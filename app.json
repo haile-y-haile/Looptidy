@@ -52,6 +52,13 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "94946304-cc30-4af8-b493-d999c6bb911b"
+      }
+    },
+    "owner": "astrohaile"
   }
 }
