@@ -1,0 +1,199 @@
+import type { OpenLoop } from '../types';
+
+const now = new Date();
+const daysAgo = (n: number) =>
+  new Date(now.getTime() - n * 24 * 60 * 60 * 1000).toISOString();
+const daysFromNow = (n: number) =>
+  new Date(now.getTime() + n * 24 * 60 * 60 * 1000).toISOString();
+
+export const mockLoops: OpenLoop[] = [
+  {
+    id: 'loop-1',
+    title: 'Contract revision from legal team',
+    description:
+      'Waiting for Sarah to send back the revised vendor contract with updated liability terms.',
+    type: 'waiting_on_others',
+    status: 'waiting',
+    priority: 'high',
+    riskLevel: 'medium',
+    category: 'work',
+    owner: { id: 'me', name: 'You' },
+    waitingOn: { id: 'p1', name: 'Sarah Chen', email: 'sarah@company.com', role: 'Legal' },
+    dueDate: daysFromNow(5),
+    reminder: {
+      id: 'r1',
+      date: daysFromNow(3),
+      note: 'Follow up if no response',
+      completed: false,
+    },
+    decisions: [],
+    timeline: [
+      {
+        id: 't1',
+        type: 'created',
+        title: 'Loop created',
+        description: 'Sent contract to legal for review',
+        timestamp: daysAgo(7),
+      },
+      {
+        id: 't2',
+        type: 'note',
+        title: 'Sent reminder',
+        description: 'Emailed Sarah a gentle nudge',
+        timestamp: daysAgo(2),
+      },
+    ],
+    createdAt: daysAgo(7),
+    updatedAt: daysAgo(2),
+  },
+  {
+    id: 'loop-2',
+    title: 'Send Q2 budget summary to Alex',
+    description:
+      'Promised Alex I would share the finalized Q2 budget breakdown by end of week.',
+    type: 'promised_by_me',
+    status: 'open',
+    priority: 'urgent',
+    riskLevel: 'high',
+    category: 'work',
+    owner: { id: 'me', name: 'You' },
+    promisedTo: { id: 'p2', name: 'Alex Rivera', email: 'alex@company.com', role: 'Finance Lead' },
+    dueDate: daysFromNow(2),
+    decisions: [],
+    timeline: [
+      {
+        id: 't3',
+        type: 'created',
+        title: 'Promise made',
+        description: 'Committed during Monday standup',
+        timestamp: daysAgo(3),
+      },
+    ],
+    createdAt: daysAgo(3),
+    updatedAt: daysAgo(3),
+  },
+  {
+    id: 'loop-3',
+    title: 'API integration blocked on credentials',
+    description:
+      'Cannot proceed with third-party API integration until DevOps provisions staging credentials.',
+    type: 'blocked',
+    status: 'blocked',
+    priority: 'high',
+    riskLevel: 'medium',
+    category: 'work',
+    owner: { id: 'me', name: 'You' },
+    waitingOn: { id: 'p3', name: 'DevOps Team', role: 'Infrastructure' },
+    decisions: [],
+    timeline: [
+      {
+        id: 't4',
+        type: 'created',
+        title: 'Blocker identified',
+        description: 'Missing staging API keys',
+        timestamp: daysAgo(5),
+      },
+      {
+        id: 't5',
+        type: 'status_change',
+        title: 'Status changed to blocked',
+        timestamp: daysAgo(4),
+      },
+    ],
+    createdAt: daysAgo(5),
+    updatedAt: daysAgo(4),
+  },
+  {
+    id: 'loop-4',
+    title: 'Choose project management tool',
+    description:
+      'Team needs to decide between Linear, Jira, or staying with Notion for task tracking.',
+    type: 'decision_needed',
+    status: 'decided',
+    priority: 'medium',
+    riskLevel: 'low',
+    category: 'work',
+    owner: { id: 'me', name: 'You' },
+    decisions: [
+      {
+        id: 'd1',
+        question: 'Which PM tool should the team adopt?',
+        outcome: 'Linear — best fit for engineering workflow and sprint planning',
+        decidedAt: daysAgo(1),
+        decidedBy: 'Team vote',
+      },
+    ],
+    timeline: [
+      {
+        id: 't6',
+        type: 'created',
+        title: 'Decision needed',
+        description: 'Raised during retro',
+        timestamp: daysAgo(10),
+      },
+      {
+        id: 't7',
+        type: 'decision',
+        title: 'Decision made',
+        description: 'Team voted for Linear',
+        timestamp: daysAgo(1),
+      },
+    ],
+    createdAt: daysAgo(10),
+    updatedAt: daysAgo(1),
+  },
+  {
+    id: 'loop-5',
+    title: 'Renew car insurance policy',
+    description: 'Policy expires soon. Need to compare quotes and renew before deadline.',
+    type: 'due',
+    status: 'open',
+    priority: 'medium',
+    riskLevel: 'high',
+    category: 'personal',
+    owner: { id: 'me', name: 'You' },
+    dueDate: daysFromNow(4),
+    reminder: {
+      id: 'r2',
+      date: daysFromNow(2),
+      note: 'Compare at least 3 quotes',
+      completed: false,
+    },
+    decisions: [],
+    timeline: [
+      {
+        id: 't8',
+        type: 'created',
+        title: 'Loop created',
+        description: 'Added from renewal notice',
+        timestamp: daysAgo(14),
+      },
+    ],
+    createdAt: daysAgo(14),
+    updatedAt: daysAgo(14),
+  },
+  {
+    id: 'loop-6',
+    title: 'Follow up on design feedback',
+    description: 'Sent mockups to product team two weeks ago. Need to check if feedback is ready.',
+    type: 'follow_up',
+    status: 'open',
+    priority: 'low',
+    riskLevel: 'none',
+    category: 'work',
+    owner: { id: 'me', name: 'You' },
+    waitingOn: { id: 'p4', name: 'Product Team', role: 'Product' },
+    dueDate: daysFromNow(1),
+    decisions: [],
+    timeline: [
+      {
+        id: 't9',
+        type: 'created',
+        title: 'Follow-up scheduled',
+        timestamp: daysAgo(14),
+      },
+    ],
+    createdAt: daysAgo(14),
+    updatedAt: daysAgo(14),
+  },
+];
