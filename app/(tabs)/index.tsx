@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { QuickCaptureSheet } from '../../components/QuickCaptureSheet';
 import { Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +31,7 @@ export default function TodayScreen() {
   const { loops, loading, refreshLoops } = useLoops();
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
 
   const [tab, setTab] = useState<'overview' | 'due' | 'waiting' | 'promised'>('overview');
   const [chips, setChips] = useState<{
@@ -326,9 +328,12 @@ export default function TodayScreen() {
             { backgroundColor: theme.colors.primary },
             pressed && styles.pressed,
           ]}
-          onPress={() => router.push('/loops/new')}
+          onPress={() => {
+            void hapticLight();
+            setQuickCaptureOpen(true);
+          }}
         >
-          <Text style={styles.primaryButtonText}>+ New Loop</Text>
+          <Text style={styles.primaryButtonText}>Quick capture</Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => [
@@ -336,13 +341,26 @@ export default function TodayScreen() {
             { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
             pressed && styles.pressed,
           ]}
-          onPress={() => router.push('/weekly-review')}
+          onPress={() => router.push('/loops/new')}
         >
           <Text style={[styles.secondaryButtonText, { color: theme.colors.text }]}>
-            Weekly Review
+            New loop
           </Text>
         </Pressable>
       </View>
+
+      <Pressable
+        onPress={() => router.push('/insights')}
+        style={({ pressed }) => [
+          styles.insightsLink,
+          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text style={[styles.insightsLinkText, { color: theme.colors.primary }]}>
+          View insights →
+        </Text>
+      </Pressable>
 
       <SegmentedControl
         value={tab}
@@ -446,6 +464,8 @@ export default function TodayScreen() {
           <EmptyState compact title="No matches" message="Try clearing a filter chip." />
         )}
       </CollapsibleSection>
+
+      <QuickCaptureSheet visible={quickCaptureOpen} onClose={() => setQuickCaptureOpen(false)} />
     </ScreenScroll>
   );
 }
@@ -560,5 +580,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.sm,
     marginBottom: spacing.lg,
+  },
+  insightsLink: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  insightsLinkText: {
+    ...typography.callout,
+    fontWeight: '800',
   },
 });

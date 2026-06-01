@@ -27,6 +27,7 @@ function RootStack() {
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="marketing" options={{ headerShown: false }} />
         <Stack.Screen name="weekly-review" options={{ title: 'Weekly Review' }} />
+        <Stack.Screen name="insights" options={{ title: 'Insights' }} />
         <Stack.Screen name="waiting" options={{ headerShown: false }} />
         <Stack.Screen name="promised" options={{ headerShown: false }} />
       </Stack>

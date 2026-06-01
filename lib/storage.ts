@@ -9,12 +9,24 @@ function cloneLoops(loops: OpenLoop[]): OpenLoop[] {
 }
 
 function normalizeLoop(raw: OpenLoop): OpenLoop {
+  const legacyReminder = raw.reminder;
+  const reminderAt =
+    raw.reminderAt ??
+    (legacyReminder && !legacyReminder.completed ? legacyReminder.date : undefined);
+  const reminderEnabled =
+    raw.reminderEnabled ?? Boolean(reminderAt && !legacyReminder?.completed);
+
   return {
     ...raw,
     description: raw.description ?? '',
     attachments: Array.isArray(raw.attachments) ? raw.attachments : [],
     decisions: Array.isArray(raw.decisions) ? raw.decisions : [],
     timeline: Array.isArray(raw.timeline) ? raw.timeline : [],
+    reminderAt,
+    reminderLabel: raw.reminderLabel,
+    snoozedUntil: raw.snoozedUntil,
+    reminderEnabled,
+    localNotificationId: raw.localNotificationId,
   };
 }
 

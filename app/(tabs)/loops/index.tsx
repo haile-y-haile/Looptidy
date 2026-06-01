@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { QuickCaptureSheet } from '../../../components/QuickCaptureSheet';
+import { GlassCard } from '../../../components/GlassCard';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,6 +39,7 @@ export default function LoopsScreen() {
 
   const [filter, setFilter] = useState<LoopListFilter>(initialFilter);
   const [query, setQuery] = useState('');
+  const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
 
   useEffect(() => {
     setFilter(initialFilter);
@@ -76,6 +79,48 @@ export default function LoopsScreen() {
           <Text style={styles.addLabel}>+</Text>
         </Pressable>
       </View>
+
+      <GlassCard style={styles.hubCard} intensity={28} contentPadding={spacing.md}>
+        <View style={styles.hubRow}>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/loops/command-center');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Command Center</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Search, filter & sort
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/insights');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Insights</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Follow-through stats
+            </Text>
+          </Pressable>
+        </View>
+        <Pressable
+          onPress={() => {
+            void hapticLight();
+            setQuickCaptureOpen(true);
+          }}
+          style={({ pressed }) => [
+            styles.quickBtn,
+            { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+            pressed && { opacity: 0.9 },
+          ]}
+        >
+          <Text style={[styles.quickBtnText, { color: theme.colors.primary }]}>Quick capture</Text>
+        </Pressable>
+      </GlassCard>
 
       <SearchField value={query} onChangeText={setQuery} />
 
@@ -119,6 +164,8 @@ export default function LoopsScreen() {
           illustration
         />
       )}
+
+      <QuickCaptureSheet visible={quickCaptureOpen} onClose={() => setQuickCaptureOpen(false)} />
     </ScreenScroll>
   );
 }
@@ -168,5 +215,34 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...typography.label,
     marginBottom: spacing.md,
+  },
+  hubCard: {
+    marginBottom: spacing.lg,
+  },
+  hubRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  hubBtn: {
+    flex: 1,
+  },
+  hubBtnTitle: {
+    ...typography.callout,
+    fontWeight: '800',
+  },
+  hubBtnSub: {
+    ...typography.caption,
+    marginTop: 2,
+  },
+  quickBtn: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  quickBtnText: {
+    ...typography.caption,
+    fontWeight: '800',
   },
 });

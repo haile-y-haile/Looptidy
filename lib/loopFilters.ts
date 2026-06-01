@@ -1,7 +1,14 @@
 import type { OpenLoop } from '../types';
-import { isOpenLoop } from './utils';
+import { isOpenLoop, isOverdue, isDueSoon } from './utils';
+import { isReminderOverdue } from './reminders';
 
 export type LoopListFilter = 'all' | 'waiting' | 'promised' | 'blocked' | 'due' | 'closed';
+
+export type CommandCenterFilter =
+  | LoopListFilter
+  | 'decisions'
+  | 'high_risk'
+  | 'overdue';
 
 export const LOOP_LIST_FILTERS: { key: LoopListFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -17,6 +24,13 @@ export function isLoopListFilter(value: string | undefined): value is LoopListFi
 }
 
 export function getLoopsForFilter(loops: OpenLoop[], filter: LoopListFilter): OpenLoop[] {
+  return getLoopsForCommandFilter(loops, filter);
+}
+
+export function getLoopsForCommandFilter(
+  loops: OpenLoop[],
+  filter: CommandCenterFilter
+): OpenLoop[] {
   switch (filter) {
     case 'waiting':
       return loops.filter((l) => isOpenLoop(l) && l.type === 'waiting_on_others');
@@ -26,9 +40,23 @@ export function getLoopsForFilter(loops: OpenLoop[], filter: LoopListFilter): Op
       return loops.filter(
         (l) => isOpenLoop(l) && (l.type === 'blocked' || l.status === 'blocked')
       );
+    case 'decisions':
+      return loops.filter(
+        (l) => isOpenLoop(l) && l.type === 'decision_needed' && l.status !== 'decided'
+      );
     case 'due':
       return loops.filter(
-        (l) => isOpenLoop(l) && (l.type === 'due' || Boolean(l.dueDate))
+        (l) =>
+          isOpenLoop(l) &&
+          (l.type === 'due' || Boolean(l.dueDate) || (l.dueDate && isDueSoon(l.dueDate)))
+      );
+    case 'high_risk':
+      return loops.filter((l) => isOpenLoop(l) && l.riskLevel === 'high');
+    case 'overdue':
+      return loops.filter(
+        (l) =>
+          isOpenLoop(l) &&
+          ((l.dueDate && isOverdue(l.dueDate)) || isReminderOverdue(l))
       );
     case 'closed':
       return loops.filter((l) => l.status === 'closed' || l.status === 'archived');

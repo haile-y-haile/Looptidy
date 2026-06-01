@@ -25,6 +25,10 @@ export default function LoopsLayout() {
         }}
       />
       <Stack.Screen name="[id]" options={{ title: 'Loop Detail' }} />
+      <Stack.Screen
+        name="command-center"
+        options={{ title: 'Command Center', headerBackTitle: 'Loops' }}
+      />
     </Stack>
   );
 }

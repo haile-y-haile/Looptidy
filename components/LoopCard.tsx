@@ -13,6 +13,12 @@ import { hapticLight, hapticSuccess } from '../lib/haptics';
 import { motion } from '../lib/motion';
 import { radius, shadows, spacing, typography } from '../lib/theme';
 import {
+  isReminderDueToday,
+  isReminderSnoozed,
+  isLoopDueToday,
+  isLoopOverdueForDisplay,
+} from '../lib/reminders';
+import {
   formatRelativeDate,
   getLoopTypeColor,
   getPriorityColor,
@@ -153,6 +159,34 @@ export function LoopCard({ loop, index = 0 }: LoopCardProps) {
           >
             Due {formatRelativeDate(loop.dueDate)}
           </Text>
+        ) : null}
+        {loop.reminderEnabled && isReminderSnoozed(loop) ? (
+          <Badge
+            label="Snoozed"
+            color={theme.colors.warning}
+            backgroundColor={theme.colors.warningLight}
+          />
+        ) : null}
+        {loop.reminderEnabled && !isReminderSnoozed(loop) ? (
+          <Badge
+            label="Reminder set"
+            color={theme.colors.primary}
+            backgroundColor={theme.colors.primaryLight}
+          />
+        ) : null}
+        {isLoopDueToday(loop) || isReminderDueToday(loop) ? (
+          <Badge
+            label="Due today"
+            color={theme.colors.primary2}
+            backgroundColor={`${theme.colors.primary2}18`}
+          />
+        ) : null}
+        {isLoopOverdueForDisplay(loop) ? (
+          <Badge
+            label="Overdue"
+            color={theme.colors.danger}
+            backgroundColor={theme.colors.dangerLight}
+          />
         ) : null}
         {loop.riskLevel === 'high' || loop.riskLevel === 'medium' ? (
           <Badge

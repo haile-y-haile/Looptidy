@@ -80,7 +80,14 @@ export interface OpenLoop {
   waitingOn?: Person;
   promisedTo?: Person;
   dueDate?: string;
+  /** @deprecated Legacy shape; prefer reminderAt / reminderEnabled */
   reminder?: Reminder;
+  reminderAt?: string;
+  reminderLabel?: string;
+  snoozedUntil?: string;
+  reminderEnabled?: boolean;
+  /** Local notification id for cancellation (device-only) */
+  localNotificationId?: string;
   attachments: LoopAttachment[];
   decisions: Decision[];
   timeline: TimelineEvent[];

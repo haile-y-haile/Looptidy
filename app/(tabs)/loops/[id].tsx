@@ -16,6 +16,7 @@ import { Badge } from '../../../components/Badge';
 import { DetailActionBar } from '../../../components/DetailActionBar';
 import { EmptyState } from '../../../components/EmptyState';
 import { PrimaryButton } from '../../../components/PrimaryButton';
+import { ReminderPanel } from '../../../components/ReminderPanel';
 import { ScreenScroll } from '../../../components/ScreenScroll';
 import { ScreenCentered } from '../../../components/ScreenCentered';
 import { hapticLight, hapticSuccess } from '../../../lib/haptics';
@@ -166,6 +167,8 @@ export default function LoopDetailScreen() {
           <MetaRow label="Created" value={formatDate(loop.createdAt)} />
           <MetaRow label="Updated" value={formatDate(loop.updatedAt)} isLast />
         </View>
+
+        {!isClosed ? <ReminderPanel loop={loop} /> : null}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sharing</Text>

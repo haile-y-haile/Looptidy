@@ -13,7 +13,9 @@ import { generateId } from '../lib/utils';
 interface LoopContextValue {
   loops: OpenLoop[];
   loading: boolean;
-  addLoop: (loop: Omit<OpenLoop, 'id' | 'createdAt' | 'updatedAt' | 'timeline'>) => Promise<void>;
+  addLoop: (
+    loop: Omit<OpenLoop, 'id' | 'createdAt' | 'updatedAt' | 'timeline'>
+  ) => Promise<OpenLoop>;
   updateLoop: (id: string, updates: Partial<OpenLoop>) => Promise<void>;
   closeLoop: (id: string) => Promise<void>;
   addDecision: (loopId: string, decision: Omit<Decision, 'id'>) => Promise<void>;
@@ -75,6 +77,7 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
       };
 
       await persistLoops((prev) => [newLoop, ...prev]);
+      return newLoop;
     },
     [persistLoops]
   );
