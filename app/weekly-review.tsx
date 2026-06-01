@@ -1,15 +1,29 @@
+import { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
+import { BrandLockup } from '../components/BrandLockup';
+import { ReviewStepper } from '../components/ReviewStepper';
 import { StatCard } from '../components/StatCard';
-import { ComingSoonBadge } from '../components/ComingSoonBadge';
 import { ScreenScroll } from '../components/ScreenScroll';
 import { radius, spacing, typography } from '../lib/theme';
 import { isOpenLoop } from '../lib/utils';
+import { hapticSuccess } from '../lib/haptics';
+
+const CHECKLIST = [
+  'Review waiting-on loops and send nudges where needed',
+  'Check promises you made — are deadlines still realistic?',
+  'Resolve or escalate anything blocked',
+  'Close loops that no longer matter',
+  'Record decisions still hanging open',
+  'Choose what deserves focus next week',
+];
 
 export default function WeeklyReviewScreen() {
   const { loops } = useLoops();
   const { theme } = useTheme();
+  const [stepIndex, setStepIndex] = useState(0);
+  const [finished, setFinished] = useState(false);
 
   const openLoops = loops.filter(isOpenLoop);
   const closedThisWeek = loops.filter((l) => {
@@ -27,81 +41,77 @@ export default function WeeklyReviewScreen() {
     return updated < twoWeeksAgo;
   });
 
+  const handleAdvance = () => {
+    if (stepIndex >= CHECKLIST.length - 1) {
+      void hapticSuccess();
+      setFinished(true);
+      return;
+    }
+    setStepIndex((i) => i + 1);
+  };
+
   return (
     <ScreenScroll>
       <View
         style={[
-          styles.placeholder,
+          styles.hero,
           { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
         ]}
       >
-        <ComingSoonBadge />
-        <Text style={styles.placeholderIcon}>📋</Text>
-        <Text style={[styles.placeholderTitle, { color: theme.colors.text }]}>Weekly review</Text>
-        <Text style={[styles.placeholderText, { color: theme.colors.textSecondary }]}>
-          Use the checklist below to close stale loops and plan the week. A guided review flow is
-          coming soon.
+        <BrandLockup variant="splash" logoSize={72} />
+        <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Weekly review</Text>
+        <Text style={[styles.heroText, { color: theme.colors.textSecondary }]}>
+          {finished
+            ? 'Nice work. You have a clearer picture of what needs attention next.'
+            : 'A short ritual to reset your open loops — work through each step at your pace.'}
         </Text>
       </View>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>This Week at a Glance</Text>
-      <View style={styles.statsRow}>
-        <StatCard label="Open" value={openLoops.length} />
-        <StatCard label="Closed" value={closedThisWeek.length} color={theme.colors.success} />
-      </View>
-      <View style={styles.statsRow}>
-        <StatCard label="Blocked" value={blocked.length} color={theme.colors.danger} />
-        <StatCard label="Stale (14d+)" value={stale.length} color={theme.colors.warning} />
-      </View>
-
-      <View style={styles.checklist}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Review Checklist</Text>
-        {[
-          'Review all waiting-on-others loops — send nudges where needed',
-          'Check promised-by-me items — are deadlines realistic?',
-          'Resolve or escalate blocked items',
-          'Close loops that are no longer relevant',
-          'Record any pending decisions',
-          'Set priorities for the coming week',
-        ].map((item, index) => (
-          <View
-            key={index}
-            style={[
-              styles.checkItem,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-            ]}
-          >
-            <View style={[styles.checkbox, { borderColor: theme.colors.border }]} />
-            <Text style={[styles.checkText, { color: theme.colors.text }]}>{item}</Text>
+      {!finished ? (
+        <>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Snapshot</Text>
+          <View style={styles.statsRow}>
+            <StatCard label="Open" value={openLoops.length} />
+            <StatCard label="Closed" value={closedThisWeek.length} color={theme.colors.success} />
           </View>
-        ))}
-      </View>
+          <View style={styles.statsRow}>
+            <StatCard label="Blocked" value={blocked.length} color={theme.colors.danger} />
+            <StatCard label="Stale (14d+)" value={stale.length} color={theme.colors.warning} />
+          </View>
+
+          <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Guided steps</Text>
+          <ReviewStepper
+            steps={CHECKLIST}
+            currentIndex={stepIndex}
+            onAdvance={handleAdvance}
+            onStepPress={setStepIndex}
+          />
+        </>
+      ) : null}
     </ScreenScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  placeholder: {
+  hero: {
     borderRadius: radius.lg,
     borderWidth: 1,
     padding: spacing.xxl,
     alignItems: 'center',
     marginBottom: spacing.xl,
+    gap: spacing.sm,
   },
-  placeholderIcon: {
-    fontSize: 36,
-    marginBottom: spacing.md,
-  },
-  placeholderTitle: {
+  heroTitle: {
     ...typography.title,
-    marginBottom: spacing.sm,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
-  placeholderText: {
+  heroText: {
     ...typography.body,
     textAlign: 'center',
   },
   sectionTitle: {
-    ...typography.headline,
+    ...typography.label,
     marginBottom: spacing.md,
     marginTop: spacing.lg,
   },
@@ -109,28 +119,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     marginBottom: spacing.md,
-  },
-  checklist: {
-    marginTop: spacing.lg,
-  },
-  checkItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing.lg,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    marginRight: spacing.md,
-    marginTop: 2,
-  },
-  checkText: {
-    ...typography.body,
-    flex: 1,
   },
 });

@@ -1,109 +1,159 @@
-import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
+import { useCallback, useRef } from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useRouter } from 'expo-router';
 import type { OpenLoop } from '../types';
 import { Badge } from './Badge';
+import { AppIcon } from './AppIcon';
+import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
+import { hapticLight, hapticSuccess } from '../lib/haptics';
+import { motion } from '../lib/motion';
 import { radius, shadows, spacing, typography } from '../lib/theme';
 import {
   formatRelativeDate,
   getLoopTypeColor,
   getPriorityColor,
   getRiskColor,
+  isOpenLoop,
   isOverdue,
   loopTypeLabels,
   priorityLabels,
   riskLevelLabels,
-  loopStatusLabels,
 } from '../lib/utils';
+
+const ACTION_WIDTH = 92;
 
 interface LoopCardProps {
   loop: OpenLoop;
+  index?: number;
 }
 
-export function LoopCard({ loop }: LoopCardProps) {
-  const router = useRouter();
+function CloseSwipeAction({
+  drag,
+  onClose,
+}: {
+  drag: SharedValue<number>;
+  onClose: () => void;
+}) {
   const { theme } = useTheme();
-  const typeColor = getLoopTypeColor(loop.type);
-  const overdue = loop.dueDate ? isOverdue(loop.dueDate) : false;
-
-  const enter = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(enter, {
-      toValue: 1,
-      duration: 320,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [enter]);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ translateX: drag.value + ACTION_WIDTH }],
+  }));
 
   return (
-    <Animated.View
-      style={{
-        opacity: enter,
-        transform: [
-          {
-            translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
-          },
-        ],
-      }}
-    >
+    <Animated.View style={[styles.actionWrap, style]}>
       <Pressable
+        onPress={onClose}
         style={({ pressed }) => [
-          styles.card,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-          pressed && styles.pressed,
+          styles.closeAction,
+          { backgroundColor: theme.colors.danger },
+          pressed && { opacity: 0.9 },
         ]}
-      onPress={() => router.push(`/loops/${loop.id}`)}
       >
-        <View style={[styles.accent, { backgroundColor: `${typeColor}55` }]} />
+        <AppIcon name="checkmark-circle-outline" size={22} color="#FFFFFF" />
+        <Text style={styles.closeLabel}>Close</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+export function LoopCard({ loop, index = 0 }: LoopCardProps) {
+  const router = useRouter();
+  const { closeLoop } = useLoops();
+  const { theme } = useTheme();
+  const swipeRef = useRef<{ close: () => void } | null>(null);
+  const typeColor = getLoopTypeColor(loop.type);
+  const overdue = loop.dueDate ? isOverdue(loop.dueDate) : false;
+  const delay = Math.min(index, 5) * motion.stagger;
+  const canSwipe = isOpenLoop(loop);
+
+  const confirmClose = useCallback(() => {
+    void hapticLight();
+    Alert.alert('Close this loop?', 'You can still find it in your history later.', [
+      { text: 'Cancel', style: 'cancel', onPress: () => swipeRef.current?.close() },
+      {
+        text: 'Close loop',
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            await closeLoop(loop.id);
+            void hapticSuccess();
+            swipeRef.current?.close();
+          })();
+        },
+      },
+    ]);
+  }, [closeLoop, loop.id]);
+
+  const renderRightActions = useCallback(
+    (_progress: SharedValue<number>, drag: SharedValue<number>) => (
+      <CloseSwipeAction drag={drag} onClose={confirmClose} />
+    ),
+    [confirmClose]
+  );
+
+  const cardBody = (
+    <Pressable
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+        pressed && styles.pressed,
+      ]}
+      onPress={() => router.push(`/loops/${loop.id}`)}
+    >
+      <View style={[styles.accent, { backgroundColor: `${typeColor}55` }]} />
 
       <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={[styles.statusDot, { backgroundColor: typeColor }]} />
-            <Text style={[styles.typeText, { color: theme.colors.textSecondary }]}>
-              {loopTypeLabels[loop.type]}
-            </Text>
-            <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
-              • {loopStatusLabels[loop.status]}
-            </Text>
-          </View>
-        {loop.priority !== 'low' && (
+        <View style={styles.headerLeft}>
+          <View style={[styles.statusDot, { backgroundColor: typeColor }]} />
+          <Text style={[styles.typeText, { color: theme.colors.textSecondary }]}>
+            {loopTypeLabels[loop.type]}
+          </Text>
+        </View>
+        {loop.priority === 'urgent' || loop.priority === 'high' ? (
           <Badge
             label={priorityLabels[loop.priority]}
             color={getPriorityColor(loop.priority)}
             backgroundColor={`${getPriorityColor(loop.priority)}15`}
           />
-        )}
+        ) : null}
       </View>
 
       <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>
         {loop.title}
       </Text>
 
+      {loop.waitingOn ? (
+        <Text style={[styles.personLine, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+          Waiting on {loop.waitingOn.name}
+        </Text>
+      ) : null}
+      {loop.promisedTo ? (
+        <Text style={[styles.personLine, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+          Promised to {loop.promisedTo.name}
+        </Text>
+      ) : null}
+
       {loop.description ? (
-        <Text style={[styles.description, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+        <Text style={[styles.description, { color: theme.colors.textMuted }]} numberOfLines={2}>
           {loop.description}
         </Text>
       ) : null}
 
       <View style={styles.footer}>
-        {loop.waitingOn ? (
-          <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
-            Waiting on {loop.waitingOn.name}
-          </Text>
-        ) : null}
-        {loop.promisedTo ? (
-          <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
-            Promised to {loop.promisedTo.name}
-          </Text>
-        ) : null}
         {loop.dueDate ? (
-          <Text style={[styles.meta, { color: theme.colors.textMuted }, overdue && styles.overdue]}>
+          <Text
+            style={[
+              styles.meta,
+              { color: overdue ? theme.colors.danger : theme.colors.textMuted },
+            ]}
+          >
             Due {formatRelativeDate(loop.dueDate)}
           </Text>
         ) : null}
-          {loop.riskLevel !== 'none' && loop.riskLevel !== 'low' ? (
+        {loop.riskLevel === 'high' || loop.riskLevel === 'medium' ? (
           <Badge
             label={`${riskLevelLabels[loop.riskLevel]} risk`}
             color={getRiskColor(loop.riskLevel)}
@@ -111,18 +161,38 @@ export function LoopCard({ loop }: LoopCardProps) {
           />
         ) : null}
       </View>
-      </Pressable>
+    </Pressable>
+  );
+
+  return (
+    <Animated.View entering={FadeInDown.delay(delay).duration(motion.normal).springify().damping(18)}>
+      {canSwipe ? (
+        <ReanimatedSwipeable
+          ref={swipeRef}
+          friction={2}
+          overshootRight={false}
+          rightThreshold={40}
+          renderRightActions={renderRightActions}
+          containerStyle={styles.swipeContainer}
+        >
+          {cardBody}
+        </ReanimatedSwipeable>
+      ) : (
+        cardBody
+      )}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  swipeContainer: {
+    marginBottom: spacing.md,
+  },
   card: {
     borderRadius: radius.md,
     borderWidth: 1,
     padding: spacing.lg,
-    marginBottom: spacing.md,
-    ...shadows.soft,
+    ...shadows.card,
     overflow: 'hidden',
   },
   accent: {
@@ -157,15 +227,13 @@ const styles = StyleSheet.create({
   },
   typeText: {
     ...typography.caption,
-    fontWeight: '800',
-  },
-  statusText: {
-    ...typography.caption,
-    fontWeight: '700',
-    marginLeft: 4,
   },
   title: {
     ...typography.headline,
+    marginBottom: spacing.xs,
+  },
+  personLine: {
+    ...typography.callout,
     marginBottom: spacing.xs,
   },
   description: {
@@ -181,8 +249,20 @@ const styles = StyleSheet.create({
   meta: {
     ...typography.caption,
   },
-  overdue: {
-    color: '#F04438',
-    fontWeight: '600',
+  actionWrap: {
+    width: ACTION_WIDTH,
+    marginBottom: spacing.md,
+  },
+  closeAction: {
+    flex: 1,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginLeft: spacing.sm,
+  },
+  closeLabel: {
+    ...typography.caption,
+    color: '#FFFFFF',
   },
 });

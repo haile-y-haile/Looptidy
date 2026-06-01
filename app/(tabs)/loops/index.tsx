@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, View, Text, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLoops } from '../../../context/LoopContext';
@@ -7,10 +7,11 @@ import { useTheme } from '../../../context/ThemeContext';
 import { LoopCard } from '../../../components/LoopCard';
 import { EmptyState } from '../../../components/EmptyState';
 import { FilterChip } from '../../../components/FilterChip';
+import { ListSkeleton } from '../../../components/ListSkeleton';
+import { SearchField } from '../../../components/SearchField';
 import { ScreenScroll } from '../../../components/ScreenScroll';
-import { ScreenCentered } from '../../../components/ScreenCentered';
-import { SectionHeader } from '../../../components/SectionHeader';
 import { hapticLight } from '../../../lib/haptics';
+import { filterLoopsByQuery } from '../../../lib/loopSearch';
 import {
   getEmptyStateForFilter,
   getLoopFilterLabel,
@@ -20,6 +21,7 @@ import {
   type LoopListFilter,
 } from '../../../lib/loopFilters';
 import { spacing, typography } from '../../../lib/theme';
+import { isDueSoon, isOpenLoop, isOverdue } from '../../../lib/utils';
 
 export default function LoopsScreen() {
   const router = useRouter();
@@ -34,31 +36,48 @@ export default function LoopsScreen() {
   }, [params.filter]);
 
   const [filter, setFilter] = useState<LoopListFilter>(initialFilter);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     setFilter(initialFilter);
   }, [initialFilter]);
 
-  const filteredLoops = useMemo(() => getLoopsForFilter(loops, filter), [loops, filter]);
-  const emptyCopy = getEmptyStateForFilter(filter);
+  const openLoops = useMemo(() => loops.filter(isOpenLoop), [loops]);
+  const dueCount = useMemo(
+    () => openLoops.filter((l) => l.dueDate && (isDueSoon(l.dueDate) || isOverdue(l.dueDate))).length,
+    [openLoops]
+  );
 
-  if (loading) {
-    return (
-      <ScreenCentered>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </ScreenCentered>
-    );
-  }
+  const filteredLoops = useMemo(() => {
+    const byFilter = getLoopsForFilter(loops, filter);
+    return filterLoopsByQuery(byFilter, query);
+  }, [loops, filter, query]);
+
+  const emptyCopy = getEmptyStateForFilter(filter);
 
   return (
     <ScreenScroll contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Loops</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          {filteredLoops.length} {filter === 'closed' ? 'closed' : 'open'}
-          {filter !== 'all' ? ` · ${getLoopFilterLabel(filter)}` : ''}
-        </Text>
+      <View style={styles.headerRow}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>Loops</Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+            {openLoops.length} open
+            {dueCount > 0 ? ` · ${dueCount} due soon` : ''}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push('/loops/new')}
+          style={({ pressed }) => [
+            styles.addBtn,
+            { backgroundColor: theme.colors.primary },
+            pressed && { opacity: 0.9 },
+          ]}
+        >
+          <Text style={styles.addLabel}>+</Text>
+        </Pressable>
       </View>
+
+      <SearchField value={query} onChangeText={setQuery} />
 
       <ScrollView
         horizontal
@@ -80,24 +99,40 @@ export default function LoopsScreen() {
         ))}
       </ScrollView>
 
-      <SectionHeader
-        title={getLoopFilterLabel(filter)}
-        action="+ New"
-        onAction={() => router.push('/loops/new')}
-      />
+      <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>
+        {getLoopFilterLabel(filter)}
+        {query.trim() ? ` · “${query.trim()}”` : ''}
+      </Text>
 
-      {filteredLoops.length > 0 ? (
-        filteredLoops.map((loop) => <LoopCard key={loop.id} loop={loop} />)
+      {loading ? (
+        <ListSkeleton rows={5} />
+      ) : filteredLoops.length > 0 ? (
+        filteredLoops.map((loop, index) => <LoopCard key={loop.id} loop={loop} index={index} />)
       ) : (
-        <EmptyState title={emptyCopy.title} message={emptyCopy.message} />
+        <EmptyState
+          title={query.trim() ? 'No matches' : emptyCopy.title}
+          message={
+            query.trim()
+              ? 'Try a different search or clear the filter.'
+              : emptyCopy.message
+          }
+          illustration
+        />
       )}
     </ScreenScroll>
   );
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
   header: {
-    marginBottom: spacing.md,
+    flex: 1,
   },
   title: {
     ...typography.largeTitle,
@@ -106,13 +141,32 @@ const styles = StyleSheet.create({
     ...typography.body,
     marginTop: spacing.xs,
   },
+  addBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  addLabel: {
+    fontSize: 26,
+    fontFamily: typography.title.fontFamily,
+    color: '#FFFFFF',
+    lineHeight: 28,
+  },
   filterScroll: {
     marginHorizontal: -spacing.lg,
+    marginTop: spacing.lg,
     marginBottom: spacing.lg,
   },
   filterRow: {
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
     flexDirection: 'row',
+  },
+  sectionLabel: {
+    ...typography.label,
+    marginBottom: spacing.md,
   },
 });

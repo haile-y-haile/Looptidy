@@ -101,22 +101,22 @@ export const categoryLabels: Record<Category, string> = {
 
 export function getLoopTypeColor(type: LoopType): string {
   const map: Record<LoopType, string> = {
-    waiting_on_others: '#7A5AF8',
-    promised_by_me: '#2563EB',
-    decision_needed: '#F79009',
-    blocked: '#F04438',
-    follow_up: '#12B76A',
-    due: '#667085',
+    waiting_on_others: '#7C3AED',
+    promised_by_me: '#0D9488',
+    decision_needed: '#D97706',
+    blocked: '#DC2626',
+    follow_up: '#059669',
+    due: '#6366F1',
   };
   return map[type];
 }
 
 export function getPriorityColor(priority: Priority): string {
   const map: Record<Priority, string> = {
-    low: '#667085',
-    medium: '#2563EB',
-    high: '#F79009',
-    urgent: '#F04438',
+    low: '#94A3B8',
+    medium: '#6366F1',
+    high: '#D97706',
+    urgent: '#DC2626',
   };
   return map[priority];
 }

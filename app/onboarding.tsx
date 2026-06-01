@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BrandLockup } from '../components/BrandLockup';
+import { PrimaryButton } from '../components/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
 import { getOnboardingComplete, setOnboardingComplete } from '../lib/preferences';
 import { radius, spacing, typography } from '../lib/theme';
@@ -118,8 +120,8 @@ export default function OnboardingScreen() {
       <LinearGradient
         colors={
           theme.isDark
-            ? ['rgba(79,70,229,0.35)', 'rgba(37,99,235,0.05)', 'rgba(11,18,32,0)']
-            : ['rgba(79,70,229,0.28)', 'rgba(37,99,235,0.06)', 'rgba(245,247,251,0)']
+            ? ['rgba(13,148,136,0.32)', 'rgba(99,102,241,0.08)', 'rgba(11,18,32,0)']
+            : ['rgba(13,148,136,0.2)', 'rgba(99,102,241,0.06)', 'rgba(246,248,251,0)']
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -139,18 +141,7 @@ export default function OnboardingScreen() {
             ],
           }}
         >
-          <View style={styles.brand}>
-            <View
-              style={[
-                styles.logoDot,
-                { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary },
-              ]}
-            />
-            <Text style={[styles.brandTitle, { color: theme.colors.text }]}>LoopTidy</Text>
-          </View>
-          <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>
-            Track follow-ups, promises, and decisions so open loops stop slipping through.
-          </Text>
+          <BrandLockup variant="full" logoSize={88} animate />
         </Animated.View>
 
         <Animated.View
@@ -173,7 +164,7 @@ export default function OnboardingScreen() {
               straight in.
             </Text>
 
-            <AuthButton label="Get started" tone="primary" onPress={continueToApp} />
+            <PrimaryButton label="Get started" onPress={continueToApp} style={{ marginBottom: spacing.sm }} />
 
             <View style={styles.dividerRow}>
               <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />

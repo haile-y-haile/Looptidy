@@ -1,11 +1,13 @@
 import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenScroll } from '../../components/ScreenScroll';
 import { SettingsRow } from '../../components/SettingsRow';
 import { useTheme } from '../../context/ThemeContext';
 import type { AppearanceMode } from '../../lib/preferences';
 import { radius, spacing, typography } from '../../lib/theme';
+import { settingsIcons } from '../../lib/icons';
 
 function AppearancePill({
   label,
@@ -42,6 +44,7 @@ function AppearancePill({
 }
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme, setMode } = useTheme();
   const [mode, setModeLocal] = useState<AppearanceMode>(theme.mode);
@@ -120,36 +123,44 @@ export default function SettingsScreen() {
       </Animated.View>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Account</Text>
-      <SettingsRow icon="👤" title="Profile" subtitle="Manage your name and photo" comingSoon />
-      <SettingsRow icon="🔐" title="Security" subtitle="Password and device security" comingSoon />
-      <SettingsRow icon="🕵️" title="Privacy" subtitle="Data and visibility controls" comingSoon />
+      <SettingsRow icon={settingsIcons.profile} title="Profile" subtitle="Manage your name and photo" comingSoon />
+      <SettingsRow icon={settingsIcons.security} title="Security" subtitle="Password and device security" comingSoon />
+      <SettingsRow icon={settingsIcons.privacy} title="Privacy" subtitle="Data and visibility controls" comingSoon />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Preferences</Text>
       <SettingsRow
-        icon="🎨"
+        icon={settingsIcons.appearance}
         title="Appearance"
         subtitle="Use the pills above to switch themes"
         right={{ type: 'value', value: appearanceLabel }}
       />
-      <SettingsRow icon="🌐" title="Language" subtitle="English only for now" comingSoon />
-      <SettingsRow icon="♿" title="Accessibility" subtitle="Text size and motion" comingSoon />
+      <SettingsRow icon={settingsIcons.language} title="Language" subtitle="English only for now" comingSoon />
+      <SettingsRow icon={settingsIcons.accessibility} title="Accessibility" subtitle="Text size and motion" comingSoon />
       <SettingsRow
-        icon="🔔"
+        icon={settingsIcons.notifications}
         title="Notifications"
         subtitle="Reminders are not available yet"
         comingSoon
       />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Data</Text>
-      <SettingsRow icon="💾" title="Backup & Restore" subtitle="Cloud backup and export" comingSoon />
+      <SettingsRow icon={settingsIcons.backup} title="Backup & Restore" subtitle="Cloud backup and export" comingSoon />
+
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>About</Text>
+      <SettingsRow
+        icon={settingsIcons.about}
+        title="About LoopTidy"
+        subtitle="Product overview and story"
+        onPress={() => router.push('/marketing')}
+      />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Help</Text>
-      <SettingsRow icon="📄" title="Legal" subtitle="Privacy policy and terms" comingSoon />
-      <SettingsRow icon="💬" title="Support" subtitle="Contact and help center" comingSoon />
+      <SettingsRow icon={settingsIcons.legal} title="Legal" subtitle="Privacy policy and terms" comingSoon />
+      <SettingsRow icon={settingsIcons.support} title="Support" subtitle="Contact and help center" comingSoon />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Danger Zone</Text>
       <SettingsRow
-        icon="⚠️"
+        icon={settingsIcons.danger}
         title="Delete Account"
         subtitle="Requires an account — not available yet"
         tone="danger"

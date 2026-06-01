@@ -1,3 +1,5 @@
+import { fonts } from './fonts';
+
 export type ThemeColors = {
   background: string;
   surface: string;
@@ -22,26 +24,26 @@ export type ThemeColors = {
 };
 
 export const lightColors: ThemeColors = {
-  background: '#F5F7FB',
+  background: '#F6F8FB',
   surface: '#FFFFFF',
-  surface2: '#F9FAFB',
-  border: '#E5E7EB',
+  surface2: '#F1F5F9',
+  border: '#E2E8F0',
   borderLight: '#EEF2F6',
-  text: '#0B1220',
-  textSecondary: '#5B6473',
-  textMuted: '#8B95A7',
-  primary: '#2563EB',
-  primary2: '#4F46E5',
-  primaryLight: '#EEF4FF',
-  success: '#12B76A',
-  successLight: '#ECFDF3',
-  warning: '#F79009',
-  warningLight: '#FFFAEB',
-  danger: '#F04438',
-  dangerLight: '#FEF3F2',
-  purple: '#7A5AF8',
-  purpleLight: '#F4F3FF',
-  overlay: 'rgba(15, 23, 42, 0.06)',
+  text: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#94A3B8',
+  primary: '#0D9488',
+  primary2: '#6366F1',
+  primaryLight: '#CCFBF1',
+  success: '#059669',
+  successLight: '#D1FAE5',
+  warning: '#D97706',
+  warningLight: '#FEF3C7',
+  danger: '#DC2626',
+  dangerLight: '#FEE2E2',
+  purple: '#7C3AED',
+  purpleLight: '#EDE9FE',
+  overlay: 'rgba(15, 23, 42, 0.05)',
 };
 
 export const darkColors: ThemeColors = {
@@ -54,7 +56,7 @@ export const darkColors: ThemeColors = {
   text: '#EAF0FF',
   textSecondary: '#B8C2D6',
   textMuted: '#7E8AA3',
-  primaryLight: 'rgba(37, 99, 235, 0.16)',
+  primaryLight: 'rgba(13, 148, 136, 0.18)',
   successLight: 'rgba(18, 183, 106, 0.16)',
   warningLight: 'rgba(247, 144, 9, 0.18)',
   dangerLight: 'rgba(240, 68, 56, 0.18)',
@@ -83,14 +85,48 @@ export const radius = {
 } as const;
 
 export const typography = {
-  largeTitle: { fontSize: 30, fontWeight: '700' as const, letterSpacing: -0.7 },
-  title: { fontSize: 22, fontWeight: '700' as const, letterSpacing: -0.4 },
-  headline: { fontSize: 17, fontWeight: '700' as const },
-  body: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22 },
-  callout: { fontSize: 14, fontWeight: '600' as const },
-  caption: { fontSize: 12, fontWeight: '500' as const },
-  label: { fontSize: 11, fontWeight: '700' as const, letterSpacing: 0.6, textTransform: 'uppercase' as const },
+  largeTitle: {
+    fontSize: 30,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.7,
+  },
+  title: {
+    fontSize: 22,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.4,
+  },
+  headline: {
+    fontSize: 17,
+    fontFamily: fonts.bold,
+  },
+  body: {
+    fontSize: 15,
+    fontFamily: fonts.regular,
+    lineHeight: 22,
+  },
+  callout: {
+    fontSize: 14,
+    fontFamily: fonts.semibold,
+  },
+  caption: {
+    fontSize: 12,
+    fontFamily: fonts.medium,
+  },
+  label: {
+    fontSize: 11,
+    fontFamily: fonts.bold,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase' as const,
+  },
+  tagline: {
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    letterSpacing: 0.2,
+    lineHeight: 18,
+  },
 } as const;
+
+export { motion } from './motion';
 
 export const shadows = {
   card: {
@@ -108,3 +144,14 @@ export const shadows = {
     elevation: 8,
   },
 } as const;
+
+export const surfaceFlat = {
+  backgroundColor: 'transparent' as const,
+  borderWidth: 0,
+};
+
+export const surfaceElevated = {
+  borderWidth: 1,
+  borderRadius: radius.lg,
+  ...shadows.soft,
+};

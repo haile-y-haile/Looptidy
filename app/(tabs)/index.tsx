@@ -21,6 +21,7 @@ import { radius, spacing, typography } from '../../lib/theme';
 import type { LoopType, OpenLoop, Priority, RiskLevel } from '../../types';
 import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue, loopTypeLabels } from '../../lib/utils';
 import { showComingSoon } from '../../lib/comingSoon';
+import { quickActionIcons } from '../../lib/icons';
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -179,7 +180,7 @@ export default function TodayScreen() {
       <View style={styles.header}>
         <Text style={[styles.greeting, { color: theme.colors.text }]}>LoopTidy</Text>
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          Follow Up Tracker
+          Close the loops that matter to you
         </Text>
         <View style={styles.metaLine}>
           <Text style={[styles.metaText, { color: theme.colors.textMuted }]}>
@@ -192,9 +193,9 @@ export default function TodayScreen() {
       {/* Quick actions grid */}
       <View style={styles.actionGrid}>
         <ActionTile
-          title="New waiting-on"
-          subtitle="Dependency"
-          icon="⏳"
+          title="Waiting on someone"
+          subtitle="Track a dependency"
+          icon={quickActionIcons.waiting}
           accent="purple"
           onPress={() => {
             void hapticLight();
@@ -202,9 +203,9 @@ export default function TodayScreen() {
           }}
         />
         <ActionTile
-          title="New promise"
-          subtitle="Commitment"
-          icon="🤝"
+          title="A promise you made"
+          subtitle="Hold yourself to it"
+          icon={quickActionIcons.promise}
           accent="primary"
           onPress={() => {
             void hapticLight();
@@ -214,9 +215,9 @@ export default function TodayScreen() {
       </View>
       <View style={styles.actionGrid}>
         <ActionTile
-          title="Log decision"
-          subtitle="Capture outcome"
-          icon="✅"
+          title="Decision to make"
+          subtitle="Capture the outcome"
+          icon={quickActionIcons.decision}
           accent="warning"
           onPress={() => {
             void hapticLight();
@@ -225,8 +226,8 @@ export default function TodayScreen() {
         />
         <ActionTile
           title="Weekly review"
-          subtitle="Reset"
-          icon="📋"
+          subtitle="Plan your week"
+          icon={quickActionIcons.review}
           accent="success"
           onPress={() => {
             void hapticLight();

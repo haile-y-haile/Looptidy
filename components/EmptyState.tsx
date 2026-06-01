@@ -1,15 +1,25 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { AppIcon, type AppIconName } from './AppIcon';
+import { LoopIllustration } from './LoopIllustration';
 import { spacing, typography } from '../lib/theme';
+import { emptyStateIcons } from '../lib/icons';
 
 interface EmptyStateProps {
-  icon?: string;
+  icon?: AppIconName;
   title: string;
   message: string;
   compact?: boolean;
+  illustration?: boolean;
 }
 
-export function EmptyState({ icon = '◌', title, message, compact = false }: EmptyStateProps) {
+export function EmptyState({
+  icon = emptyStateIcons.default,
+  title,
+  message,
+  compact = false,
+  illustration = false,
+}: EmptyStateProps) {
   const { theme } = useTheme();
   return (
     <View
@@ -19,7 +29,15 @@ export function EmptyState({ icon = '◌', title, message, compact = false }: Em
         compact && { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
       ]}
     >
-      {!compact ? <Text style={[styles.icon, { color: theme.colors.textMuted }]}>{icon}</Text> : null}
+      {!compact ? (
+        <View style={styles.iconWrap}>
+          {illustration ? (
+            <LoopIllustration size={108} />
+          ) : (
+            <AppIcon name={icon} size={28} variant="circle" tone="primary" />
+          )}
+        </View>
+      ) : null}
       <Text style={[styles.title, { color: theme.colors.text }, compact && styles.compactTitle]}>
         {title}
       </Text>
@@ -40,7 +58,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xxxl * 2,
+    paddingVertical: spacing.xxxl * 1.5,
     paddingHorizontal: spacing.xxl,
   },
   compact: {
@@ -50,8 +68,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
   },
-  icon: {
-    fontSize: 40,
+  iconWrap: {
     marginBottom: spacing.lg,
   },
   title: {
@@ -66,8 +83,10 @@ const styles = StyleSheet.create({
   message: {
     ...typography.body,
     textAlign: 'center',
+    maxWidth: 320,
   },
   compactMessage: {
     textAlign: 'left',
+    maxWidth: undefined,
   },
 });

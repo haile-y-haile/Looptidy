@@ -1,7 +1,8 @@
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { TabBarBackground } from '../../components/TabBarBackground';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -30,12 +31,14 @@ export default function TabsLayout() {
         headerTitleStyle: { fontWeight: '700', color: theme.colors.text },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
+        tabBarBackground: () => <TabBarBackground />,
         tabBarStyle: {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : theme.colors.surface,
           borderTopColor: theme.colors.border,
-          borderTopWidth: 1,
+          borderTopWidth: StyleSheet.hairlineWidth,
           paddingTop: 6,
           height: Platform.OS === 'ios' ? 88 : 64,
+          position: Platform.OS === 'ios' ? 'absolute' : undefined,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -70,7 +73,7 @@ export default function TabsLayout() {
         options={{
           title: 'Decisions',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name="checkmark-circle-outline" color={color} focused={focused} />
+            <TabBarIcon name="git-branch-outline" color={color} focused={focused} />
           ),
         }}
       />

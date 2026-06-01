@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { AppIcon, type AppIconName } from './AppIcon';
 import { ComingSoonBadge } from './ComingSoonBadge';
 import { radius, spacing, typography } from '../lib/theme';
 import { showComingSoon } from '../lib/comingSoon';
@@ -11,7 +12,7 @@ type RightAccessory =
   | { type: 'none' };
 
 interface SettingsRowProps {
-  icon?: string;
+  icon?: AppIconName;
   title: string;
   subtitle?: string;
   onPress?: () => void;
@@ -59,7 +60,14 @@ export function SettingsRow({
       ]}
     >
       <View style={styles.left}>
-        {icon ? <Text style={[styles.icon, { color: theme.colors.textMuted }]}>{icon}</Text> : null}
+        {icon ? (
+          <AppIcon
+            name={icon}
+            size={18}
+            variant="circle"
+            tone={isDanger ? 'danger' : 'muted'}
+          />
+        ) : null}
         <View style={styles.texts}>
           <View style={styles.titleRow}>
             <Text
@@ -93,7 +101,7 @@ export function SettingsRow({
           />
         ) : null}
         {resolvedRight.type === 'chevron' ? (
-          <Text style={[styles.chevron, { color: theme.colors.textMuted }]}>›</Text>
+          <AppIcon name="chevron-forward" size={18} color={theme.colors.textMuted} />
         ) : null}
       </View>
     </Pressable>
@@ -125,11 +133,6 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
     gap: spacing.md,
   },
-  icon: {
-    width: 22,
-    textAlign: 'center',
-    fontSize: 16,
-  },
   texts: {
     flex: 1,
   },
@@ -155,9 +158,5 @@ const styles = StyleSheet.create({
   value: {
     ...typography.caption,
     fontWeight: '600',
-  },
-  chevron: {
-    fontSize: 22,
-    marginTop: -1,
   },
 });

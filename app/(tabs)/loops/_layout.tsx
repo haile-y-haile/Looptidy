@@ -21,6 +21,7 @@ export default function LoopsLayout() {
           title: 'New Loop',
           presentation: 'modal',
           headerBackTitle: 'Cancel',
+          sheetGrabberVisible: true,
         }}
       />
       <Stack.Screen name="[id]" options={{ title: 'Loop Detail' }} />

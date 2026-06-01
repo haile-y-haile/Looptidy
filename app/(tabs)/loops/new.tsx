@@ -18,7 +18,9 @@ import { ScreenScroll } from '../../../components/ScreenScroll';
 import { hapticLight, hapticSuccess } from '../../../lib/haptics';
 import { showComingSoon } from '../../../lib/comingSoon';
 import { radius, spacing, typography } from '../../../lib/theme';
+import { attachmentIcons } from '../../../lib/icons';
 import { generateId, loopTypeLabels, categoryLabels } from '../../../lib/utils';
+import { AppIcon } from '../../../components/AppIcon';
 
 const loopTypes: LoopType[] = [
   'waiting_on_others',
@@ -369,7 +371,7 @@ export default function NewLoopScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.attachIcon}>📄</Text>
+            <AppIcon name={attachmentIcons.document} size={18} tone="muted" />
             <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Document</Text>
           </Pressable>
           <Pressable
@@ -384,7 +386,7 @@ export default function NewLoopScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.attachIcon}>🖼️</Text>
+            <AppIcon name={attachmentIcons.photo} size={18} tone="muted" />
             <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Photo</Text>
           </Pressable>
           <Pressable
@@ -399,7 +401,7 @@ export default function NewLoopScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.attachIcon}>🎙️</Text>
+            <AppIcon name={attachmentIcons.audio} size={18} tone="muted" />
             <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Audio</Text>
           </Pressable>
           <Pressable
@@ -414,7 +416,7 @@ export default function NewLoopScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.attachIcon}>🎬</Text>
+            <AppIcon name={attachmentIcons.video} size={18} tone="muted" />
             <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Video</Text>
           </Pressable>
         </View>
@@ -568,9 +570,6 @@ const styles = StyleSheet.create({
   },
   attachTileSoon: {
     opacity: 0.88,
-  },
-  attachIcon: {
-    fontSize: 16,
   },
   attachLabel: {
     ...typography.caption,

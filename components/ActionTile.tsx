@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
+import { AppIcon, type AppIconName } from './AppIcon';
 import { GlassCard } from './GlassCard';
 import { radius, spacing, typography } from '../lib/theme';
 
@@ -14,7 +15,7 @@ export function ActionTile({
 }: {
   title: string;
   subtitle?: string;
-  icon: string;
+  icon: AppIconName;
   onPress: () => void;
   accent?: 'primary' | 'purple' | 'warning' | 'success';
   glass?: boolean;
@@ -30,9 +31,31 @@ export function ActionTile({
       case 'success':
         return theme.colors.success;
       default:
-        return theme.colors.primary2;
+        return theme.colors.primary;
     }
   })();
+
+  const iconTone = accent === 'primary' ? 'primary' : accent;
+
+  const content = (
+    <>
+      <LinearGradient
+        colors={[`${accentColor}22`, `${accentColor}08`, 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      />
+      <AppIcon name={icon} size={20} variant="circle" tone={iconTone} />
+      <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+          {subtitle}
+        </Text>
+      ) : null}
+    </>
+  );
 
   return (
     <Pressable
@@ -41,44 +64,17 @@ export function ActionTile({
     >
       {glass ? (
         <GlassCard style={styles.card} intensity={32} contentPadding={spacing.lg}>
-          <LinearGradient
-            colors={[`${accentColor}26`, `${accentColor}0C`, 'transparent']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradient}
-          />
-          <Text style={styles.icon}>{icon}</Text>
-          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
-              {subtitle}
-            </Text>
-          ) : null}
+          {content}
         </GlassCard>
       ) : (
         <View
           style={[
             styles.card,
+            styles.cardSolid,
             { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
           ]}
         >
-          <LinearGradient
-            colors={[`${accentColor}22`, `${accentColor}08`, 'transparent']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradient}
-          />
-          <Text style={styles.icon}>{icon}</Text>
-          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
-            {title}
-          </Text>
-          {subtitle ? (
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
-              {subtitle}
-            </Text>
-          ) : null}
+          {content}
         </View>
       )}
     </Pressable>
@@ -92,22 +88,21 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
     overflow: 'hidden',
-    minHeight: 92,
+    minHeight: 104,
+  },
+  cardSolid: {
+    borderWidth: 1,
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,
   },
-  icon: {
-    fontSize: 18,
-    marginBottom: spacing.sm,
-  },
   title: {
     ...typography.callout,
     fontWeight: '800',
+    marginTop: spacing.sm,
   },
   subtitle: {
     ...typography.caption,
     marginTop: 2,
   },
 });
-

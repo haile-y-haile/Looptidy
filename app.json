@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5F7FB"
+      "backgroundColor": "#F6F8FB"
     },
     "ios": {
       "supportsTablet": true,
@@ -26,7 +26,7 @@
       "package": "com.hailehaile.looptidy",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#F5F7FB",
+        "backgroundColor": "#F6F8FB",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -42,7 +42,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F5F7FB",
+          "backgroundColor": "#F6F8FB",
           "image": "./assets/splash-icon.png",
           "imageWidth": 220,
           "dark": {

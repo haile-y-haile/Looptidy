@@ -13,12 +13,16 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useLoops } from '../../../context/LoopContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { Badge } from '../../../components/Badge';
+import { DetailActionBar } from '../../../components/DetailActionBar';
 import { EmptyState } from '../../../components/EmptyState';
+import { PrimaryButton } from '../../../components/PrimaryButton';
 import { ScreenScroll } from '../../../components/ScreenScroll';
 import { ScreenCentered } from '../../../components/ScreenCentered';
-import { hapticLight } from '../../../lib/haptics';
+import { hapticLight, hapticSuccess } from '../../../lib/haptics';
 import { showComingSoon } from '../../../lib/comingSoon';
 import { radius, spacing, typography } from '../../../lib/theme';
+import { AppIcon } from '../../../components/AppIcon';
+import { attachmentIcons, emptyStateIcons } from '../../../lib/icons';
 import {
   formatDate,
   getLoopTypeColor,
@@ -57,7 +61,7 @@ export default function LoopDetailScreen() {
     return (
       <ScreenCentered>
         <EmptyState
-          icon="?"
+          icon={emptyStateIcons.notFound}
           title="Loop not found"
           message="It may have been removed or the link is outdated."
         />
@@ -79,6 +83,7 @@ export default function LoopDetailScreen() {
         style: 'destructive',
         onPress: async () => {
           await closeLoop(loop.id);
+          void hapticSuccess();
           router.back();
         },
       },
@@ -106,10 +111,17 @@ export default function LoopDetailScreen() {
     setShowDecisionInput(false);
   };
 
+  const personLine = loop.waitingOn
+    ? `Waiting on ${loop.waitingOn.name}`
+    : loop.promisedTo
+      ? `Promised to ${loop.promisedTo.name}`
+      : null;
+
   return (
     <>
-      <Stack.Screen options={{ title: loop.title }} />
-      <ScreenScroll>
+      <Stack.Screen options={{ title: '' }} />
+      <View style={styles.screen}>
+      <ScreenScroll contentContainerStyle={!isClosed ? styles.scrollWithBar : undefined}>
         <View style={styles.badges}>
           <Badge
             label={loopTypeLabels[loop.type]}
@@ -132,6 +144,9 @@ export default function LoopDetailScreen() {
         </View>
 
         <Text style={[styles.title, { color: theme.colors.text }]}>{loop.title}</Text>
+        {personLine ? (
+          <Text style={[styles.personLine, { color: theme.colors.textSecondary }]}>{personLine}</Text>
+        ) : null}
         {loop.description ? (
           <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
             {loop.description}
@@ -192,17 +207,7 @@ export default function LoopDetailScreen() {
                   showComingSoon('File attachments');
                 }}
               >
-                <Text style={[styles.attachmentIcon, { color: theme.colors.textMuted }]}>
-                  {a.type === 'link'
-                    ? '🔗'
-                    : a.type === 'document'
-                      ? '📄'
-                      : a.type === 'photo'
-                        ? '🖼️'
-                        : a.type === 'audio'
-                          ? '🎙️'
-                          : '🎬'}
-                </Text>
+                <AppIcon name={attachmentIcons[a.type]} size={18} tone="muted" />
                 <View style={{ flex: 1 }}>
                   <Text
                     style={[styles.attachmentTitle, { color: theme.colors.text }]}
@@ -294,18 +299,6 @@ export default function LoopDetailScreen() {
                 placeholderTextColor={theme.colors.textMuted}
                 multiline
               />
-              <Pressable
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  { backgroundColor: theme.colors.primary },
-                  !noteReady && styles.disabled,
-                  noteReady && pressed && styles.pressed,
-                ]}
-                onPress={handleAddNote}
-                disabled={!noteReady}
-              >
-                <Text style={styles.actionButtonText}>Save note</Text>
-              </Pressable>
             </View>
 
             {loop.type === 'decision_needed' && !showDecisionInput && (
@@ -343,36 +336,24 @@ export default function LoopDetailScreen() {
                   placeholderTextColor={theme.colors.textMuted}
                   multiline
                 />
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.actionButton,
-                    { backgroundColor: theme.colors.primary },
-                    !decisionReady && styles.disabled,
-                    decisionReady && pressed && styles.pressed,
-                  ]}
+                <PrimaryButton
+                  label="Save decision"
                   onPress={handleAddDecision}
                   disabled={!decisionReady}
-                >
-                  <Text style={styles.actionButtonText}>Save decision</Text>
-                </Pressable>
+                />
               </View>
             )}
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.closeButton,
-                { backgroundColor: theme.colors.dangerLight },
-                pressed && styles.pressed,
-              ]}
-              onPress={handleClose}
-            >
-              <Text style={[styles.closeButtonText, { color: theme.colors.danger }]}>
-                Close loop
-              </Text>
-            </Pressable>
           </>
         )}
       </ScreenScroll>
+      {!isClosed ? (
+        <DetailActionBar
+          onAddNote={handleAddNote}
+          onClose={handleClose}
+          noteDisabled={!noteReady}
+        />
+      ) : null}
+      </View>
     </>
   );
 }
@@ -402,9 +383,18 @@ function MetaRow({
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  scrollWithBar: {
+    paddingBottom: 120,
+  },
   link: {
     ...typography.callout,
-    fontWeight: '600',
+  },
+  personLine: {
+    ...typography.callout,
+    marginBottom: spacing.md,
   },
   badges: {
     flexDirection: 'row',
@@ -459,7 +449,6 @@ const styles = StyleSheet.create({
   },
   shareTitle: {
     ...typography.callout,
-    fontWeight: '900',
   },
   shareSub: {
     ...typography.body,
@@ -474,14 +463,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.sm,
   },
-  attachmentIcon: {
-    width: 22,
-    textAlign: 'center',
-    fontSize: 16,
-  },
   attachmentTitle: {
     ...typography.callout,
-    fontWeight: '800',
   },
   attachmentMeta: {
     ...typography.caption,
@@ -520,7 +503,6 @@ const styles = StyleSheet.create({
   },
   timelineTitle: {
     ...typography.callout,
-    fontWeight: '500',
   },
   timelineDesc: {
     ...typography.body,
@@ -539,16 +521,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     marginBottom: spacing.sm,
   },
-  actionButton: {
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    ...typography.callout,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
   outlineButton: {
     borderRadius: radius.md,
     borderWidth: 1,
@@ -558,18 +530,6 @@ const styles = StyleSheet.create({
   },
   outlineButtonText: {
     ...typography.callout,
-    fontWeight: '600',
-  },
-  closeButton: {
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  closeButtonText: {
-    ...typography.callout,
-    fontWeight: '600',
   },
   pressed: { opacity: 0.8 },
-  disabled: { opacity: 0.45 },
 });

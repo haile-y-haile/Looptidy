@@ -1,8 +1,10 @@
 import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashGate } from '../components/SplashGate';
+import { FontProvider } from '../context/FontContext';
 import { LoopProvider } from '../context/LoopContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
@@ -23,6 +25,7 @@ function RootStack() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="marketing" options={{ headerShown: false }} />
         <Stack.Screen name="weekly-review" options={{ title: 'Weekly Review' }} />
         <Stack.Screen name="waiting" options={{ headerShown: false }} />
         <Stack.Screen name="promised" options={{ headerShown: false }} />
@@ -35,11 +38,13 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <LoopProvider>
-          <SplashGate>
-            <RootStack />
-          </SplashGate>
-        </LoopProvider>
+        <FontProvider>
+          <LoopProvider>
+            <SplashGate>
+              <RootStack />
+            </SplashGate>
+          </LoopProvider>
+        </FontProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
