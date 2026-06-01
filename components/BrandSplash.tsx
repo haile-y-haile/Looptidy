@@ -14,6 +14,9 @@ import { spacing, typography } from '../lib/theme';
 import { BrandLockup } from './BrandLockup';
 
 const LOTTIE = require('../assets/lottie/brand-splash.json');
+const BRAND_SPLASH_DURATION_MS = 2800;
+const MOTION_FADE_MS = 280;
+const REDUCE_MOTION_FADE_MS = 150;
 
 type BrandSplashProps = {
   visible: boolean;
@@ -24,15 +27,25 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
   const { theme } = useTheme();
   const overlayOpacity = useSharedValue(1);
   const finishedRef = useRef(false);
+  const visibleSinceRef = useRef<number | null>(null);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
+
+  const clearFadeTimer = () => {
+    if (!fadeTimerRef.current) return;
+    clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = null;
+  };
 
   const finish = () => {
     if (finishedRef.current) return;
     finishedRef.current = true;
+    clearFadeTimer();
     onFinish();
   };
 
   const fadeOut = (fade: number) => {
+    clearFadeTimer();
     overlayOpacity.value = withTiming(
       0,
       { duration: fade, easing: motion.easing.out },
@@ -42,23 +55,37 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
     );
   };
 
+  const fadeOutAfterMinimumDuration = (fade: number) => {
+    clearFadeTimer();
+    const visibleSince = visibleSinceRef.current ?? Date.now();
+    const elapsed = Date.now() - visibleSince;
+    const delay = Math.max(0, BRAND_SPLASH_DURATION_MS - fade - elapsed);
+    fadeTimerRef.current = setTimeout(() => fadeOut(fade), delay);
+  };
+
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      clearFadeTimer();
+      return undefined;
+    }
     finishedRef.current = false;
+    visibleSinceRef.current = Date.now();
     overlayOpacity.value = 1;
     setReduceMotion(null);
 
     void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
       setReduceMotion(enabled);
     });
+
+    return clearFadeTimer;
   }, [visible, overlayOpacity]);
 
   useEffect(() => {
     if (!visible || reduceMotion === null) return;
 
     if (reduceMotion) {
-      const timer = setTimeout(() => fadeOut(150), 900);
-      return () => clearTimeout(timer);
+      fadeOutAfterMinimumDuration(REDUCE_MOTION_FADE_MS);
+      return clearFadeTimer;
     }
     // Lottie path: fade triggered by onAnimationFinish
     return undefined;
@@ -92,7 +119,7 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
                 loop={false}
                 style={styles.lottie}
                 onAnimationFinish={(isCancelled) => {
-                  if (!isCancelled) fadeOut(280);
+                  if (!isCancelled) fadeOutAfterMinimumDuration(MOTION_FADE_MS);
                 }}
               />
               <Image source={require('../assets/icon.png')} style={styles.iconOverlay} />
