@@ -1,24 +1,35 @@
-import { ScrollView, StyleSheet, ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useLoops } from '../../context/LoopContext';
+import { useTheme } from '../../context/ThemeContext';
 import { LoopCard } from '../../components/LoopCard';
 import { EmptyState } from '../../components/EmptyState';
-import { colors, spacing } from '../../lib/theme';
+import { ScreenScroll } from '../../components/ScreenScroll';
+import { ScreenCentered } from '../../components/ScreenCentered';
+import { SectionHeader } from '../../components/SectionHeader';
 import { isOpenLoop } from '../../lib/utils';
 
 export default function LoopsScreen() {
+  const router = useRouter();
+  const { theme } = useTheme();
   const { loops, loading } = useLoops();
   const openLoops = loops.filter(isOpenLoop);
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <ScreenCentered>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </ScreenCentered>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenScroll>
+      <SectionHeader
+        title={`${openLoops.length} open`}
+        action="+ New"
+        onAction={() => router.push('/loops/new')}
+      />
       {openLoops.length > 0 ? (
         openLoops.map((loop) => <LoopCard key={loop.id} loop={loop} />)
       ) : (
@@ -27,23 +38,6 @@ export default function LoopsScreen() {
           message="Create a new loop to start tracking follow-ups and promises."
         />
       )}
-    </ScrollView>
+    </ScreenScroll>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl * 2,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-});

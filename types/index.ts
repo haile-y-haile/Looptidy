@@ -56,6 +56,17 @@ export interface TimelineEvent {
   timestamp: string;
 }
 
+export type AttachmentType = 'link' | 'document' | 'photo' | 'audio' | 'video';
+
+export interface LoopAttachment {
+  id: string;
+  type: AttachmentType;
+  title: string;
+  url?: string; // for links
+  uri?: string; // for local files/media (future)
+  createdAt: string;
+}
+
 export interface OpenLoop {
   id: string;
   title: string;
@@ -70,6 +81,7 @@ export interface OpenLoop {
   promisedTo?: Person;
   dueDate?: string;
   reminder?: Reminder;
+  attachments: LoopAttachment[];
   decisions: Decision[];
   timeline: TimelineEvent[];
   createdAt: string;

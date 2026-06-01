@@ -1,19 +1,28 @@
 import { Stack } from 'expo-router';
-import { colors } from '../../lib/theme';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function LoopsLayout() {
+  const { theme } = useTheme();
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: theme.colors.background },
         headerShadowVisible: false,
-        headerTintColor: colors.primary,
-        headerTitleStyle: { fontWeight: '600', color: colors.text },
-        contentStyle: { backgroundColor: colors.background },
+        headerTintColor: theme.colors.primary,
+        headerTitleStyle: { fontWeight: '700', color: theme.colors.text },
+        contentStyle: { backgroundColor: theme.colors.background },
+        headerBackTitle: 'Back',
       }}
     >
       <Stack.Screen name="index" options={{ title: 'All Loops' }} />
-      <Stack.Screen name="new" options={{ title: 'New Loop', presentation: 'modal' }} />
+      <Stack.Screen
+        name="new"
+        options={{
+          title: 'New Loop',
+          presentation: 'modal',
+          headerBackTitle: 'Cancel',
+        }}
+      />
       <Stack.Screen name="[id]" options={{ title: 'Loop Detail' }} />
     </Stack>
   );

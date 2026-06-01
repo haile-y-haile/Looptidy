@@ -1,22 +1,33 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { colors, radius, shadows, spacing, typography } from '../lib/theme';
+import { useTheme } from '../context/ThemeContext';
+import { radius, shadows, spacing, typography } from '../lib/theme';
 
 interface StatCardProps {
   label: string;
   value: number;
   color?: string;
   onPress?: () => void;
+  /** Transparent styling for use inside GlassCard */
+  embedded?: boolean;
 }
 
-export function StatCard({ label, value, color = colors.primary, onPress }: StatCardProps) {
+export function StatCard({ label, value, color, onPress, embedded = false }: StatCardProps) {
+  const { theme } = useTheme();
+  const displayColor = color ?? theme.colors.primary;
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.card,
+        embedded
+          ? styles.embedded
+          : { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+        pressed && styles.pressed,
+      ]}
       onPress={onPress}
       disabled={!onPress}
     >
-      <Text style={[styles.value, { color }]}>{value}</Text>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.value, { color: displayColor }]}>{value}</Text>
+      <Text style={[styles.label, { color: theme.colors.textSecondary }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -24,16 +35,21 @@ export function StatCard({ label, value, color = colors.primary, onPress }: Stat
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     alignItems: 'center',
     ...shadows.card,
   },
+  embedded: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   pressed: {
-    opacity: 0.7,
+    transform: [{ scale: 0.98 }],
+    opacity: 0.85,
   },
   value: {
     fontSize: 28,
@@ -42,7 +58,6 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.caption,
-    color: colors.textSecondary,
     textAlign: 'center',
   },
 });

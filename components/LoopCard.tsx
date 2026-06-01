@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { OpenLoop } from '../types';
 import { Badge } from './Badge';
-import { colors, radius, shadows, spacing, typography } from '../lib/theme';
+import { useTheme } from '../context/ThemeContext';
+import { radius, shadows, spacing, typography } from '../lib/theme';
 import {
   formatRelativeDate,
   getLoopTypeColor,
@@ -12,6 +14,7 @@ import {
   loopTypeLabels,
   priorityLabels,
   riskLevelLabels,
+  loopStatusLabels,
 } from '../lib/utils';
 
 interface LoopCardProps {
@@ -20,20 +23,51 @@ interface LoopCardProps {
 
 export function LoopCard({ loop }: LoopCardProps) {
   const router = useRouter();
+  const { theme } = useTheme();
   const typeColor = getLoopTypeColor(loop.type);
   const overdue = loop.dueDate ? isOverdue(loop.dueDate) : false;
 
+  const enter = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 320,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [enter]);
+
   return (
-    <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-      onPress={() => router.push(`/loops/${loop.id}`)}
+    <Animated.View
+      style={{
+        opacity: enter,
+        transform: [
+          {
+            translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }),
+          },
+        ],
+      }}
     >
+      <Pressable
+        style={({ pressed }) => [
+          styles.card,
+          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+          pressed && styles.pressed,
+        ]}
+      onPress={() => router.push(`/loops/${loop.id}`)}
+      >
+        <View style={[styles.accent, { backgroundColor: `${typeColor}55` }]} />
+
       <View style={styles.header}>
-        <Badge
-          label={loopTypeLabels[loop.type]}
-          color={typeColor}
-          backgroundColor={`${typeColor}15`}
-        />
+          <View style={styles.headerLeft}>
+            <View style={[styles.statusDot, { backgroundColor: typeColor }]} />
+            <Text style={[styles.typeText, { color: theme.colors.textSecondary }]}>
+              {loopTypeLabels[loop.type]}
+            </Text>
+            <Text style={[styles.statusText, { color: theme.colors.textMuted }]}>
+              • {loopStatusLabels[loop.status]}
+            </Text>
+          </View>
         {loop.priority !== 'low' && (
           <Badge
             label={priorityLabels[loop.priority]}
@@ -43,29 +77,33 @@ export function LoopCard({ loop }: LoopCardProps) {
         )}
       </View>
 
-      <Text style={styles.title} numberOfLines={2}>
+      <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>
         {loop.title}
       </Text>
 
       {loop.description ? (
-        <Text style={styles.description} numberOfLines={2}>
+        <Text style={[styles.description, { color: theme.colors.textSecondary }]} numberOfLines={2}>
           {loop.description}
         </Text>
       ) : null}
 
       <View style={styles.footer}>
         {loop.waitingOn ? (
-          <Text style={styles.meta}>Waiting on {loop.waitingOn.name}</Text>
+          <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+            Waiting on {loop.waitingOn.name}
+          </Text>
         ) : null}
         {loop.promisedTo ? (
-          <Text style={styles.meta}>Promised to {loop.promisedTo.name}</Text>
+          <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+            Promised to {loop.promisedTo.name}
+          </Text>
         ) : null}
         {loop.dueDate ? (
-          <Text style={[styles.meta, overdue && styles.overdue]}>
+          <Text style={[styles.meta, { color: theme.colors.textMuted }, overdue && styles.overdue]}>
             Due {formatRelativeDate(loop.dueDate)}
           </Text>
         ) : null}
-        {loop.riskLevel !== 'none' && loop.riskLevel !== 'low' ? (
+          {loop.riskLevel !== 'none' && loop.riskLevel !== 'low' ? (
           <Badge
             label={`${riskLevelLabels[loop.riskLevel]} risk`}
             color={getRiskColor(loop.riskLevel)}
@@ -73,37 +111,65 @@ export function LoopCard({ loop }: LoopCardProps) {
           />
         ) : null}
       </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.md,
-    ...shadows.card,
+    ...shadows.soft,
+    overflow: 'hidden',
+  },
+  accent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
   },
   pressed: {
-    opacity: 0.85,
+    transform: [{ scale: 0.99 }],
+    opacity: 0.92,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
     flexWrap: 'wrap',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: spacing.sm,
+  },
+  typeText: {
+    ...typography.caption,
+    fontWeight: '800',
+  },
+  statusText: {
+    ...typography.caption,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
   title: {
     ...typography.headline,
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   description: {
     ...typography.body,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   footer: {
@@ -114,10 +180,9 @@ const styles = StyleSheet.create({
   },
   meta: {
     ...typography.caption,
-    color: colors.textMuted,
   },
   overdue: {
-    color: colors.danger,
+    color: '#F04438',
     fontWeight: '600',
   },
 });

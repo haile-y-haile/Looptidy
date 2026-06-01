@@ -1,20 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TextInput,
   Pressable,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLoops } from '../../context/LoopContext';
-import type { LoopType, Priority, RiskLevel, Category } from '../../types';
-import { colors, radius, spacing, typography } from '../../lib/theme';
-import { loopTypeLabels, categoryLabels } from '../../lib/utils';
+import { useTheme } from '../../context/ThemeContext';
+import type { LoopAttachment, LoopType, Priority, RiskLevel, Category } from '../../types';
+import { ScreenScroll } from '../../components/ScreenScroll';
+import { hapticLight, hapticSuccess } from '../../lib/haptics';
+import { radius, spacing, typography } from '../../lib/theme';
+import { generateId, loopTypeLabels, categoryLabels } from '../../lib/utils';
 
 const loopTypes: LoopType[] = [
   'waiting_on_others',
@@ -31,6 +34,9 @@ const categories: Category[] = ['work', 'personal', 'finance', 'health', 'home',
 
 export default function NewLoopScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  const params = useLocalSearchParams<{ type?: string; priority?: string; riskLevel?: string; category?: string }>();
   const { addLoop } = useLoops();
 
   const [title, setTitle] = useState('');
@@ -41,7 +47,31 @@ export default function NewLoopScreen() {
   const [category, setCategory] = useState<Category>('work');
   const [personName, setPersonName] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [attachments, setAttachments] = useState<LoopAttachment[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const template = useMemo(() => {
+    const t = params.type;
+    const p = params.priority;
+    const r = params.riskLevel;
+    const c = params.category;
+    const out: Partial<{ type: LoopType; priority: Priority; riskLevel: RiskLevel; category: Category }> = {};
+    if (t && loopTypes.includes(t as LoopType)) out.type = t as LoopType;
+    if (p && priorities.includes(p as Priority)) out.priority = p as Priority;
+    if (r && riskLevels.includes(r as RiskLevel)) out.riskLevel = r as RiskLevel;
+    if (c && categories.includes(c as Category)) out.category = c as Category;
+    return out;
+  }, [params.category, params.priority, params.riskLevel, params.type]);
+
+  useEffect(() => {
+    if (template.type) setType(template.type);
+    if (template.priority) setPriority(template.priority);
+    if (template.riskLevel) setRiskLevel(template.riskLevel);
+    if (template.category) setCategory(template.category);
+    // Only on initial mount/template change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -51,6 +81,7 @@ export default function NewLoopScreen() {
 
     setSaving(true);
     try {
+      await hapticLight();
       const person = personName.trim()
         ? { id: `person-${Date.now()}`, name: personName.trim() }
         : undefined;
@@ -68,7 +99,9 @@ export default function NewLoopScreen() {
         promisedTo: type === 'promised_by_me' ? person : undefined,
         dueDate: dueDate.trim() || undefined,
         decisions: [],
+        attachments,
       });
+      await hapticSuccess();
       router.back();
     } catch {
       Alert.alert('Error', 'Could not save loop. Please try again.');
@@ -77,115 +110,339 @@ export default function NewLoopScreen() {
     }
   };
 
+  const addLinkAttachment = () => {
+    const url = linkUrl.trim();
+    if (!url) return;
+
+    const now = new Date().toISOString();
+    const newAttachment: LoopAttachment = {
+      id: generateId(),
+      type: 'link',
+      title: url.replace(/^https?:\/\//, '').slice(0, 40) || 'Link',
+      url,
+      createdAt: now,
+    };
+    setAttachments((prev) => [newAttachment, ...prev]);
+    setLinkUrl('');
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const comingSoon = (label: string) => {
+    Alert.alert('Coming soon', `${label} attachments will be supported in a future update.`);
+  };
+
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={[styles.flex, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 60 : 0}
     >
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.label}>Title</Text>
+      <ScreenScroll contentContainerStyle={{ paddingBottom: spacing.xxxl + insets.bottom }}>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Title</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
           value={title}
           onChangeText={setTitle}
           placeholder="What needs to be tracked?"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={theme.colors.textMuted}
         />
 
-        <Text style={styles.label}>Description</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Description</Text>
         <TextInput
-          style={[styles.input, styles.textArea]}
+          style={[
+            styles.input,
+            styles.textArea,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
           value={description}
           onChangeText={setDescription}
           placeholder="Add context..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={theme.colors.textMuted}
           multiline
           numberOfLines={3}
         />
 
-        <Text style={styles.label}>Type</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Type</Text>
         <View style={styles.chipRow}>
           {loopTypes.map((t) => (
             <Pressable
               key={t}
-              style={[styles.chip, type === t && styles.chipSelected]}
+              style={[
+                styles.chip,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                type === t && { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+              ]}
               onPress={() => setType(t)}
             >
-              <Text style={[styles.chipText, type === t && styles.chipTextSelected]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: theme.colors.textSecondary },
+                  type === t && { color: theme.colors.primary, fontWeight: '800' },
+                ]}
+              >
                 {loopTypeLabels[t]}
               </Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={styles.label}>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
           {type === 'promised_by_me' ? 'Promised To' : 'Waiting On / Person'}
         </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
           value={personName}
           onChangeText={setPersonName}
           placeholder="Name (optional)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={theme.colors.textMuted}
         />
 
-        <Text style={styles.label}>Due Date</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Due Date</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
           value={dueDate}
           onChangeText={setDueDate}
           placeholder="YYYY-MM-DD (optional)"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={theme.colors.textMuted}
         />
 
-        <Text style={styles.label}>Priority</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Priority</Text>
         <View style={styles.chipRow}>
           {priorities.map((p) => (
             <Pressable
               key={p}
-              style={[styles.chip, priority === p && styles.chipSelected]}
+              style={[
+                styles.chip,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                priority === p && { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+              ]}
               onPress={() => setPriority(p)}
             >
-              <Text style={[styles.chipText, priority === p && styles.chipTextSelected]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: theme.colors.textSecondary },
+                  priority === p && { color: theme.colors.primary, fontWeight: '800' },
+                ]}
+              >
                 {p.charAt(0).toUpperCase() + p.slice(1)}
               </Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={styles.label}>Risk Level</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Risk Level</Text>
         <View style={styles.chipRow}>
           {riskLevels.map((r) => (
             <Pressable
               key={r}
-              style={[styles.chip, riskLevel === r && styles.chipSelected]}
+              style={[
+                styles.chip,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                riskLevel === r && { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+              ]}
               onPress={() => setRiskLevel(r)}
             >
-              <Text style={[styles.chipText, riskLevel === r && styles.chipTextSelected]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: theme.colors.textSecondary },
+                  riskLevel === r && { color: theme.colors.primary, fontWeight: '800' },
+                ]}
+              >
                 {r.charAt(0).toUpperCase() + r.slice(1)}
               </Text>
             </Pressable>
           ))}
         </View>
 
-        <Text style={styles.label}>Category</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Category</Text>
         <View style={styles.chipRow}>
           {categories.map((c) => (
             <Pressable
               key={c}
-              style={[styles.chip, category === c && styles.chipSelected]}
+              style={[
+                styles.chip,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                category === c && { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+              ]}
               onPress={() => setCategory(c)}
             >
-              <Text style={[styles.chipText, category === c && styles.chipTextSelected]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: theme.colors.textSecondary },
+                  category === c && { color: theme.colors.primary, fontWeight: '800' },
+                ]}
+              >
                 {categoryLabels[c]}
               </Text>
             </Pressable>
           ))}
         </View>
 
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sharing</Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.shareCard,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              pressed && styles.pressed,
+            ]}
+            onPress={() => {
+              void hapticLight();
+              Alert.alert(
+                'Coming soon',
+                'Sharing requires LoopTidy accounts. This is a UI placeholder only (no real auth yet).'
+              );
+            }}
+          >
+            <Text style={[styles.shareTitle, { color: theme.colors.text }]}>Share this loop</Text>
+            <Text style={[styles.shareSub, { color: theme.colors.textSecondary }]}>
+              Share with LoopTidy accounts only (not yet available).
+            </Text>
+          </Pressable>
+        </View>
+
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Attachments (optional)</Text>
+
+        <View style={styles.attachRow}>
+          <TextInput
+            style={[
+              styles.input,
+              styles.linkInput,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+            ]}
+            value={linkUrl}
+            onChangeText={setLinkUrl}
+            placeholder="Paste a link…"
+            placeholderTextColor={theme.colors.textMuted}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              addLinkAttachment();
+            }}
+            style={({ pressed }) => [
+              styles.addLinkButton,
+              { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.addLinkButtonText}>Add</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.attachTiles}>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              comingSoon('Document');
+            }}
+            style={({ pressed }) => [
+              styles.attachTile,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.attachIcon}>📄</Text>
+            <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Document</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              comingSoon('Photo');
+            }}
+            style={({ pressed }) => [
+              styles.attachTile,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.attachIcon}>🖼️</Text>
+            <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Photo</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              comingSoon('Audio');
+            }}
+            style={({ pressed }) => [
+              styles.attachTile,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.attachIcon}>🎙️</Text>
+            <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Audio</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              comingSoon('Video');
+            }}
+            style={({ pressed }) => [
+              styles.attachTile,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.attachIcon}>🎬</Text>
+            <Text style={[styles.attachLabel, { color: theme.colors.textSecondary }]}>Video</Text>
+          </Pressable>
+        </View>
+
+        {attachments.length > 0 ? (
+          <View style={styles.attachList}>
+            {attachments.map((a) => (
+              <View
+                key={a.id}
+                style={[
+                  styles.attachItem,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.attachItemTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                    {a.title}
+                  </Text>
+                  {a.url ? (
+                    <Text style={[styles.attachItemMeta, { color: theme.colors.textMuted }]} numberOfLines={1}>
+                      {a.url}
+                    </Text>
+                  ) : null}
+                </View>
+                <Pressable
+                  onPress={() => removeAttachment(a.id)}
+                  hitSlop={10}
+                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.removeText, { color: theme.colors.danger }]}>Remove</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         <Pressable
           style={({ pressed }) => [
             styles.saveButton,
+            { backgroundColor: theme.colors.primary },
             pressed && styles.pressed,
             saving && styles.disabled,
           ]}
@@ -194,35 +451,23 @@ export default function NewLoopScreen() {
         >
           <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Create Loop'}</Text>
         </Pressable>
-      </ScrollView>
+      </ScreenScroll>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl * 2,
-  },
   label: {
     ...typography.callout,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
     marginTop: spacing.lg,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
     ...typography.body,
-    color: colors.text,
   },
   textArea: {
     minHeight: 80,
@@ -237,24 +482,101 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.full,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipSelected: {
-    backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
   },
   chipText: {
     ...typography.caption,
-    color: colors.textSecondary,
+    fontWeight: '800',
   },
-  chipTextSelected: {
-    color: colors.primary,
-    fontWeight: '600',
+  section: {
+    marginTop: spacing.lg,
+  },
+  sectionTitle: {
+    ...typography.headline,
+    marginBottom: spacing.md,
+  },
+  shareCard: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.lg,
+  },
+  shareTitle: {
+    ...typography.callout,
+    fontWeight: '900',
+  },
+  shareSub: {
+    ...typography.body,
+    marginTop: spacing.xs,
+  },
+  attachRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  linkInput: {
+    flex: 1,
+  },
+  addLinkButton: {
+    borderRadius: radius.full,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderWidth: 1,
+  },
+  addLinkButtonText: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    fontWeight: '900',
+  },
+  attachTiles: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  attachTile: {
+    minWidth: 120,
+    flexGrow: 1,
+    flexBasis: '45%',
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  attachIcon: {
+    fontSize: 16,
+  },
+  attachLabel: {
+    ...typography.caption,
+    fontWeight: '800',
+  },
+  attachList: {
+    marginTop: spacing.sm,
+  },
+  attachItem: {
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  attachItemTitle: {
+    ...typography.callout,
+    fontWeight: '800',
+  },
+  attachItemMeta: {
+    ...typography.caption,
+    marginTop: 2,
+  },
+  removeText: {
+    ...typography.caption,
+    fontWeight: '900',
   },
   saveButton: {
-    backgroundColor: colors.primary,
     borderRadius: radius.md,
     paddingVertical: spacing.lg,
     alignItems: 'center',
@@ -262,7 +584,7 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     ...typography.headline,
-    color: colors.surface,
+    color: '#FFFFFF',
   },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.5 },

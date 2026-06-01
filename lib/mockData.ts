@@ -26,6 +26,15 @@ export const mockLoops: OpenLoop[] = [
       note: 'Follow up if no response',
       completed: false,
     },
+    attachments: [
+      {
+        id: 'a1',
+        type: 'link',
+        title: 'Vendor contract draft',
+        url: 'https://example.com/contract-draft',
+        createdAt: daysAgo(7),
+      },
+    ],
     decisions: [],
     timeline: [
       {
@@ -59,6 +68,7 @@ export const mockLoops: OpenLoop[] = [
     owner: { id: 'me', name: 'You' },
     promisedTo: { id: 'p2', name: 'Alex Rivera', email: 'alex@company.com', role: 'Finance Lead' },
     dueDate: daysFromNow(2),
+    attachments: [],
     decisions: [],
     timeline: [
       {
@@ -84,6 +94,7 @@ export const mockLoops: OpenLoop[] = [
     category: 'work',
     owner: { id: 'me', name: 'You' },
     waitingOn: { id: 'p3', name: 'DevOps Team', role: 'Infrastructure' },
+    attachments: [],
     decisions: [],
     timeline: [
       {
@@ -114,6 +125,7 @@ export const mockLoops: OpenLoop[] = [
     riskLevel: 'low',
     category: 'work',
     owner: { id: 'me', name: 'You' },
+    attachments: [],
     decisions: [
       {
         id: 'd1',
@@ -159,6 +171,7 @@ export const mockLoops: OpenLoop[] = [
       note: 'Compare at least 3 quotes',
       completed: false,
     },
+    attachments: [],
     decisions: [],
     timeline: [
       {
@@ -184,6 +197,7 @@ export const mockLoops: OpenLoop[] = [
     owner: { id: 'me', name: 'You' },
     waitingOn: { id: 'p4', name: 'Product Team', role: 'Product' },
     dueDate: daysFromNow(1),
+    attachments: [],
     decisions: [],
     timeline: [
       {

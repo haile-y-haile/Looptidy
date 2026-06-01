@@ -1,11 +1,14 @@
-import { ScrollView, StyleSheet, ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { useLoops } from '../context/LoopContext';
+import { useTheme } from '../context/ThemeContext';
 import { LoopCard } from '../components/LoopCard';
 import { EmptyState } from '../components/EmptyState';
-import { colors, spacing } from '../lib/theme';
+import { ScreenScroll } from '../components/ScreenScroll';
+import { ScreenCentered } from '../components/ScreenCentered';
 import { isOpenLoop } from '../lib/utils';
 
 export default function PromisedScreen() {
+  const { theme } = useTheme();
   const { loops, loading } = useLoops();
   const promisedLoops = loops.filter(
     (l) => isOpenLoop(l) && l.type === 'promised_by_me'
@@ -13,14 +16,14 @@ export default function PromisedScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <ScreenCentered>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </ScreenCentered>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenScroll>
       {promisedLoops.length > 0 ? (
         promisedLoops.map((loop) => <LoopCard key={loop.id} loop={loop} />)
       ) : (
@@ -29,23 +32,6 @@ export default function PromisedScreen() {
           message="You haven't committed to any follow-ups that are still open."
         />
       )}
-    </ScrollView>
+    </ScreenScroll>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl * 2,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-});

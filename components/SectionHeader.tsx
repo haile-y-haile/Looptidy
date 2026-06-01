@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '../lib/theme';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { spacing, typography } from '../lib/theme';
 
 interface SectionHeaderProps {
   title: string;
@@ -7,11 +8,23 @@ interface SectionHeaderProps {
   onAction?: () => void;
 }
 
-export function SectionHeader({ title, action }: SectionHeaderProps) {
+export function SectionHeader({ title, action, onAction }: SectionHeaderProps) {
+  const { theme } = useTheme();
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      {action ? <Text style={styles.action}>{action}</Text> : null}
+      <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
+      {action ? (
+        <Pressable onPress={onAction} disabled={!onAction} hitSlop={8}>
+          <Text
+            style={[
+              styles.action,
+              { color: onAction ? theme.colors.primary : theme.colors.textMuted },
+            ]}
+          >
+            {action}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -26,10 +39,8 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headline,
-    color: colors.text,
   },
   action: {
     ...typography.callout,
-    color: colors.primary,
   },
 });

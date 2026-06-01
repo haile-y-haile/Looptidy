@@ -1,11 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useLoops } from '../context/LoopContext';
+import { useTheme } from '../context/ThemeContext';
 import { EmptyState } from '../components/EmptyState';
 import { Badge } from '../components/Badge';
-import { colors, radius, spacing, typography } from '../lib/theme';
+import { ScreenScroll } from '../components/ScreenScroll';
+import { ScreenCentered } from '../components/ScreenCentered';
+import { radius, spacing, typography } from '../lib/theme';
 import { formatDate } from '../lib/utils';
 
 export default function DecisionsScreen() {
+  const router = useRouter();
+  const { theme } = useTheme();
   const { loops, loading } = useLoops();
 
   const allDecisions = loops
@@ -24,44 +30,70 @@ export default function DecisionsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <ScreenCentered>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </ScreenCentered>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenScroll>
       {pendingDecisions.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pending Decisions</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Pending Decisions</Text>
           {pendingDecisions.map((loop) => (
-            <View key={loop.id} style={styles.card}>
+            <Pressable
+              key={loop.id}
+              style={({ pressed }) => [
+                styles.card,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                pressed && styles.pressed,
+              ]}
+              onPress={() => router.push(`/loops/${loop.id}`)}
+            >
               <Badge label="Pending" variant="warning" />
-              <Text style={styles.loopTitle}>{loop.title}</Text>
+              <Text style={[styles.loopTitle, { color: theme.colors.textMuted }]}>{loop.title}</Text>
               {loop.description ? (
-                <Text style={styles.description}>{loop.description}</Text>
+                <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
+                  {loop.description}
+                </Text>
               ) : null}
-            </View>
+            </Pressable>
           ))}
         </View>
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Decision History</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Decision History</Text>
         {allDecisions.length > 0 ? (
           allDecisions.map((decision) => (
-            <View key={decision.id} style={styles.card}>
-              <Text style={styles.loopTitle}>{decision.loopTitle}</Text>
-              <Text style={styles.question}>{decision.question}</Text>
-              <Text style={styles.outcome}>{decision.outcome}</Text>
+            <Pressable
+              key={decision.id}
+              style={({ pressed }) => [
+                styles.card,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                pressed && styles.pressed,
+              ]}
+              onPress={() => router.push(`/loops/${decision.loopId}`)}
+            >
+              <Text style={[styles.loopTitle, { color: theme.colors.textMuted }]}>
+                {decision.loopTitle}
+              </Text>
+              <Text style={[styles.question, { color: theme.colors.textSecondary }]}>
+                {decision.question}
+              </Text>
+              <Text style={[styles.outcome, { color: theme.colors.text }]}>{decision.outcome}</Text>
               <View style={styles.footer}>
-                <Text style={styles.date}>{formatDate(decision.decidedAt)}</Text>
+                <Text style={[styles.date, { color: theme.colors.textMuted }]}>
+                  {formatDate(decision.decidedAt)}
+                </Text>
                 {decision.decidedBy ? (
-                  <Text style={styles.decidedBy}>by {decision.decidedBy}</Text>
+                  <Text style={[styles.decidedBy, { color: theme.colors.textMuted }]}>
+                    by {decision.decidedBy}
+                  </Text>
                 ) : null}
               </View>
-            </View>
+            </Pressable>
           ))
         ) : (
           <EmptyState
@@ -70,60 +102,42 @@ export default function DecisionsScreen() {
           />
         )}
       </View>
-    </ScrollView>
+    </ScreenScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl * 2,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
   section: {
     marginBottom: spacing.xl,
   },
   sectionTitle: {
     ...typography.headline,
-    color: colors.text,
     marginBottom: spacing.md,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
+  pressed: {
+    opacity: 0.85,
+  },
   loopTitle: {
     ...typography.callout,
-    color: colors.textMuted,
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
   },
   question: {
     ...typography.body,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   description: {
     ...typography.body,
-    color: colors.textSecondary,
     marginTop: spacing.xs,
   },
   outcome: {
     ...typography.headline,
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   footer: {
@@ -132,10 +146,8 @@ const styles = StyleSheet.create({
   },
   date: {
     ...typography.caption,
-    color: colors.textMuted,
   },
   decidedBy: {
     ...typography.caption,
-    color: colors.textMuted,
   },
 });

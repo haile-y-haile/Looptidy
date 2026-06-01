@@ -1,16 +1,51 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLoops } from '../context/LoopContext';
+import { useTheme } from '../context/ThemeContext';
 import { StatCard } from '../components/StatCard';
 import { SectionHeader } from '../components/SectionHeader';
 import { LoopCard } from '../components/LoopCard';
 import { EmptyState } from '../components/EmptyState';
-import { colors, radius, spacing, typography } from '../lib/theme';
-import { isDueSoon, isOpenLoop } from '../lib/utils';
+import { ScreenScroll } from '../components/ScreenScroll';
+import { ScreenCentered } from '../components/ScreenCentered';
+import { SegmentedControl } from '../components/SegmentedControl';
+import { FilterChip } from '../components/FilterChip';
+import { CollapsibleSection } from '../components/CollapsibleSection';
+import { ActionTile } from '../components/ActionTile';
+import { GlassCard } from '../components/GlassCard';
+import { getOnboardingComplete } from '../lib/preferences';
+import { hapticLight, hapticSuccess } from '../lib/haptics';
+import { radius, spacing, typography } from '../lib/theme';
+import type { LoopType, OpenLoop, Priority, RiskLevel } from '../types';
+import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue } from '../lib/utils';
 
 export default function TodayScreen() {
   const router = useRouter();
-  const { loops, loading } = useLoops();
+  const { theme } = useTheme();
+  const { loops, loading, refreshLoops } = useLoops();
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+
+  const [tab, setTab] = useState<'overview' | 'due' | 'waiting' | 'promised'>('overview');
+  const [chips, setChips] = useState<{
+    highPriority: boolean;
+    highRisk: boolean;
+    overdue: boolean;
+    blocked: boolean;
+    decisions: boolean;
+  }>({ highPriority: false, highRisk: false, overdue: false, blocked: false, decisions: false });
+
+  const [collapsed, setCollapsed] = useState({
+    upNext: false,
+    dueSoon: false,
+    highRisk: false,
+    waiting: true,
+    promised: true,
+  });
+
+  const headerEnter = useRef(new Animated.Value(0)).current;
 
   const openLoops = loops.filter(isOpenLoop);
   const waitingCount = openLoops.filter((l) => l.type === 'waiting_on_others').length;
@@ -21,119 +56,451 @@ export default function TodayScreen() {
   const dueSoon = openLoops.filter((l) => l.dueDate && isDueSoon(l.dueDate));
   const highRisk = openLoops.filter((l) => l.riskLevel === 'high' || l.riskLevel === 'medium');
 
+  const overdue = openLoops.filter((l) => l.dueDate && isOverdue(l.dueDate));
+
+  const focusLoop = useMemo(() => {
+    const score = (l: OpenLoop) => {
+      let s = 0;
+      if (l.dueDate && isOverdue(l.dueDate)) s += 120;
+      if (l.dueDate && isDueSoon(l.dueDate)) s += 80;
+      if (l.priority === 'urgent') s += 70;
+      if (l.priority === 'high') s += 40;
+      if (l.riskLevel === 'high') s += 60;
+      if (l.riskLevel === 'medium') s += 25;
+      if (l.status === 'blocked') s += 35;
+      if (l.type === 'waiting_on_others') s += 20;
+      return s;
+    };
+    return [...openLoops].sort((a, b) => score(b) - score(a))[0];
+  }, [openLoops]);
+
+  const upNext = useMemo(() => {
+    const score = (l: OpenLoop) => {
+      let s = 0;
+      if (l.dueDate && isOverdue(l.dueDate)) s += 120;
+      if (l.dueDate && isDueSoon(l.dueDate)) s += 80;
+      if (l.priority === 'urgent') s += 70;
+      if (l.priority === 'high') s += 40;
+      if (l.riskLevel === 'high') s += 60;
+      if (l.riskLevel === 'medium') s += 25;
+      if (l.status === 'blocked') s += 35;
+      return s;
+    };
+    return [...openLoops].sort((a, b) => score(b) - score(a)).slice(0, 5);
+  }, [openLoops]);
+
+  const filteredByTab = useMemo(() => {
+    switch (tab) {
+      case 'due':
+        return openLoops.filter((l) => !!l.dueDate);
+      case 'waiting':
+        return openLoops.filter((l) => l.type === 'waiting_on_others');
+      case 'promised':
+        return openLoops.filter((l) => l.type === 'promised_by_me');
+      case 'overview':
+      default:
+        return openLoops;
+    }
+  }, [openLoops, tab]);
+
+  const filtered = useMemo(() => {
+    return filteredByTab.filter((l) => {
+      if (chips.highPriority && !(l.priority === 'high' || l.priority === 'urgent')) return false;
+      if (chips.highRisk && !(l.riskLevel === 'high' || l.riskLevel === 'medium')) return false;
+      if (chips.overdue && !(l.dueDate && isOverdue(l.dueDate))) return false;
+      if (chips.blocked && !(l.status === 'blocked' || l.type === 'blocked')) return false;
+      if (chips.decisions && !(l.type === 'decision_needed')) return false;
+      return true;
+    });
+  }, [chips, filteredByTab]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await hapticLight();
+    try {
+      await refreshLoops();
+      setLastUpdatedAt(new Date());
+      await hapticSuccess();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const done = await getOnboardingComplete();
+      if (cancelled) return;
+      if (!done) router.replace('/onboarding');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  useEffect(() => {
+    Animated.timing(headerEnter, {
+      toValue: 1,
+      duration: 520,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [headerEnter]);
+
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <ScreenCentered>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </ScreenCentered>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenScroll
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={theme.colors.primary}
+        />
+      }
+    >
+      <Animated.View
+        style={{
+          opacity: headerEnter,
+          transform: [
+            { translateY: headerEnter.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) },
+          ],
+        }}
+      >
       <View style={styles.header}>
-        <Text style={styles.greeting}>LoopTidy</Text>
-        <Text style={styles.subtitle}>Follow Up Tracker</Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.greeting, { color: theme.colors.text }]}>LoopTidy</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+              Follow Up Tracker
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => router.push('/settings')}
+            style={({ pressed }) => [
+              styles.settingsButton,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={[styles.settingsIcon, { color: theme.colors.textSecondary }]}>⚙️</Text>
+          </Pressable>
+        </View>
+        <View style={styles.metaLine}>
+          <Text style={[styles.metaText, { color: theme.colors.textMuted }]}>
+            {lastUpdatedAt ? `Updated ${formatRelativeDate(lastUpdatedAt.toISOString())}` : `Open: ${openLoops.length} • Overdue: ${overdue.length}`}
+          </Text>
+        </View>
+      </View>
+      </Animated.View>
+
+      {/* Quick actions grid */}
+      <View style={styles.actionGrid}>
+        <ActionTile
+          title="New waiting-on"
+          subtitle="Dependency"
+          icon="⏳"
+          accent="purple"
+          onPress={() => {
+            void hapticLight();
+            router.push({ pathname: '/loops/new', params: { type: 'waiting_on_others' } });
+          }}
+        />
+        <ActionTile
+          title="New promise"
+          subtitle="Commitment"
+          icon="🤝"
+          accent="primary"
+          onPress={() => {
+            void hapticLight();
+            router.push({ pathname: '/loops/new', params: { type: 'promised_by_me' } });
+          }}
+        />
+      </View>
+      <View style={styles.actionGrid}>
+        <ActionTile
+          title="Log decision"
+          subtitle="Capture outcome"
+          icon="✅"
+          accent="warning"
+          onPress={() => {
+            void hapticLight();
+            router.push({ pathname: '/loops/new', params: { type: 'decision_needed' } });
+          }}
+        />
+        <ActionTile
+          title="Weekly review"
+          subtitle="Reset"
+          icon="📋"
+          accent="success"
+          onPress={() => {
+            void hapticLight();
+            router.push('/weekly-review');
+          }}
+        />
       </View>
 
-      <View style={styles.statsRow}>
-        <StatCard
-          label="Open Loops"
-          value={openLoops.length}
-          onPress={() => router.push('/loops')}
-        />
-        <StatCard
-          label="Waiting"
-          value={waitingCount}
-          color={colors.purple}
-          onPress={() => router.push('/waiting')}
-        />
-      </View>
-
-      <View style={styles.statsRow}>
-        <StatCard
-          label="Promised"
-          value={promisedCount}
-          color={colors.primary}
-          onPress={() => router.push('/promised')}
-        />
-        <StatCard
-          label="Decisions"
-          value={decisionCount}
-          color={colors.warning}
-          onPress={() => router.push('/decisions')}
-        />
-      </View>
+      <GlassCard style={styles.statsPanel} intensity={32} contentPadding={spacing.lg}>
+        <View style={styles.statsRowEmbedded}>
+          <StatCard
+            label="Open Loops"
+            value={openLoops.length}
+            embedded
+            onPress={() => router.push('/loops')}
+          />
+          <StatCard
+            label="Waiting"
+            value={waitingCount}
+            color={theme.colors.purple}
+            embedded
+            onPress={() => router.push('/waiting')}
+          />
+        </View>
+        <View style={[styles.statsRowEmbedded, styles.statsRowEmbeddedGap]}>
+          <StatCard
+            label="Promised"
+            value={promisedCount}
+            color={theme.colors.primary}
+            embedded
+            onPress={() => router.push('/promised')}
+          />
+          <StatCard
+            label="Decisions"
+            value={decisionCount}
+            color={theme.colors.warning}
+            embedded
+            onPress={() => router.push('/decisions')}
+          />
+        </View>
+      </GlassCard>
 
       <View style={styles.actions}>
         <Pressable
-          style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            { backgroundColor: theme.colors.primary },
+            pressed && styles.pressed,
+          ]}
           onPress={() => router.push('/loops/new')}
         >
           <Text style={styles.primaryButtonText}>+ New Loop</Text>
         </Pressable>
         <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+            pressed && styles.pressed,
+          ]}
           onPress={() => router.push('/weekly-review')}
         >
-          <Text style={styles.secondaryButtonText}>Weekly Review</Text>
+          <Text style={[styles.secondaryButtonText, { color: theme.colors.text }]}>
+            Weekly Review
+          </Text>
         </Pressable>
       </View>
 
-      <SectionHeader title="Due Soon" />
-      {dueSoon.length > 0 ? (
-        dueSoon.map((loop) => <LoopCard key={loop.id} loop={loop} />)
-      ) : (
-        <EmptyState
-          title="Nothing due soon"
-          message="You're clear for the next week."
-        />
-      )}
+      <SectionHeader
+        title="Due Soon"
+        action="See all"
+        onAction={() => router.push('/loops')}
+      />
+      {/* Focus */}
+      <GlassCard style={styles.focusCard} intensity={45} contentPadding={spacing.xxl}>
+        <Text style={[styles.focusLabel, { color: theme.colors.textMuted }]}>Today Focus</Text>
+        {focusLoop ? (
+          <>
+            <Text style={[styles.focusTitle, { color: theme.colors.text }]} numberOfLines={2}>
+              {focusLoop.title}
+            </Text>
+            <Text style={[styles.focusSub, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+              {focusLoop.dueDate ? `Due ${formatRelativeDate(focusLoop.dueDate)}` : `Type: ${focusLoop.type}`}
+              {focusLoop.waitingOn ? ` • Waiting on ${focusLoop.waitingOn.name}` : ''}
+            </Text>
+            <View style={styles.focusActions}>
+              <Pressable
+                onPress={() => {
+                  void hapticLight();
+                  router.push(`/loops/${focusLoop.id}`);
+                }}
+                style={({ pressed }) => [
+                  styles.focusButtonPrimary,
+                  { backgroundColor: theme.colors.primary },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.focusButtonPrimaryText}>Open</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  void hapticLight();
+                  router.push('/waiting');
+                }}
+                style={({ pressed }) => [
+                  styles.focusButtonSecondary,
+                  { backgroundColor: theme.colors.surface2, borderColor: theme.colors.border },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={[styles.focusButtonSecondaryText, { color: theme.colors.text }]}>
+                  Nudge
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <EmptyState compact title="No focus loop" message="You're clear right now." />
+        )}
+      </GlassCard>
 
-      <SectionHeader title="High Risk" />
-      {highRisk.length > 0 ? (
-        highRisk.map((loop) => <LoopCard key={loop.id} loop={loop} />)
-      ) : (
-        <EmptyState
-          title="No high-risk loops"
-          message="All open loops are at manageable risk levels."
+      {/* Segments + chips */}
+      <SegmentedControl
+        value={tab}
+        onChange={(next) => {
+          void hapticLight();
+          setTab(next);
+        }}
+        glass
+        segments={[
+          { key: 'overview', label: 'Overview' },
+          { key: 'due', label: 'Due' },
+          { key: 'waiting', label: 'Waiting' },
+          { key: 'promised', label: 'Promised' },
+        ]}
+      />
+
+      <View style={styles.chipsRow}>
+        <FilterChip
+          label="High priority"
+          selected={chips.highPriority}
+          onPress={() => setChips((c) => ({ ...c, highPriority: !c.highPriority }))}
         />
-      )}
-    </ScrollView>
+        <FilterChip
+          label="High risk"
+          tone="warning"
+          selected={chips.highRisk}
+          onPress={() => setChips((c) => ({ ...c, highRisk: !c.highRisk }))}
+        />
+        <FilterChip
+          label="Overdue"
+          tone="danger"
+          selected={chips.overdue}
+          onPress={() => setChips((c) => ({ ...c, overdue: !c.overdue }))}
+        />
+        <FilterChip
+          label="Blocked"
+          tone="danger"
+          selected={chips.blocked}
+          onPress={() => setChips((c) => ({ ...c, blocked: !c.blocked }))}
+        />
+        <FilterChip
+          label="Decisions"
+          tone="success"
+          selected={chips.decisions}
+          onPress={() => setChips((c) => ({ ...c, decisions: !c.decisions }))}
+        />
+      </View>
+
+      <CollapsibleSection
+        title="Up Next"
+        count={upNext.length}
+        collapsed={collapsed.upNext}
+        onToggle={() => setCollapsed((s) => ({ ...s, upNext: !s.upNext }))}
+      >
+        {upNext.length > 0 ? (
+          upNext.map((l) => <LoopCard key={l.id} loop={l} />)
+        ) : (
+          <EmptyState compact title="Nothing up next" message="You're in good shape." />
+        )}
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Due Soon"
+        count={dueSoon.length}
+        collapsed={collapsed.dueSoon}
+        onToggle={() => setCollapsed((s) => ({ ...s, dueSoon: !s.dueSoon }))}
+      >
+        {dueSoon.length > 0 ? (
+          dueSoon.map((loop) => <LoopCard key={loop.id} loop={loop} />)
+        ) : (
+          <EmptyState compact title="Nothing due soon" message="You're clear for the next week." />
+        )}
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="High Risk"
+        count={highRisk.length}
+        collapsed={collapsed.highRisk}
+        onToggle={() => setCollapsed((s) => ({ ...s, highRisk: !s.highRisk }))}
+      >
+        {highRisk.length > 0 ? (
+          highRisk.map((loop) => <LoopCard key={loop.id} loop={loop} />)
+        ) : (
+          <EmptyState
+            compact
+            title="No high-risk loops"
+            message="All open loops are at manageable risk levels."
+          />
+        )}
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Results"
+        count={filtered.length}
+        collapsed={false}
+        onToggle={() => {}}
+      >
+        {filtered.length > 0 ? (
+          filtered.slice(0, 8).map((loop) => <LoopCard key={loop.id} loop={loop} />)
+        ) : (
+          <EmptyState compact title="No matches" message="Try clearing a filter chip." />
+        )}
+      </CollapsibleSection>
+    </ScreenScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl * 2,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
   header: {
     marginBottom: spacing.xl,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  settingsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsIcon: {
+    fontSize: 16,
+  },
   greeting: {
     ...typography.largeTitle,
-    color: colors.text,
   },
   subtitle: {
     ...typography.body,
-    color: colors.textSecondary,
     marginTop: spacing.xs,
   },
-  statsRow: {
+  statsPanel: {
+    marginBottom: spacing.md,
+  },
+  statsRowEmbedded: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginBottom: spacing.md,
+  },
+  statsRowEmbeddedGap: {
+    marginTop: spacing.sm,
   },
   actions: {
     flexDirection: 'row',
@@ -143,31 +510,90 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1,
-    backgroundColor: colors.primary,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
   primaryButtonText: {
     ...typography.callout,
-    color: colors.surface,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   secondaryButtonText: {
     ...typography.callout,
-    color: colors.text,
     fontWeight: '600',
   },
   pressed: {
     opacity: 0.8,
+  },
+  metaLine: {
+    marginTop: spacing.sm,
+  },
+  metaText: {
+    ...typography.caption,
+    fontWeight: '700',
+  },
+  actionGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  focusCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.xxl,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  focusLabel: {
+    ...typography.label,
+  },
+  focusTitle: {
+    ...typography.title,
+    marginTop: spacing.sm,
+  },
+  focusSub: {
+    ...typography.body,
+    marginTop: spacing.xs,
+  },
+  focusActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  focusButtonPrimary: {
+    flex: 1,
+    borderRadius: radius.full,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  focusButtonPrimaryText: {
+    ...typography.callout,
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  focusButtonSecondary: {
+    flex: 1,
+    borderRadius: radius.full,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  focusButtonSecondaryText: {
+    ...typography.callout,
+    fontWeight: '800',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
 });

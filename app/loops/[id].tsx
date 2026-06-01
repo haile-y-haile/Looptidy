@@ -3,15 +3,19 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
   Alert,
   TextInput,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useLoops } from '../../context/LoopContext';
+import { useTheme } from '../../context/ThemeContext';
 import { Badge } from '../../components/Badge';
+import { ScreenScroll } from '../../components/ScreenScroll';
+import { ScreenCentered } from '../../components/ScreenCentered';
+import { hapticLight } from '../../lib/haptics';
 import { colors, radius, spacing, typography } from '../../lib/theme';
 import {
   formatDate,
@@ -29,6 +33,7 @@ export default function LoopDetailScreen() {
   const { id: idParam } = useLocalSearchParams<{ id: string | string[] }>();
   const loopId = Array.isArray(idParam) ? idParam[0] : idParam;
   const router = useRouter();
+  const { theme } = useTheme();
   const { loops, loading, closeLoop, addDecision, addTimelineEvent } = useLoops();
   const [note, setNote] = useState('');
   const [decisionOutcome, setDecisionOutcome] = useState('');
@@ -38,20 +43,20 @@ export default function LoopDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <ScreenCentered>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </ScreenCentered>
     );
   }
 
   if (!loop) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.notFound}>Loop not found</Text>
+      <ScreenCentered>
+        <Text style={[styles.notFound, { color: theme.colors.textSecondary }]}>Loop not found</Text>
         <Pressable onPress={() => router.back()}>
-          <Text style={styles.link}>Go back</Text>
+          <Text style={[styles.link, { color: theme.colors.primary }]}>Go back</Text>
         </Pressable>
-      </View>
+      </ScreenCentered>
     );
   }
 
@@ -93,7 +98,9 @@ export default function LoopDetailScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <>
+      <Stack.Screen options={{ title: loop.title }} />
+      <ScreenScroll>
       <View style={styles.badges}>
         <Badge
           label={loopTypeLabels[loop.type]}
@@ -115,10 +122,12 @@ export default function LoopDetailScreen() {
         )}
       </View>
 
-      <Text style={styles.title}>{loop.title}</Text>
-      {loop.description ? <Text style={styles.description}>{loop.description}</Text> : null}
+      <Text style={[styles.title, { color: theme.colors.text }]}>{loop.title}</Text>
+      {loop.description ? (
+        <Text style={[styles.description, { color: theme.colors.textSecondary }]}>{loop.description}</Text>
+      ) : null}
 
-      <View style={styles.metaCard}>
+      <View style={[styles.metaCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
         <MetaRow label="Category" value={categoryLabels[loop.category]} />
         {loop.waitingOn ? (
           <MetaRow label="Waiting on" value={loop.waitingOn.name} />
@@ -128,7 +137,70 @@ export default function LoopDetailScreen() {
         ) : null}
         {loop.dueDate ? <MetaRow label="Due" value={formatDate(loop.dueDate)} /> : null}
         <MetaRow label="Created" value={formatDate(loop.createdAt)} />
-        <MetaRow label="Updated" value={formatDate(loop.updatedAt)} />
+        <MetaRow label="Updated" value={formatDate(loop.updatedAt)} isLast />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sharing</Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.shareCard,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+            pressed && styles.pressed,
+          ]}
+          onPress={() => {
+            void hapticLight();
+            Alert.alert(
+              'Coming soon',
+              'Sharing requires LoopTidy accounts. This is a UI placeholder only (no real auth yet).'
+            );
+          }}
+        >
+          <Text style={[styles.shareTitle, { color: theme.colors.text }]}>Share this loop</Text>
+          <Text style={[styles.shareSub, { color: theme.colors.textSecondary }]}>
+            Share with LoopTidy accounts only (not yet available).
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Attachments</Text>
+        {loop.attachments.length > 0 ? (
+          loop.attachments.map((a) => (
+            <Pressable
+              key={a.id}
+              style={({ pressed }) => [
+                styles.attachmentRow,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                pressed && styles.pressed,
+              ]}
+              onPress={() => {
+                void hapticLight();
+                if (a.type === 'link' && a.url) {
+                  void Linking.openURL(a.url);
+                  return;
+                }
+                Alert.alert('Coming soon', 'Only links are interactive for now.');
+              }}
+            >
+              <Text style={[styles.attachmentIcon, { color: theme.colors.textMuted }]}>
+                {a.type === 'link' ? '🔗' : a.type === 'document' ? '📄' : a.type === 'photo' ? '🖼️' : a.type === 'audio' ? '🎙️' : '🎬'}
+              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.attachmentTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                  {a.title}
+                </Text>
+                {a.url ? (
+                  <Text style={[styles.attachmentMeta, { color: theme.colors.textMuted }]} numberOfLines={1}>
+                    {a.url}
+                  </Text>
+                ) : null}
+              </View>
+            </Pressable>
+          ))
+        ) : (
+          <Text style={[styles.muted, { color: theme.colors.textMuted }]}>No attachments.</Text>
+        )}
       </View>
 
       {loop.decisions.length > 0 && (
@@ -163,13 +235,16 @@ export default function LoopDetailScreen() {
       {!isClosed && (
         <>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Add Note</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Add Note</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+              ]}
               value={note}
               onChangeText={setNote}
               placeholder="Write a note..."
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={theme.colors.textMuted}
               multiline
             />
             <Pressable
@@ -191,13 +266,16 @@ export default function LoopDetailScreen() {
 
           {showDecisionInput && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Decision Outcome</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Decision Outcome</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+                ]}
                 value={decisionOutcome}
                 onChangeText={setDecisionOutcome}
                 placeholder="What was decided?"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={theme.colors.textMuted}
                 multiline
               />
               <Pressable
@@ -217,13 +295,22 @@ export default function LoopDetailScreen() {
           </Pressable>
         </>
       )}
-    </ScrollView>
+      </ScreenScroll>
+    </>
   );
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+function MetaRow({
+  label,
+  value,
+  isLast = false,
+}: {
+  label: string;
+  value: string;
+  isLast?: boolean;
+}) {
   return (
-    <View style={styles.metaRow}>
+    <View style={[styles.metaRow, isLast && styles.metaRowLast]}>
       <Text style={styles.metaLabel}>{label}</Text>
       <Text style={styles.metaValue}>{value}</Text>
     </View>
@@ -231,28 +318,12 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl * 2,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
   notFound: {
     ...typography.headline,
-    color: colors.textSecondary,
     marginBottom: spacing.md,
   },
   link: {
     ...typography.callout,
-    color: colors.primary,
   },
   badges: {
     flexDirection: 'row',
@@ -262,19 +333,15 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.title,
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   description: {
     ...typography.body,
-    color: colors.textSecondary,
     marginBottom: spacing.lg,
   },
   metaCard: {
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.lg,
   },
@@ -283,15 +350,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: '#EEF2F6',
+  },
+  metaRowLast: {
+    borderBottomWidth: 0,
   },
   metaLabel: {
     ...typography.callout,
-    color: colors.textSecondary,
+    color: '#5B6473',
   },
   metaValue: {
     ...typography.callout,
-    color: colors.text,
     fontWeight: '500',
   },
   section: {
@@ -299,8 +368,47 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.headline,
-    color: colors.text,
     marginBottom: spacing.md,
+  },
+  muted: {
+    ...typography.caption,
+    fontWeight: '700',
+    marginTop: spacing.xs,
+  },
+  shareCard: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.lg,
+  },
+  shareTitle: {
+    ...typography.callout,
+    fontWeight: '900',
+  },
+  shareSub: {
+    ...typography.body,
+    marginTop: spacing.xs,
+  },
+  attachmentRow: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  attachmentIcon: {
+    width: 22,
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  attachmentTitle: {
+    ...typography.callout,
+    fontWeight: '800',
+  },
+  attachmentMeta: {
+    ...typography.caption,
+    marginTop: 2,
   },
   decisionCard: {
     backgroundColor: colors.surface,

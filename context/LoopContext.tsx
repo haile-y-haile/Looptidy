@@ -30,11 +30,22 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
   const [loops, setLoops] = useState<OpenLoop[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const persistLoops = useCallback(async (getNext: (prev: OpenLoop[]) => OpenLoop[]) => {
+    let next: OpenLoop[] = [];
+    setLoops((prev) => {
+      next = getNext(prev);
+      return next;
+    });
+    await saveLoops(next);
+  }, []);
+
   const refreshLoops = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getLoops();
       setLoops(data);
+    } catch (error) {
+      console.error('Failed to refresh loops:', error);
     } finally {
       setLoading(false);
     }
@@ -49,6 +60,7 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
       const now = new Date().toISOString();
       const newLoop: OpenLoop = {
         ...input,
+        attachments: input.attachments ?? [],
         id: generateId(),
         createdAt: now,
         updatedAt: now,
@@ -62,86 +74,85 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
         ],
       };
 
-      setLoops((prev) => {
-        const updated = [newLoop, ...prev];
-        void saveLoops(updated);
-        return updated;
-      });
+      await persistLoops((prev) => [newLoop, ...prev]);
     },
-    []
+    [persistLoops]
   );
 
-  const updateLoop = useCallback(async (id: string, updates: Partial<OpenLoop>) => {
-    const now = new Date().toISOString();
-    setLoops((prev) => {
-      const updated = prev.map((loop) =>
-        loop.id === id ? { ...loop, ...updates, updatedAt: now } : loop
+  const updateLoop = useCallback(
+    async (id: string, updates: Partial<OpenLoop>) => {
+      const now = new Date().toISOString();
+      await persistLoops((prev) =>
+        prev.map((loop) =>
+          loop.id === id ? { ...loop, ...updates, updatedAt: now } : loop
+        )
       );
-      void saveLoops(updated);
-      return updated;
-    });
-  }, []);
+    },
+    [persistLoops]
+  );
 
-  const closeLoop = useCallback(async (id: string) => {
-    const now = new Date().toISOString();
-    setLoops((prev) => {
-      const updated = prev.map((loop) =>
-        loop.id === id
-          ? {
-              ...loop,
-              status: 'closed' as const,
-              closedAt: now,
-              updatedAt: now,
-              timeline: [
-                ...loop.timeline,
-                {
-                  id: generateId(),
-                  type: 'closed' as const,
-                  title: 'Loop closed',
-                  timestamp: now,
-                },
-              ],
-            }
-          : loop
+  const closeLoop = useCallback(
+    async (id: string) => {
+      const now = new Date().toISOString();
+      await persistLoops((prev) =>
+        prev.map((loop) =>
+          loop.id === id
+            ? {
+                ...loop,
+                status: 'closed' as const,
+                closedAt: now,
+                updatedAt: now,
+                timeline: [
+                  ...loop.timeline,
+                  {
+                    id: generateId(),
+                    type: 'closed' as const,
+                    title: 'Loop closed',
+                    timestamp: now,
+                  },
+                ],
+              }
+            : loop
+        )
       );
-      void saveLoops(updated);
-      return updated;
-    });
-  }, []);
+    },
+    [persistLoops]
+  );
 
-  const addDecision = useCallback(async (loopId: string, decision: Omit<Decision, 'id'>) => {
-    const now = new Date().toISOString();
-    setLoops((prev) => {
-      const updated = prev.map((loop) => {
-        if (loop.id !== loopId) return loop;
-        const newDecision: Decision = { ...decision, id: generateId() };
-        return {
-          ...loop,
-          status: 'decided' as const,
-          updatedAt: now,
-          decisions: [...loop.decisions, newDecision],
-          timeline: [
-            ...loop.timeline,
-            {
-              id: generateId(),
-              type: 'decision' as const,
-              title: 'Decision recorded',
-              description: decision.outcome,
-              timestamp: now,
-            },
-          ],
-        };
-      });
-      void saveLoops(updated);
-      return updated;
-    });
-  }, []);
+  const addDecision = useCallback(
+    async (loopId: string, decision: Omit<Decision, 'id'>) => {
+      const now = new Date().toISOString();
+      await persistLoops((prev) =>
+        prev.map((loop) => {
+          if (loop.id !== loopId) return loop;
+          const newDecision: Decision = { ...decision, id: generateId() };
+          return {
+            ...loop,
+            status: 'decided' as const,
+            updatedAt: now,
+            decisions: [...loop.decisions, newDecision],
+            timeline: [
+              ...loop.timeline,
+              {
+                id: generateId(),
+                type: 'decision' as const,
+                title: 'Decision recorded',
+                description: decision.outcome,
+                timestamp: now,
+              },
+            ],
+          };
+        })
+      );
+    },
+    [persistLoops]
+  );
 
   const addTimelineEvent = useCallback(
     async (loopId: string, event: Omit<TimelineEvent, 'id' | 'timestamp'>) => {
       const now = new Date().toISOString();
-      setLoops((prev) => {
-        const updated = prev.map((loop) =>
+      await persistLoops((prev) =>
+        prev.map((loop) =>
           loop.id === loopId
             ? {
                 ...loop,
@@ -152,12 +163,10 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
                 ],
               }
             : loop
-        );
-        void saveLoops(updated);
-        return updated;
-      });
+        )
+      );
     },
-    []
+    [persistLoops]
   );
 
   const value = useMemo(
