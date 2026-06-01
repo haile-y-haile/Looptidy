@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hailehaile.looptidy",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "infoPlist": {
         "CFBundleDisplayName": "LoopTidy",
         "ITSAppUsesNonExemptEncryption": false
@@ -38,13 +38,6 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-notifications",
-        {
-          "enableBackgroundRemoteNotifications": false
-        }
-      ],
-      "./plugins/withRemovePushEntitlement",
       "expo-font",
       [
         "expo-splash-screen",
@@ -58,7 +51,8 @@
             "imageWidth": 220
           }
         }
-      ]
+      ],
+      "./plugins/withRemovePushEntitlement"
     ],
     "extra": {
       "router": {},
