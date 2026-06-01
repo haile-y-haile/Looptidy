@@ -1,67 +1,63 @@
 # Privacy Policy — LoopTidy
 
 **Last updated:** June 2026  
-**Applies to:** LoopTidy iOS (TestFlight and future App Store releases)
+**Applies to:** LoopTidy for iOS (TestFlight and future releases)
 
-LoopTidy is built as a **local-first** personal app. This policy describes what data the app handles today and what it does not do.
+## Overview
 
-## Summary
+The current version of LoopTidy is **local-first**. Loop data you create is stored on **your device**, not on LoopTidy-operated servers.
 
-- Your loops are stored **on your device** (AsyncStorage).
-- LoopTidy does **not** run its own servers or sync your data to a backend.
-- There is **no** in-app analytics, advertising, or third-party tracking SDKs.
-- There is **no** real account system; sign-in buttons in onboarding are placeholders only.
-- There are **no** push notifications in the current version.
+LoopTidy does **not**:
 
-## Data stored on your device
-
-When you use LoopTidy, the app may store locally:
-
-- Loop titles, descriptions, types, status, priority, and risk level
-- Names and optional contact details you enter for “waiting on” or “promised to”
-- Due dates, notes, timeline events, and decision outcomes
-- App preferences (for example, appearance mode)
-- Whether you completed onboarding
-
-This data remains on your phone unless you delete the app or clear app storage.
-
-## Data we do not collect
-
-LoopTidy (as shipped today) does **not**:
-
-- Require an account or collect email/password for app login
-- Upload your loop content to LoopTidy-operated servers
-- Sell or share your personal data with advertisers
-- Use analytics services to profile your behavior inside the app
+- Collect, sell, track, or share your personal data for advertising or profiling
+- Use real authentication or account servers
+- Run backend servers that store your loop content
+- Use in-app analytics
+- Show ads
 - Send push notifications
+- Embed third-party tracking SDKs for behavioral analytics
 
-## Third-party services
+## What is stored on your device
 
-### Apple TestFlight and App Store
+LoopTidy may store locally on your phone or tablet:
 
-If you install via TestFlight or the App Store, **Apple** processes installation, crash reports, and usage data according to [Apple’s privacy policy](https://www.apple.com/legal/privacy/). That is separate from LoopTidy’s local storage.
+- Open loop titles, descriptions, types, status, priority, and risk level
+- Follow-up, waiting, promised, blocked, and decision-related fields
+- Due dates, notes, timeline events, and decision outcomes
+- Names or labels you enter for people tied to a loop
+- Link URLs you attach to a loop
+- Appearance preferences and onboarding state
 
-### Expo / EAS (developers only)
+Deleting the app or clearing its storage removes this data from your device.
 
-Source code may be built with [Expo Application Services (EAS)](https://expo.dev/eas) for TestFlight. Build pipelines do not receive your on-device loop content. Only project maintainers interact with EAS, not end users’ loop data.
+## What we do not do today
+
+- Sync your loops to a cloud account operated by LoopTidy
+- Require login credentials that are validated on a server (sign-in UI is mock only)
+- Share your loop content with other users through LoopTidy services
+
+## Third parties
+
+### Apple (TestFlight / App Store)
+
+Apple processes app installation, updates, and may collect crash diagnostics under [Apple’s privacy policy](https://www.apple.com/legal/privacy/). That is separate from how LoopTidy stores data on your device.
+
+### Expo Application Services (maintainers only)
+
+Production iOS builds may be produced with [EAS Build](https://expo.dev/eas). That process does not upload your on-device loop data. It only builds the app from source.
 
 ### Links you open
 
-If you add a link attachment and open it, your device’s browser handles that URL under its own terms.
+If you open a link saved on a loop, your browser or system handles that request under its own policies.
 
 ## Children
 
-LoopTidy is not directed at children under 13. We do not knowingly collect personal information from children.
+LoopTidy is not directed at children under 13.
 
-## Your choices
+## Changes
 
-- **Delete data:** Remove individual loops in the app, or delete the app to remove all local data.
-- **Export:** Full export is not built into the app yet; see [ROADMAP.md](ROADMAP.md).
-
-## Changes to this policy
-
-We may update this policy as features change (for example, if cloud sync or accounts are added). Material changes will be reflected in this file and, when appropriate, in the app or TestFlight notes.
+If we add cloud sync, accounts, analytics, or notifications in a future version, this policy will be updated before those features ship in a meaningful way.
 
 ## Contact
 
-Questions about privacy: open a [GitHub issue](https://github.com/haile-y-haile/Looptidy/issues/new?title=Privacy%20question) with the label or subject “Privacy”, or see [SUPPORT.md](SUPPORT.md).
+Privacy questions: [GitHub — Privacy](https://github.com/haile-y-haile/Looptidy/issues/new?title=Privacy%20question) or see [SUPPORT.md](SUPPORT.md).

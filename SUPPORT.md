@@ -1,46 +1,44 @@
 # Support — LoopTidy
 
-Thank you for trying LoopTidy. This page explains how to get help, report problems, and request TestFlight access.
+LoopTidy is a local-first open-loop tracker for follow-ups, blockers, commitments, and decisions. This page explains how to get help and join the TestFlight beta.
 
-## TestFlight access
+## Support contact
 
-LoopTidy is currently distributed through **Apple TestFlight** (beta).
+**GitHub Issues (preferred):** https://github.com/haile-y-haile/Looptidy/issues
 
-1. Install [TestFlight](https://apps.apple.com/app/testflight/id899247664) on your iPhone or iPad.
-2. [Request a beta invite on GitHub](https://github.com/haile-y-haile/Looptidy/issues/new?title=TestFlight%20beta%20access&body=Apple%20ID%20email%20for%20invite%3A%0A%0A) and include the **Apple ID email** you use on your device.
-3. Accept the invite in TestFlight when you receive it.
+| Need | Link |
+|------|------|
+| TestFlight invite | [Request beta access](https://github.com/haile-y-haile/Looptidy/issues/new?title=TestFlight%20beta%20access&body=Apple%20ID%20email%20for%20invite%3A%0A%0A) |
+| Bug or problem | [Report an issue](https://github.com/haile-y-haile/Looptidy/issues/new?title=Bug%3A%20) |
+| General help | [Support request](https://github.com/haile-y-haile/Looptidy/issues/new?title=LoopTidy%20support) |
 
-## Report a bug or ask a question
-
-Use GitHub Issues (preferred):
-
-- **Bug report:** [New issue — describe what happened](https://github.com/haile-y-haile/Looptidy/issues/new?title=Bug%3A%20&body=**What%20happened%3A**%0A%0A**Steps%20to%20reproduce%3A**%0A1.%20%0A%0A**Expected%3A**%0A%0A**Device%20%2F%20iOS%20version%3A**%0A%0A**LoopTidy%20build%20(if%20known)%3A**%0A)
-- **General support:** [New issue — LoopTidy support](https://github.com/haile-y-haile/Looptidy/issues/new?title=LoopTidy%20support&body=)
+## What to include in your message
 
 Please include:
 
-- iOS version and device model
-- LoopTidy version (Settings → About, or TestFlight build number)
-- Steps to reproduce, for bugs
-- Screenshots if helpful (no need to include sensitive loop content)
+- **Device model** (for example, iPhone 15)
+- **iOS version** (for example, iOS 18.4)
+- **App version** (LoopTidy 1.0.0 and TestFlight build number if shown)
+- **Description of the issue** — what you expected vs what happened
+- **Screenshot if available** — redact or crop sensitive loop content if needed
 
-## Known limitations (current release)
+For TestFlight invites, also send the **Apple ID email** used on your device.
 
-- **Local-only:** Data does not sync across devices or to the cloud.
-- **No push reminders:** Due dates are visible in the app only.
-- **Mock sign-in:** Onboarding may show Apple/Google/email options; only **Get started** is active.
-- **Coming soon items:** Some Settings rows are placeholders and show a “coming soon” message.
+## TestFlight
 
-See [ROADMAP.md](ROADMAP.md) for what may ship next.
+1. Install [TestFlight](https://apps.apple.com/app/testflight/id899247664).
+2. Request an invite using the link above.
+3. Accept the invitation and install LoopTidy.
 
-## Feature requests
+## Current limitations
 
-We welcome ideas that fit LoopTidy’s purpose (personal follow-ups and open loops, not a full task manager). Open a GitHub issue with the title prefix `Feature:` and describe the problem you are trying to solve.
+- Data stays on one device (no cloud sync yet)
+- No push notifications for due or overdue loops
+- Mock sign-in on onboarding only — use **Get started**
+- Some Settings items are placeholders
 
-## Security issues
+See [ROADMAP.md](ROADMAP.md) for planned work.
 
-Do **not** post security vulnerabilities in public issues. See [SECURITY.md](SECURITY.md).
+## Security
 
-## Response time
-
-LoopTidy is an independent project. We read issues as time allows and prioritize crashes and data-loss reports for TestFlight builds.
+Do not post passwords, tokens, or exploit details in public issues. See [SECURITY.md](SECURITY.md).

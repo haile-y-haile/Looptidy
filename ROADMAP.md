@@ -1,47 +1,49 @@
 # Roadmap — LoopTidy
 
-LoopTidy stays focused on **personal open loops** (follow-ups, promises, waiting, decisions)—not becoming a generic task manager or team workspace.
+LoopTidy manages **open loops**: follow-ups, **blockers**, **commitments** (promised), **due** dates, **decisions**, and **closure** when something is done. It is not a general task list or workspace for unrelated work.
 
-Items below are **planned direction**, not commitments or dates. Order may change based on TestFlight feedback.
+Plans may change based on TestFlight feedback.
 
-## Now (TestFlight 1.0)
+## MVP complete (1.0.0 TestFlight)
 
-- [x] Local-first loops with Today, Loops, Decisions, Settings
-- [x] Search on Loops list
-- [x] Weekly review checklist and stepper
-- [x] TestFlight distribution (iOS)
-- [ ] Public TestFlight join link documented in app and marketing
-- [ ] Stable `ascAppId` in EAS submit config for repeatable uploads
+- Today dashboard
+- Open loop creation
+- Open loop list
+- Loop detail with notes, timeline, and closure
+- Waiting on others
+- Promised by me
+- Decision log
+- Weekly review placeholder (stats + checklist)
+- Local persistence (AsyncStorage)
+- Dark mode
+- Settings
+- Local link attachments
+- iOS TestFlight build via EAS
 
-## Next (1.x — still local-first)
+Also shipped in 1.0.0: tab navigation (Today, Loops, Decisions, Settings), loop search and filters, swipe to close, brand splash, and link-based attachments.
 
-- **Export / backup** — JSON export to Files or share sheet
-- **Edit loop** — change title, person, due date after creation without workarounds
-- **Snooze** — push a due date forward from list or detail (local only)
-- **Stale loop hints** — surface loops untouched for 14+ days on Today
-- **Person directory** — reuse contacts across loops
-- **Guided weekly review** — deeper flow than the current checklist
-- **Reduce “coming soon”** — implement or hide Settings placeholders
+## Next
 
-## Later (requires new infrastructure)
+- **Bottom tab navigation** — refinements to structure and wayfinding across Today, Loops, Decisions, and Settings
+- **Improved weekly review flow** — guided closure and escalation prompts beyond the placeholder checklist
+- **Search and filters** — deeper filtering (person, category, date range, stale loops)
+- **Local reminders** — on-device notifications for due and overdue loops (no server required)
+- **Export and backup** — JSON export to Files or share sheet for backup and portability
 
-These need backend, accounts, or platform work and are **out of scope** until explicitly prioritized:
+## Future
 
-- Cloud sync and multi-device backup
-- Real authentication (Apple, Google, email)
-- Push notifications for due dates and nudges
-- Loop sharing or collaboration
-- Android release
-- App Store public release (beyond TestFlight)
+- **Real account system**
+- **Apple / Google / email sign-in**
+- **Cloud sync** across devices
+- **Shared loops** with controlled visibility
+- **Collaboration workflows** — assign, comment, or hand off loops with others
 
-## Explicitly not planned (for now)
+## Out of scope for now
 
-- Advertising or ad-supported model
-- In-app analytics or behavioral tracking
-- Gamification, streaks, or social feeds
-- Full project management (boards, sprints, epics)
-- AI auto-prioritization as a default experience
+- Analytics, ads, or behavioral tracking
+- In-app payments or subscriptions
+- Replacing dedicated project-management or issue-tracking tools
 
 ## Feedback
 
-TestFlight testers: please file [GitHub issues](https://github.com/haile-y-haile/Looptidy/issues) with `Feature:` or `Bug:` in the title. That input shapes what moves up this list.
+[Open a GitHub issue](https://github.com/haile-y-haile/Looptidy/issues) with `Bug:` or `Feature:` in the title to influence priority.

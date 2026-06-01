@@ -1,16 +1,15 @@
-# Build & release — LoopTidy
+# Build — LoopTidy
 
-Instructions for running LoopTidy locally and producing iOS builds for TestFlight.
+How to run LoopTidy locally, preview with Expo Go, verify before release, and ship iOS builds to TestFlight.
 
 ## Requirements
 
-- **Node.js** 20+ (LTS recommended)
-- **npm** 10+
-- **macOS** (for iOS Simulator and App Store submission; Windows can run Metro and `tsc` but not local iOS builds)
-- [Expo account](https://expo.dev) and [EAS CLI](https://docs.expo.dev/build/setup/) for TestFlight builds
-- Apple Developer Program membership for TestFlight
+- Node.js 20+ and npm
+- Expo account for EAS builds
+- Apple Developer Program for TestFlight
+- macOS recommended for iOS Simulator and submission (Windows can run Metro and verification commands)
 
-## Local development
+## Local start
 
 ```bash
 git clone https://github.com/haile-y-haile/Looptidy.git
@@ -19,98 +18,84 @@ npm install
 npx expo start
 ```
 
-| Command | Purpose |
-|---------|---------|
-| `npx expo start` | Metro bundler; scan QR with Expo Go or press `i` for simulator |
-| `npx expo start --ios` | Open iOS simulator |
-| `npx tsc --noEmit` | Typecheck |
-| `npx expo-doctor` | Validate Expo project health |
-| `npx expo export --platform ios` | Smoke-test production bundle |
+## Expo Go preview
 
-### Notes
-
-- **Expo Go** works for much of the UI; native modules (Reanimated, Lottie) behave best on a **development build** or TestFlight build.
-- Data is stored in AsyncStorage on the device you use; reinstalling clears data unless you back up the app container.
-
-## Project configuration
-
-| File | Role |
-|------|------|
-| `app.json` | App name, version, iOS `buildNumber`, bundle ID `com.hailehaile.looptidy` |
-| `eas.json` | EAS build profiles (`development`, `preview`, `production`) and submit settings |
-| `.npmrc` | `legacy-peer-deps=true` for consistent `npm ci` on EAS |
-
-**Version source:** `appVersionSource: local` in `eas.json` — bump `expo.version` and `ios.buildNumber` in `app.json` before release builds. Production profile has `autoIncrement: true`, which may bump the build number on EAS during upload.
-
-## EAS iOS production build (TestFlight)
+With Metro running:
 
 ```bash
-# From project root
+npx expo start
+```
+
+Scan the QR code with **Expo Go** on a physical iPhone, or press **`i`** for the iOS Simulator.
+
+Expo Go is fine for UI work. Features that rely on the full native binary (for example Lottie splash, some Reanimated behavior) are best tested on a **TestFlight** or EAS development build.
+
+## Pre-build verification
+
+Run before tagging or uploading a TestFlight build:
+
+```bash
+npx expo-doctor
+npx tsc --noEmit
+npx expo export --platform ios
+```
+
+All three should complete without errors.
+
+## iOS production build
+
+```bash
 npm run build:ios
-# equivalent:
+```
+
+Equivalent:
+
+```bash
 npx eas-cli build --platform ios --profile production
 ```
 
-Monitor the build at [expo.dev](https://expo.dev/accounts/astrohaile/projects/looptidy/builds).
+Builds appear at: https://expo.dev/accounts/astrohaile/projects/looptidy/builds
 
-### Submit to App Store Connect / TestFlight
+Version and iOS build number are read from `app.json`. The production profile may auto-increment the build number on EAS.
 
-1. Add your App Store Connect **Apple ID** (numeric app id) to `eas.json`:
+## Submit to TestFlight
 
-```json
-"submit": {
-  "production": {
-    "ios": {
-      "appleId": "your-apple-id@email.com",
-      "appleTeamId": "YOUR_TEAM_ID",
-      "ascAppId": "1234567890"
-    }
-  }
-}
-```
-
-Find `ascAppId` in App Store Connect → **LoopTidy** → **App Information** → **Apple ID**.
-
-2. Submit the latest or a specific build:
+Set `ascAppId` in `eas.json` (App Store Connect → LoopTidy → App Information → Apple ID) for non-interactive submit, then:
 
 ```bash
 npm run submit:ios
-# or
+```
+
+Equivalent:
+
+```bash
 npx eas-cli submit --platform ios --latest --wait
+```
+
+Or submit a specific build:
+
+```bash
 npx eas-cli submit --platform ios --id BUILD_UUID --wait
 ```
 
-3. In [App Store Connect](https://appstoreconnect.apple.com) → **TestFlight**, wait for processing, then enable testers.
+After upload, wait for Apple processing in [App Store Connect](https://appstoreconnect.apple.com) → **TestFlight**.
 
-**Non-interactive CI:** `ascAppId` is required when using `--non-interactive`.
+## Configuration (reference)
 
-### Preview / internal builds
+| File | Purpose |
+|------|---------|
+| `app.json` | App version, `ios.buildNumber`, bundle ID |
+| `eas.json` | Build profiles and submit settings |
+| `.npmrc` | `legacy-peer-deps=true` for EAS `npm ci` |
 
-```bash
-npm run build:ios:preview
-```
-
-Uses the `preview` profile in `eas.json` (internal distribution).
-
-## Marketing static site (optional)
-
-```bash
-npm run marketing:preview
-```
-
-Serves the repo root; open `/marketing/index.html` for the static landing page.
+Do not change bundle ID or EAS project ID without updating Apple and Expo project settings.
 
 ## Troubleshooting
 
-| Issue | What to try |
-|-------|-------------|
-| `npm ci` fails on EAS | Ensure `package-lock.json` is committed; `.npmrc` has `legacy-peer-deps=true` |
-| Submit fails: `ascAppId` | Set `ascAppId` in `eas.json` or run submit interactively once |
-| Reanimated errors | Clear Metro cache: `npx expo start -c`; use a dev client or TestFlight build, not stale Expo Go |
-| Build number mismatch | Sync `app.json` `ios.buildNumber` with the build shown in EAS |
+| Issue | Suggestion |
+|-------|------------|
+| `npm ci` fails on EAS | Commit `package-lock.json`; keep `.npmrc` |
+| Submit requires `ascAppId` | Add to `eas.json` or run submit interactively once |
+| Metro cache issues | `npx expo start -c` |
 
-## Related docs
-
-- [README.md](README.md) — product overview  
-- [CHANGELOG.md](CHANGELOG.md) — what shipped in each version  
-- [SUPPORT.md](SUPPORT.md) — TestFlight access for testers  
+See also [README.md](README.md) and [SUPPORT.md](SUPPORT.md).

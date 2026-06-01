@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useRouter } from 'expo-router';
 import type { OpenLoop } from '../types';
 import { Badge } from './Badge';
@@ -63,7 +64,7 @@ export function LoopCard({ loop, index = 0 }: LoopCardProps) {
   const router = useRouter();
   const { closeLoop } = useLoops();
   const { theme } = useTheme();
-  const swipeRef = useRef<{ close: () => void } | null>(null);
+  const swipeRef = useRef<SwipeableMethods | null>(null);
   const typeColor = getLoopTypeColor(loop.type);
   const overdue = loop.dueDate ? isOverdue(loop.dueDate) : false;
   const delay = Math.min(index, 5) * motion.stagger;

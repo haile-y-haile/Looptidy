@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "looptidy",
     "userInterfaceStyle": "automatic",
-    "description": "Track follow-ups, promises, waiting items, and decisions so open loops stop slipping through.",
+    "description": "An open-loop tracker for follow-ups, blockers, commitments, and decisions.",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

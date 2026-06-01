@@ -1,64 +1,61 @@
 # Security Policy — LoopTidy
 
-We take security reports seriously, even for a local-first beta app.
+## Scope
+
+LoopTidy is **local-only** today. Open-loop data (follow-ups, blockers, commitments, decisions, waiting, promised, due, and closure) is stored on the user’s device. The app does **not** use a LoopTidy backend in the current release.
 
 ## Supported versions
 
-| Version | Supported |
-|---------|-----------|
+| Version | Support |
+|---------|---------|
 | Latest TestFlight build | Yes |
 | Older TestFlight builds | Best effort |
-| Source on `main` (development) | Security fixes land on `main`; new TestFlight build when warranted |
+| `main` branch (development) | Fixes land on `main`; new TestFlight when needed |
 
-## What to report
+## Reporting a vulnerability
 
-Please report issues such as:
+Please **do not** report security issues in public GitHub issues.
 
-- Ways to read or modify another user’s loop data on the same device without authorization (unexpected sandbox escapes)
-- Hardcoded secrets or API keys in the repository
-- Insecure handling of link URLs (unexpected code execution, unsafe WebView usage if added later)
-- Data unexpectedly transmitted to third-party servers (the current release should **not** send loop content to LoopTidy servers)
-
-## Out of scope (current design)
-
-These are **known limitations**, not vulnerabilities:
-
-- Data is readable by anyone with physical access to an unlocked device (standard iOS app storage)
-- No encryption at rest beyond what iOS provides for app containers
-- No remote account compromise (there is no real account system)
-- Mock sign-in UI that does not authenticate
-
-## How to report
-
-**Do not** open public GitHub issues for exploitable security problems.
-
-Instead:
-
-1. Use GitHub **Private vulnerability reporting** if enabled on the repository, **or**
-2. Open a minimal GitHub issue asking for a private contact channel without exploit details, **or**
-3. Contact the maintainer through the channel listed in [SUPPORT.md](SUPPORT.md) with subject **Security**.
+Email security concerns to: ****  
+Subject line: `LoopTidy Security`
 
 Include:
 
-- Description of the issue and impact
+- Description and impact
 - Steps to reproduce
-- Affected version (TestFlight build number if known)
-- Your environment (iOS version, device)
+- App version and iOS version
+- Whether data leaves the device (for current builds, loop content should not)
 
-## What to expect
+You may also use GitHub **Private vulnerability reporting** if enabled on the repository.
 
-- Acknowledgment within a reasonable time (goal: 7 days for valid reports)
-- A fix or mitigation plan for confirmed issues affecting users
-- Credit in release notes if you wish and the fix is shipped (optional)
+## Public issues — please do not post
 
-## Secure development practices
+When filing normal bugs on GitHub, **do not** include:
 
-Maintainers aim to:
+- Passwords or app-specific passwords
+- API tokens, keys, or certificates
+- Apple Developer or App Store Connect credentials
+- Private user data from your loops
+- Sensitive screenshots (redact personal names and commitments if sharing UI issues)
 
-- Keep dependencies updated and run `expo-doctor` before releases
-- Avoid committing secrets (`.env`, keys, certificates)
-- Review permissions before adding networking, accounts, or analytics
+## In-scope examples
 
-## Encryption export
+- Unexpected network transmission of loop content
+- Secrets committed to the repository
+- Unsafe handling of link URLs that could lead to unexpected behavior
+- Local data exposure beyond normal iOS app sandbox rules
 
-LoopTidy declares standard encryption only (`ITSAppUsesNonExemptEncryption: false` in `app.json`) — HTTPS for external links only, no custom cryptography in the app today.
+## Known design (not vulnerabilities)
+
+- Anyone with access to an unlocked device can open the app and read local data
+- No encryption beyond what iOS provides for app storage
+- Mock sign-in UI does not authenticate users
+- No remote account to compromise
+
+## Response
+
+We aim to acknowledge valid reports within a reasonable time and ship fixes for confirmed issues affecting TestFlight users when appropriate.
+
+## Encryption
+
+LoopTidy uses standard HTTPS only when you open external links. Export compliance is declared in `app.json` (`ITSAppUsesNonExemptEncryption: false`).

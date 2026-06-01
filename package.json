@@ -1,6 +1,7 @@
 {
   "name": "looptidy",
   "version": "1.0.0",
+  "description": "An open-loop tracker for follow-ups, blockers, commitments, and decisions.",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
