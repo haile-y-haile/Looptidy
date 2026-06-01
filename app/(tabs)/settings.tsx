@@ -1,10 +1,11 @@
 import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ScreenScroll } from '../components/ScreenScroll';
-import { SettingsRow } from '../components/SettingsRow';
-import { useTheme } from '../context/ThemeContext';
-import type { AppearanceMode } from '../lib/preferences';
-import { radius, spacing, typography } from '../lib/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScreenScroll } from '../../components/ScreenScroll';
+import { SettingsRow } from '../../components/SettingsRow';
+import { useTheme } from '../../context/ThemeContext';
+import type { AppearanceMode } from '../../lib/preferences';
+import { radius, spacing, typography } from '../../lib/theme';
 
 function AppearancePill({
   label,
@@ -41,6 +42,7 @@ function AppearancePill({
 }
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const { theme, setMode } = useTheme();
   const [mode, setModeLocal] = useState<AppearanceMode>(theme.mode);
 
@@ -70,7 +72,7 @@ export default function SettingsScreen() {
   }, [theme.mode]);
 
   return (
-    <ScreenScroll>
+    <ScreenScroll contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}>
       <Animated.View
         style={{
           opacity: headerEnter,

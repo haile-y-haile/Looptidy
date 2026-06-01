@@ -10,15 +10,15 @@ import {
   Linking,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useLoops } from '../../context/LoopContext';
-import { useTheme } from '../../context/ThemeContext';
-import { Badge } from '../../components/Badge';
-import { EmptyState } from '../../components/EmptyState';
-import { ScreenScroll } from '../../components/ScreenScroll';
-import { ScreenCentered } from '../../components/ScreenCentered';
-import { hapticLight } from '../../lib/haptics';
-import { showComingSoon } from '../../lib/comingSoon';
-import { radius, spacing, typography } from '../../lib/theme';
+import { useLoops } from '../../../context/LoopContext';
+import { useTheme } from '../../../context/ThemeContext';
+import { Badge } from '../../../components/Badge';
+import { EmptyState } from '../../../components/EmptyState';
+import { ScreenScroll } from '../../../components/ScreenScroll';
+import { ScreenCentered } from '../../../components/ScreenCentered';
+import { hapticLight } from '../../../lib/haptics';
+import { showComingSoon } from '../../../lib/comingSoon';
+import { radius, spacing, typography } from '../../../lib/theme';
 import {
   formatDate,
   getLoopTypeColor,
@@ -29,7 +29,7 @@ import {
   priorityLabels,
   riskLevelLabels,
   categoryLabels,
-} from '../../lib/utils';
+} from '../../../lib/utils';
 
 export default function LoopDetailScreen() {
   const { id: idParam } = useLocalSearchParams<{ id: string | string[] }>();

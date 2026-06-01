@@ -2,27 +2,29 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl } 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useLoops } from '../context/LoopContext';
-import { useTheme } from '../context/ThemeContext';
-import { StatCard } from '../components/StatCard';
-import { LoopCard } from '../components/LoopCard';
-import { EmptyState } from '../components/EmptyState';
-import { ScreenScroll } from '../components/ScreenScroll';
-import { ScreenCentered } from '../components/ScreenCentered';
-import { SegmentedControl } from '../components/SegmentedControl';
-import { FilterChip } from '../components/FilterChip';
-import { CollapsibleSection } from '../components/CollapsibleSection';
-import { ActionTile } from '../components/ActionTile';
-import { GlassCard } from '../components/GlassCard';
-import { getOnboardingComplete } from '../lib/preferences';
-import { hapticLight, hapticSuccess } from '../lib/haptics';
-import { radius, spacing, typography } from '../lib/theme';
-import type { LoopType, OpenLoop, Priority, RiskLevel } from '../types';
-import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue, loopTypeLabels } from '../lib/utils';
-import { showComingSoon } from '../lib/comingSoon';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLoops } from '../../context/LoopContext';
+import { useTheme } from '../../context/ThemeContext';
+import { StatCard } from '../../components/StatCard';
+import { LoopCard } from '../../components/LoopCard';
+import { EmptyState } from '../../components/EmptyState';
+import { ScreenScroll } from '../../components/ScreenScroll';
+import { ScreenCentered } from '../../components/ScreenCentered';
+import { SegmentedControl } from '../../components/SegmentedControl';
+import { FilterChip } from '../../components/FilterChip';
+import { CollapsibleSection } from '../../components/CollapsibleSection';
+import { ActionTile } from '../../components/ActionTile';
+import { GlassCard } from '../../components/GlassCard';
+import { getOnboardingComplete } from '../../lib/preferences';
+import { hapticLight, hapticSuccess } from '../../lib/haptics';
+import { radius, spacing, typography } from '../../lib/theme';
+import type { LoopType, OpenLoop, Priority, RiskLevel } from '../../types';
+import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue, loopTypeLabels } from '../../lib/utils';
+import { showComingSoon } from '../../lib/comingSoon';
 
 export default function TodayScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { loops, loading, refreshLoops } = useLoops();
   const [refreshing, setRefreshing] = useState(false);
@@ -157,6 +159,7 @@ export default function TodayScreen() {
 
   return (
     <ScreenScroll
+      contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -174,24 +177,10 @@ export default function TodayScreen() {
         }}
       >
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.greeting, { color: theme.colors.text }]}>LoopTidy</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-              Follow Up Tracker
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => router.push('/settings')}
-            style={({ pressed }) => [
-              styles.settingsButton,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text style={[styles.settingsIcon, { color: theme.colors.textSecondary }]}>⚙️</Text>
-          </Pressable>
-        </View>
+        <Text style={[styles.greeting, { color: theme.colors.text }]}>LoopTidy</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+          Follow Up Tracker
+        </Text>
         <View style={styles.metaLine}>
           <Text style={[styles.metaText, { color: theme.colors.textMuted }]}>
             {lastUpdatedAt ? `Updated ${formatRelativeDate(lastUpdatedAt.toISOString())}` : `Open: ${openLoops.length} • Overdue: ${overdue.length}`}
@@ -259,7 +248,7 @@ export default function TodayScreen() {
             value={waitingCount}
             color={theme.colors.purple}
             embedded
-            onPress={() => router.push('/waiting')}
+            onPress={() => router.push({ pathname: '/loops', params: { filter: 'waiting' } })}
           />
         </View>
         <View style={[styles.statsRowEmbedded, styles.statsRowEmbeddedGap]}>
@@ -268,7 +257,7 @@ export default function TodayScreen() {
             value={promisedCount}
             color={theme.colors.primary}
             embedded
-            onPress={() => router.push('/promised')}
+            onPress={() => router.push({ pathname: '/loops', params: { filter: 'promised' } })}
           />
           <StatCard
             label="Decisions"
@@ -463,22 +452,6 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.xl,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  settingsButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingsIcon: {
-    fontSize: 16,
   },
   greeting: {
     ...typography.largeTitle,

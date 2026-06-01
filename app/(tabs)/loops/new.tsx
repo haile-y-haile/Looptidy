@@ -11,14 +11,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useLoops } from '../../context/LoopContext';
-import { useTheme } from '../../context/ThemeContext';
-import type { LoopAttachment, LoopType, Priority, RiskLevel, Category } from '../../types';
-import { ScreenScroll } from '../../components/ScreenScroll';
-import { hapticLight, hapticSuccess } from '../../lib/haptics';
-import { showComingSoon } from '../../lib/comingSoon';
-import { radius, spacing, typography } from '../../lib/theme';
-import { generateId, loopTypeLabels, categoryLabels } from '../../lib/utils';
+import { useLoops } from '../../../context/LoopContext';
+import { useTheme } from '../../../context/ThemeContext';
+import type { LoopAttachment, LoopType, Priority, RiskLevel, Category } from '../../../types';
+import { ScreenScroll } from '../../../components/ScreenScroll';
+import { hapticLight, hapticSuccess } from '../../../lib/haptics';
+import { showComingSoon } from '../../../lib/comingSoon';
+import { radius, spacing, typography } from '../../../lib/theme';
+import { generateId, loopTypeLabels, categoryLabels } from '../../../lib/utils';
 
 const loopTypes: LoopType[] = [
   'waiting_on_others',

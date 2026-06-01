@@ -21,14 +21,11 @@ function RootStack() {
           headerBackTitle: 'Back',
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Today' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="settings" options={{ title: 'Settings' }} />
-        <Stack.Screen name="loops" options={{ headerShown: false }} />
-        <Stack.Screen name="waiting" options={{ title: 'Waiting On Others' }} />
-        <Stack.Screen name="promised" options={{ title: 'Promised by Me' }} />
-        <Stack.Screen name="decisions" options={{ title: 'Decision Log' }} />
         <Stack.Screen name="weekly-review" options={{ title: 'Weekly Review' }} />
+        <Stack.Screen name="waiting" options={{ headerShown: false }} />
+        <Stack.Screen name="promised" options={{ headerShown: false }} />
       </Stack>
     </>
   );

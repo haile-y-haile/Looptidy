@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function LoopsLayout() {
   const { theme } = useTheme();
@@ -14,7 +14,7 @@ export default function LoopsLayout() {
         headerBackTitle: 'Back',
       }}
     >
-      <Stack.Screen name="index" options={{ title: 'All Loops' }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
         name="new"
         options={{
