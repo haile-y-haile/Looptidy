@@ -349,18 +349,28 @@ export default function TodayScreen() {
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={() => router.push('/insights')}
-        style={({ pressed }) => [
-          styles.insightsLink,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-          pressed && styles.pressed,
-        ]}
-      >
-        <Text style={[styles.insightsLinkText, { color: theme.colors.primary }]}>
-          View insights →
-        </Text>
-      </Pressable>
+      <View style={styles.linkRow}>
+        <Pressable
+          onPress={() => router.push('/insights')}
+          style={({ pressed }) => [
+            styles.insightsLink,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={[styles.insightsLinkText, { color: theme.colors.primary }]}>Insights</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push('/people')}
+          style={({ pressed }) => [
+            styles.insightsLink,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={[styles.insightsLinkText, { color: theme.colors.primary }]}>People</Text>
+        </Pressable>
+      </View>
 
       <SegmentedControl
         value={tab}
@@ -581,12 +591,17 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
+  linkRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
   insightsLink: {
+    flex: 1,
     borderRadius: radius.md,
     borderWidth: 1,
     paddingVertical: spacing.md,
     alignItems: 'center',
-    marginBottom: spacing.lg,
   },
   insightsLinkText: {
     ...typography.callout,

@@ -104,8 +104,10 @@ export default function LoopDetailScreen() {
   const handleAddDecision = async () => {
     if (!decisionReady) return;
     await addDecision(loop.id, {
-      question: loop.title,
-      outcome: decisionOutcome.trim(),
+      title: loop.title,
+      status: 'decided',
+      finalDecision: decisionOutcome.trim(),
+      rationale: decisionOutcome.trim(),
       decidedAt: new Date().toISOString(),
     });
     setDecisionOutcome('');
@@ -248,14 +250,23 @@ export default function LoopDetailScreen() {
                 ]}
               >
                 <Text style={[styles.decisionQuestion, { color: theme.colors.textSecondary }]}>
-                  {d.question}
+                  {d.title ?? d.question}
                 </Text>
-                <Text style={[styles.decisionOutcome, { color: theme.colors.text }]}>
-                  {d.outcome}
-                </Text>
-                <Text style={[styles.decisionDate, { color: theme.colors.textMuted }]}>
-                  {formatDate(d.decidedAt)}
-                </Text>
+                {(d.finalDecision ?? d.outcome) ? (
+                  <Text style={[styles.decisionOutcome, { color: theme.colors.text }]}>
+                    {d.finalDecision ?? d.outcome}
+                  </Text>
+                ) : null}
+                {d.rationale && d.rationale !== (d.finalDecision ?? d.outcome) ? (
+                  <Text style={[styles.decisionDate, { color: theme.colors.textSecondary }]}>
+                    Rationale: {d.rationale}
+                  </Text>
+                ) : null}
+                {d.decidedAt ? (
+                  <Text style={[styles.decisionDate, { color: theme.colors.textMuted }]}>
+                    {formatDate(d.decidedAt)}
+                  </Text>
+                ) : null}
               </View>
             ))}
           </View>

@@ -1,32 +1,39 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import React, { useMemo } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLoops } from '../../context/LoopContext';
 import { useTheme } from '../../context/ThemeContext';
+import { DecisionRecordCard } from '../../components/DecisionRecordCard';
 import { EmptyState } from '../../components/EmptyState';
-import { Badge } from '../../components/Badge';
+import { GlassCard } from '../../components/GlassCard';
+import { LoopCard } from '../../components/LoopCard';
 import { ScreenScroll } from '../../components/ScreenScroll';
 import { ScreenCentered } from '../../components/ScreenCentered';
+import { StatCard } from '../../components/StatCard';
+import { hapticLight } from '../../lib/haptics';
+import { flattenDecisions } from '../../lib/decisions';
+import {
+  getDecisionCenterStats,
+  getDecisionsNeeded,
+  getHighRiskDecisions,
+  getRecentlyDecided,
+  getRevisitSoon,
+} from '../../lib/decisionCenter';
 import { radius, spacing, typography } from '../../lib/theme';
-import { formatDate } from '../../lib/utils';
 
 export default function DecisionsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { loops, loading } = useLoops();
 
-  const allDecisions = loops
-    .flatMap((loop) =>
-      loop.decisions.map((decision) => ({
-        ...decision,
-        loopTitle: loop.title,
-        loopId: loop.id,
-      }))
-    )
-    .sort((a, b) => new Date(b.decidedAt).getTime() - new Date(a.decidedAt).getTime());
-
-  const pendingDecisions = loops.filter(
-    (l) => l.type === 'decision_needed' && l.status !== 'decided' && l.status !== 'closed'
-  );
+  const allDecisions = useMemo(() => flattenDecisions(loops), [loops]);
+  const stats = useMemo(() => getDecisionCenterStats(loops), [loops]);
+  const neededLoops = useMemo(() => getDecisionsNeeded(loops), [loops]);
+  const recent = useMemo(() => getRecentlyDecided(allDecisions), [allDecisions]);
+  const revisit = useMemo(() => getRevisitSoon(allDecisions), [allDecisions]);
+  const highRisk = useMemo(() => getHighRiskDecisions(allDecisions), [allDecisions]);
 
   if (loading) {
     return (
@@ -37,117 +44,140 @@ export default function DecisionsScreen() {
   }
 
   return (
-    <ScreenScroll>
-      {pendingDecisions.length > 0 && (
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Pending Decisions</Text>
-          {pendingDecisions.map((loop) => (
-            <Pressable
-              key={loop.id}
-              style={({ pressed }) => [
-                styles.card,
-                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-                pressed && styles.pressed,
-              ]}
-              onPress={() => router.push(`/loops/${loop.id}`)}
-            >
-              <Badge label="Pending" variant="warning" />
-              <Text style={[styles.loopTitle, { color: theme.colors.textMuted }]}>{loop.title}</Text>
-              {loop.description ? (
-                <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-                  {loop.description}
-                </Text>
-              ) : null}
-            </Pressable>
-          ))}
-        </View>
-      )}
+    <ScreenScroll contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Decision Center</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+        Track choices, rationale, impact, and revisits — tied to your open loops.
+      </Text>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Decision History</Text>
+      <Pressable
+        onPress={() => {
+          void hapticLight();
+          router.push('/decision-detail?loopId=' + (neededLoops[0]?.id ?? loops[0]?.id ?? ''));
+        }}
+        style={({ pressed }) => [
+          styles.addBtn,
+          { backgroundColor: theme.colors.primary },
+          pressed && { opacity: 0.9 },
+        ]}
+      >
+        <Text style={styles.addBtnText}>+ Add decision</Text>
+      </Pressable>
+
+      <GlassCard style={styles.statsCard} intensity={32}>
+        <View style={styles.statsRow}>
+          <StatCard label="Needed" value={stats.needed} color={theme.colors.warning} embedded />
+          <StatCard label="Decided" value={stats.decided} color={theme.colors.success} embedded />
+        </View>
+        <View style={[styles.statsRow, styles.statsGap]}>
+          <StatCard label="Revisiting" value={stats.revisiting} embedded />
+          <StatCard label="Revisit soon" value={stats.revisitSoon} color={theme.colors.primary} embedded />
+        </View>
+        <StatCard label="High risk" value={stats.highRisk} color={theme.colors.danger} />
+      </GlassCard>
+
+      <Section title="Decisions needed" count={neededLoops.length}>
+        {neededLoops.length > 0 ? (
+          neededLoops.map((loop, i) => <LoopCard key={loop.id} loop={loop} index={i} />)
+        ) : (
+          <EmptyState compact title="All clear" message="No open decision loops right now." />
+        )}
+      </Section>
+
+      <Section title="Revisit soon" count={revisit.length}>
+        {revisit.length > 0 ? (
+          revisit.map((d) => <DecisionRecordCard key={d.id} decision={d} />)
+        ) : (
+          <EmptyState compact title="Nothing to revisit" message="Set revisit dates on decisions." />
+        )}
+      </Section>
+
+      <Section title="High-risk decisions" count={highRisk.length}>
+        {highRisk.length > 0 ? (
+          highRisk.map((d) => <DecisionRecordCard key={d.id} decision={d} expandedDefault />)
+        ) : (
+          <EmptyState compact title="No high-risk items" message="Decisions at high risk appear here." />
+        )}
+      </Section>
+
+      <Section title="Recently decided" count={recent.length}>
+        {recent.length > 0 ? (
+          recent.map((d) => <DecisionRecordCard key={d.id} decision={d} />)
+        ) : (
+          <EmptyState compact title="No decisions yet" message="Record outcomes as you decide." />
+        )}
+      </Section>
+
+      <Section title="All decisions" count={allDecisions.length}>
         {allDecisions.length > 0 ? (
-          allDecisions.map((decision) => (
-            <Pressable
-              key={decision.id}
-              style={({ pressed }) => [
-                styles.card,
-                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-                pressed && styles.pressed,
-              ]}
-              onPress={() => router.push(`/loops/${decision.loopId}`)}
-            >
-              <Text style={[styles.loopTitle, { color: theme.colors.textMuted }]}>
-                {decision.loopTitle}
-              </Text>
-              <Text style={[styles.question, { color: theme.colors.textSecondary }]}>
-                {decision.question}
-              </Text>
-              <Text style={[styles.outcome, { color: theme.colors.text }]}>{decision.outcome}</Text>
-              <View style={styles.footer}>
-                <Text style={[styles.date, { color: theme.colors.textMuted }]}>
-                  {formatDate(decision.decidedAt)}
-                </Text>
-                {decision.decidedBy ? (
-                  <Text style={[styles.decidedBy, { color: theme.colors.textMuted }]}>
-                    by {decision.decidedBy}
-                  </Text>
-                ) : null}
-              </View>
-            </Pressable>
-          ))
+          allDecisions.map((d) => <DecisionRecordCard key={d.id} decision={d} />)
         ) : (
           <EmptyState
             title="No decisions yet"
-            message="Decisions you record will appear here for future reference."
+            message="Capture rationale and impact when you resolve open choices."
           />
         )}
-      </View>
+      </Section>
     </ScreenScroll>
   );
 }
 
+function Section({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  const { theme } = useTheme();
+  return (
+    <View style={styles.section}>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        {title} {count > 0 ? `(${count})` : ''}
+      </Text>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  title: {
+    ...typography.largeTitle,
+  },
+  subtitle: {
+    ...typography.body,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  addBtn: {
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  addBtnText: {
+    ...typography.callout,
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  statsCard: {
+    marginBottom: spacing.xl,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  statsGap: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
   section: {
     marginBottom: spacing.xl,
   },
   sectionTitle: {
     ...typography.headline,
     marginBottom: spacing.md,
-  },
-  card: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  loopTitle: {
-    ...typography.callout,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  question: {
-    ...typography.body,
-    marginBottom: spacing.sm,
-  },
-  description: {
-    ...typography.body,
-    marginTop: spacing.xs,
-  },
-  outcome: {
-    ...typography.headline,
-    marginBottom: spacing.sm,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  date: {
-    ...typography.caption,
-  },
-  decidedBy: {
-    ...typography.caption,
   },
 });

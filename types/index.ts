@@ -40,11 +40,38 @@ export interface Reminder {
   completed: boolean;
 }
 
+export type DecisionStatus =
+  | 'decision_needed'
+  | 'options_reviewed'
+  | 'decided'
+  | 'revisiting'
+  | 'archived';
+
+export interface DecisionOption {
+  id: string;
+  label: string;
+  tradeoff?: string;
+}
+
 export interface Decision {
   id: string;
-  question: string;
-  outcome: string;
-  decidedAt: string;
+  loopId: string;
+  title: string;
+  summary?: string;
+  status: DecisionStatus;
+  owner?: string;
+  options: DecisionOption[];
+  finalDecision?: string;
+  rationale?: string;
+  impact?: string;
+  riskLevel: RiskLevel;
+  decidedAt?: string;
+  revisitAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  /** @deprecated Legacy fields — migrated on load */
+  question?: string;
+  outcome?: string;
   decidedBy?: string;
 }
 
@@ -62,8 +89,8 @@ export interface LoopAttachment {
   id: string;
   type: AttachmentType;
   title: string;
-  url?: string; // for links
-  uri?: string; // for local files/media (future)
+  url?: string;
+  uri?: string;
   createdAt: string;
 }
 
@@ -86,7 +113,6 @@ export interface OpenLoop {
   reminderLabel?: string;
   snoozedUntil?: string;
   reminderEnabled?: boolean;
-  /** Local notification id for cancellation (device-only) */
   localNotificationId?: string;
   attachments: LoopAttachment[];
   decisions: Decision[];
@@ -98,10 +124,24 @@ export interface OpenLoop {
 
 export interface WeeklyReview {
   id: string;
-  weekStart: string;
-  weekEnd: string;
-  loopsClosed: number;
-  loopsOpened: number;
-  notes: string;
+  startedAt: string;
   completedAt?: string;
+  reviewedLoopIds: string[];
+  closedLoopIds: string[];
+  notes: string;
+  createdAt: string;
+  /** @deprecated Legacy weekly review fields */
+  weekStart?: string;
+  weekEnd?: string;
+  loopsClosed?: number;
+  loopsOpened?: number;
+}
+
+export const BACKUP_FORMAT_VERSION = 2;
+
+export interface LoopTidyBackup {
+  version: number;
+  exportedAt: string;
+  loops: OpenLoop[];
+  weeklyReviews: WeeklyReview[];
 }

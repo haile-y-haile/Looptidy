@@ -107,6 +107,32 @@ export default function LoopsScreen() {
             </Text>
           </Pressable>
         </View>
+        <View style={styles.hubRow}>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/people');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>People</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Commitments by person
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/weekly-review');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Weekly review</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Guided triage
+            </Text>
+          </Pressable>
+        </View>
         <Pressable
           onPress={() => {
             void hapticLight();

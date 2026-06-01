@@ -7,8 +7,22 @@ import React, {
   useState,
 } from 'react';
 import type { Decision, OpenLoop, TimelineEvent } from '../types';
-import { getLoops, saveLoops } from '../lib/storage';
+import { normalizeDecision } from '../lib/decisions';
+import { clearAllLoops, getLoops, saveLoops } from '../lib/storage';
 import { generateId } from '../lib/utils';
+
+export type CreateDecisionInput = Omit<
+  Decision,
+  'id' | 'loopId' | 'createdAt' | 'updatedAt' | 'options' | 'riskLevel' | 'title' | 'status'
+> &
+  Partial<Pick<Decision, 'options' | 'loopId' | 'riskLevel' | 'title' | 'status'>> & {
+    title?: string;
+    status?: Decision['status'];
+    /** @deprecated Legacy quick-record fields */
+    question?: string;
+    outcome?: string;
+    decidedBy?: string;
+  };
 
 interface LoopContextValue {
   loops: OpenLoop[];
@@ -18,15 +32,47 @@ interface LoopContextValue {
   ) => Promise<OpenLoop>;
   updateLoop: (id: string, updates: Partial<OpenLoop>) => Promise<void>;
   closeLoop: (id: string) => Promise<void>;
-  addDecision: (loopId: string, decision: Omit<Decision, 'id'>) => Promise<void>;
+  addDecision: (loopId: string, decision: CreateDecisionInput) => Promise<void>;
+  updateDecision: (
+    loopId: string,
+    decisionId: string,
+    updates: Partial<Decision>
+  ) => Promise<void>;
   addTimelineEvent: (
     loopId: string,
     event: Omit<TimelineEvent, 'id' | 'timestamp'>
   ) => Promise<void>;
+  replaceAllLoops: (loops: OpenLoop[]) => Promise<void>;
+  resetToDemoData: () => Promise<void>;
+  deleteAllLocalData: () => Promise<void>;
   refreshLoops: () => Promise<void>;
 }
 
 const LoopContext = createContext<LoopContextValue | null>(null);
+
+function toCreateDecision(input: CreateDecisionInput, loopId: string): Decision {
+  const now = new Date().toISOString();
+  return normalizeDecision(
+    {
+      id: generateId(),
+      loopId,
+      title: input.title ?? input.question ?? 'Decision',
+      summary: input.summary ?? input.question,
+      status: input.status ?? (input.outcome || input.finalDecision ? 'decided' : 'decision_needed'),
+      owner: input.owner ?? input.decidedBy,
+      options: input.options ?? [],
+      finalDecision: input.finalDecision ?? input.outcome,
+      rationale: input.rationale ?? input.outcome,
+      impact: input.impact,
+      riskLevel: input.riskLevel ?? 'medium',
+      decidedAt: input.decidedAt ?? (input.outcome ? now : undefined),
+      revisitAt: input.revisitAt,
+      createdAt: now,
+      updatedAt: now,
+    },
+    loopId
+  );
+}
 
 export function LoopProvider({ children }: { children: React.ReactNode }) {
   const [loops, setLoops] = useState<OpenLoop[]>([]);
@@ -63,6 +109,9 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
       const newLoop: OpenLoop = {
         ...input,
         attachments: input.attachments ?? [],
+        decisions: (input.decisions ?? []).map((d) =>
+          normalizeDecision({ ...d, id: d.id || generateId() }, 'pending')
+        ),
         id: generateId(),
         createdAt: now,
         updatedAt: now,
@@ -75,6 +124,9 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
           },
         ],
       };
+      newLoop.decisions = newLoop.decisions.map((d) =>
+        normalizeDecision({ ...d, loopId: newLoop.id }, newLoop.id)
+      );
 
       await persistLoops((prev) => [newLoop, ...prev]);
       return newLoop;
@@ -123,15 +175,17 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
   );
 
   const addDecision = useCallback(
-    async (loopId: string, decision: Omit<Decision, 'id'>) => {
+    async (loopId: string, input: CreateDecisionInput) => {
       const now = new Date().toISOString();
+      const newDecision = toCreateDecision(input, loopId);
       await persistLoops((prev) =>
         prev.map((loop) => {
           if (loop.id !== loopId) return loop;
-          const newDecision: Decision = { ...decision, id: generateId() };
+          const shouldMarkDecided =
+            newDecision.status === 'decided' && loop.type === 'decision_needed';
           return {
             ...loop,
-            status: 'decided' as const,
+            status: shouldMarkDecided ? ('decided' as const) : loop.status,
             updatedAt: now,
             decisions: [...loop.decisions, newDecision],
             timeline: [
@@ -140,10 +194,34 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
                 id: generateId(),
                 type: 'decision' as const,
                 title: 'Decision recorded',
-                description: decision.outcome,
+                description: newDecision.finalDecision ?? newDecision.title,
                 timestamp: now,
               },
             ],
+          };
+        })
+      );
+    },
+    [persistLoops]
+  );
+
+  const updateDecision = useCallback(
+    async (loopId: string, decisionId: string, updates: Partial<Decision>) => {
+      const now = new Date().toISOString();
+      await persistLoops((prev) =>
+        prev.map((loop) => {
+          if (loop.id !== loopId) return loop;
+          return {
+            ...loop,
+            updatedAt: now,
+            decisions: loop.decisions.map((d) =>
+              d.id === decisionId
+                ? normalizeDecision(
+                    { ...d, ...updates, id: d.id, updatedAt: now },
+                    loopId
+                  )
+                : d
+            ),
           };
         })
       );
@@ -172,6 +250,26 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
     [persistLoops]
   );
 
+  const replaceAllLoops = useCallback(async (nextLoops: OpenLoop[]) => {
+    const normalized = nextLoops.map((l) => ({
+      ...l,
+      decisions: l.decisions.map((d) => normalizeDecision({ ...d, id: d.id }, l.id)),
+    }));
+    await saveLoops(normalized);
+    setLoops(normalized);
+  }, []);
+
+  const resetToDemoData = useCallback(async () => {
+    const { resetLoops } = await import('../lib/storage');
+    const seeded = await resetLoops();
+    setLoops(seeded);
+  }, []);
+
+  const deleteAllLocalData = useCallback(async () => {
+    await clearAllLoops();
+    setLoops([]);
+  }, []);
+
   const value = useMemo(
     () => ({
       loops,
@@ -180,10 +278,27 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
       updateLoop,
       closeLoop,
       addDecision,
+      updateDecision,
       addTimelineEvent,
+      replaceAllLoops,
+      resetToDemoData,
+      deleteAllLocalData,
       refreshLoops,
     }),
-    [loops, loading, addLoop, updateLoop, closeLoop, addDecision, addTimelineEvent, refreshLoops]
+    [
+      loops,
+      loading,
+      addLoop,
+      updateLoop,
+      closeLoop,
+      addDecision,
+      updateDecision,
+      addTimelineEvent,
+      replaceAllLoops,
+      resetToDemoData,
+      deleteAllLocalData,
+      refreshLoops,
+    ]
   );
 
   return <LoopContext.Provider value={value}>{children}</LoopContext.Provider>;

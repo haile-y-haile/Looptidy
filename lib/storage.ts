@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { OpenLoop } from '../types';
+import { normalizeDecision } from './decisions';
 import { mockLoops } from './mockData';
 
 const STORAGE_KEY = '@looptidy/loops';
@@ -20,7 +21,9 @@ function normalizeLoop(raw: OpenLoop): OpenLoop {
     ...raw,
     description: raw.description ?? '',
     attachments: Array.isArray(raw.attachments) ? raw.attachments : [],
-    decisions: Array.isArray(raw.decisions) ? raw.decisions : [],
+    decisions: Array.isArray(raw.decisions)
+      ? raw.decisions.map((d) => normalizeDecision({ ...d, id: d.id }, raw.id))
+      : [],
     timeline: Array.isArray(raw.timeline) ? raw.timeline : [],
     reminderAt,
     reminderLabel: raw.reminderLabel,
@@ -81,4 +84,8 @@ export async function saveLoops(loops: OpenLoop[]): Promise<void> {
 
 export async function resetLoops(): Promise<OpenLoop[]> {
   return seedMockLoops();
+}
+
+export async function clearAllLoops(): Promise<void> {
+  await AsyncStorage.removeItem(STORAGE_KEY);
 }

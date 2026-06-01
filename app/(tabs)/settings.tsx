@@ -144,7 +144,12 @@ export default function SettingsScreen() {
       />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Data</Text>
-      <SettingsRow icon={settingsIcons.backup} title="Backup & Restore" subtitle="Cloud backup and export" comingSoon />
+      <SettingsRow
+        icon={settingsIcons.backup}
+        title="Backup & Restore"
+        subtitle="Export JSON/CSV and restore on this device"
+        onPress={() => router.push('/backup-restore')}
+      />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>About</Text>
       <SettingsRow
@@ -162,9 +167,16 @@ export default function SettingsScreen() {
       <SettingsRow
         icon={settingsIcons.danger}
         title="Delete Account"
-        subtitle="Requires an account — not available yet"
+        subtitle="Unavailable until cloud accounts exist"
         tone="danger"
         comingSoon
+      />
+      <SettingsRow
+        icon={settingsIcons.danger}
+        title="Delete all local data"
+        subtitle="Manage in Backup & Restore danger zone"
+        tone="danger"
+        onPress={() => router.push('/backup-restore')}
       />
 
       <View style={{ height: spacing.xxl }} />
