@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, Easing, ScrollView, ActivityIndicator } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { getOnboardingComplete, setOnboardingComplete } from '../lib/preferences';
 import { radius, spacing, typography } from '../lib/theme';
@@ -10,10 +11,12 @@ function AuthButton({
   label,
   tone = 'primary',
   onPress,
+  disabled = false,
 }: {
   label: string;
   tone?: 'primary' | 'secondary' | 'ghost';
   onPress: () => void;
+  disabled?: boolean;
 }) {
   const { theme } = useTheme();
   const style = useMemo(() => {
@@ -43,10 +46,12 @@ function AuthButton({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.authButton,
         { backgroundColor: style.backgroundColor, borderColor: style.borderColor },
-        pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
+        disabled && styles.disabled,
+        !disabled && pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
       ]}
     >
       <Text style={[styles.authButtonText, { color: style.text }]}>{label}</Text>
@@ -76,6 +81,7 @@ export default function OnboardingScreen() {
   }, [router]);
 
   useEffect(() => {
+    if (!hydrated) return;
     Animated.stagger(90, [
       Animated.timing(logoEnter, {
         toValue: 1,
@@ -90,17 +96,25 @@ export default function OnboardingScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [cardEnter, logoEnter]);
+  }, [cardEnter, hydrated, logoEnter]);
 
   const continueToApp = async () => {
     await setOnboardingComplete(true);
     router.replace('/');
   };
 
-  if (!hydrated) return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
+  if (!hydrated) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <LinearGradient
         colors={
           theme.isDark
@@ -112,70 +126,82 @@ export default function OnboardingScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      <Animated.View
-        style={{
-          opacity: logoEnter,
-          transform: [
-            { translateY: logoEnter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
-          ],
-        }}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.brand}>
+        <Animated.View
+          style={{
+            opacity: logoEnter,
+            transform: [
+              { translateY: logoEnter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
+            ],
+          }}
+        >
+          <View style={styles.brand}>
+            <View
+              style={[
+                styles.logoDot,
+                { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary },
+              ]}
+            />
+            <Text style={[styles.brandTitle, { color: theme.colors.text }]}>LoopTidy</Text>
+          </View>
+          <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>
+            Track follow-ups, promises, and decisions so open loops stop slipping through.
+          </Text>
+        </Animated.View>
+
+        <Animated.View
+          style={{
+            opacity: cardEnter,
+            transform: [
+              { translateY: cardEnter.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
+            ],
+          }}
+        >
           <View
             style={[
-              styles.logoDot,
-              { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary },
+              styles.card,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
             ]}
-          />
-          <Text style={[styles.brandTitle, { color: theme.colors.text }]}>LoopTidy</Text>
-        </View>
-        <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>
-          Close open loops. Track follow-ups, promises, blockers, and decisions.
-        </Text>
-      </Animated.View>
+          >
+            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Welcome</Text>
+            <Text style={[styles.cardSubtitle, { color: theme.colors.textSecondary }]}>
+              Your data stays on this device. Sign-in options are coming soon — for now, jump
+              straight in.
+            </Text>
 
-      <Animated.View
-        style={{
-          opacity: cardEnter,
-          transform: [
-            { translateY: cardEnter.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
-          ],
-        }}
-      >
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-          ]}
-        >
-          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-            Mock Login / Signup
-          </Text>
-          <Text style={[styles.cardSubtitle, { color: theme.colors.textSecondary }]}>
-            These buttons are placeholders for now. No real auth or backend is used.
-          </Text>
+            <AuthButton label="Get started" tone="primary" onPress={continueToApp} />
 
-          <AuthButton label="Continue with Apple" tone="secondary" onPress={continueToApp} />
-          <AuthButton label="Continue with Google" tone="secondary" onPress={continueToApp} />
-          <AuthButton label="Continue with Email" tone="secondary" onPress={continueToApp} />
+            <View style={styles.dividerRow}>
+              <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
+              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>sign-in coming soon</Text>
+              <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
+            </View>
 
-          <View style={styles.dividerRow}>
-            <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
-            <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or</Text>
-            <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
+            <AuthButton label="Continue with Apple" tone="secondary" disabled onPress={continueToApp} />
+            <AuthButton label="Continue with Google" tone="secondary" disabled onPress={continueToApp} />
+            <AuthButton label="Continue with Email" tone="secondary" disabled onPress={continueToApp} />
           </View>
-
-          <AuthButton label="Create a Loop" tone="primary" onPress={continueToApp} />
-          <AuthButton label="Skip for now" tone="ghost" onPress={continueToApp} />
-        </View>
-      </Animated.View>
-    </View>
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: spacing.xxl,
     justifyContent: 'center',
   },
@@ -225,6 +251,9 @@ const styles = StyleSheet.create({
     ...typography.callout,
     fontWeight: '700',
   },
+  disabled: {
+    opacity: 0.45,
+  },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -238,6 +267,7 @@ const styles = StyleSheet.create({
   dividerText: {
     ...typography.caption,
     fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
 });
-

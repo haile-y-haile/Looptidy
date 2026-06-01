@@ -2,6 +2,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { StatCard } from '../components/StatCard';
+import { ComingSoonBadge } from '../components/ComingSoonBadge';
 import { ScreenScroll } from '../components/ScreenScroll';
 import { radius, spacing, typography } from '../lib/theme';
 import { isOpenLoop } from '../lib/utils';
@@ -34,11 +35,12 @@ export default function WeeklyReviewScreen() {
           { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
         ]}
       >
+        <ComingSoonBadge />
         <Text style={styles.placeholderIcon}>📋</Text>
-        <Text style={[styles.placeholderTitle, { color: theme.colors.text }]}>Weekly Review</Text>
+        <Text style={[styles.placeholderTitle, { color: theme.colors.text }]}>Weekly review</Text>
         <Text style={[styles.placeholderText, { color: theme.colors.textSecondary }]}>
-          A dedicated space to review open loops, close stale items, and plan the week ahead.
-          Full guided review coming soon.
+          Use the checklist below to close stale loops and plan the week. A guided review flow is
+          coming soon.
         </Text>
       </View>
 

@@ -16,6 +16,7 @@ import { useTheme } from '../../context/ThemeContext';
 import type { LoopAttachment, LoopType, Priority, RiskLevel, Category } from '../../types';
 import { ScreenScroll } from '../../components/ScreenScroll';
 import { hapticLight, hapticSuccess } from '../../lib/haptics';
+import { showComingSoon } from '../../lib/comingSoon';
 import { radius, spacing, typography } from '../../lib/theme';
 import { generateId, loopTypeLabels, categoryLabels } from '../../lib/utils';
 
@@ -131,8 +132,11 @@ export default function NewLoopScreen() {
   };
 
   const comingSoon = (label: string) => {
-    Alert.alert('Coming soon', `${label} attachments will be supported in a future update.`);
+    showComingSoon(`${label} attachments`);
   };
+
+  const canSave = title.trim().length > 0 && !saving;
+  const canAddLink = linkUrl.trim().length > 0;
 
   return (
     <KeyboardAvoidingView
@@ -141,7 +145,9 @@ export default function NewLoopScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 60 : 0}
     >
       <ScreenScroll contentContainerStyle={{ paddingBottom: spacing.xxxl + insets.bottom }}>
-        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Title</Text>
+        <Text style={[styles.label, styles.firstLabel, { color: theme.colors.textSecondary }]}>
+          Title
+        </Text>
         <TextInput
           style={[
             styles.input,
@@ -149,7 +155,7 @@ export default function NewLoopScreen() {
           ]}
           value={title}
           onChangeText={setTitle}
-          placeholder="What needs to be tracked?"
+          placeholder="e.g. Follow up with Alex on proposal"
           placeholderTextColor={theme.colors.textMuted}
         />
 
@@ -215,7 +221,7 @@ export default function NewLoopScreen() {
           ]}
           value={dueDate}
           onChangeText={setDueDate}
-          placeholder="YYYY-MM-DD (optional)"
+          placeholder="Mar 15, 2026 or 2026-03-15"
           placeholderTextColor={theme.colors.textMuted}
         />
 
@@ -304,20 +310,20 @@ export default function NewLoopScreen() {
             ]}
             onPress={() => {
               void hapticLight();
-              Alert.alert(
-                'Coming soon',
-                'Sharing requires LoopTidy accounts. This is a UI placeholder only (no real auth yet).'
-              );
+              showComingSoon('Loop sharing');
             }}
           >
             <Text style={[styles.shareTitle, { color: theme.colors.text }]}>Share this loop</Text>
             <Text style={[styles.shareSub, { color: theme.colors.textSecondary }]}>
-              Share with LoopTidy accounts only (not yet available).
+              Share with other LoopTidy users once accounts launch.
             </Text>
           </Pressable>
         </View>
 
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Attachments (optional)</Text>
+        <Text style={[styles.helperText, { color: theme.colors.textMuted }]}>
+          Links save on this device. Photos, documents, and other files are coming soon.
+        </Text>
 
         <View style={styles.attachRow}>
           <TextInput
@@ -338,10 +344,12 @@ export default function NewLoopScreen() {
               void hapticLight();
               addLinkAttachment();
             }}
+            disabled={!canAddLink}
             style={({ pressed }) => [
               styles.addLinkButton,
               { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-              pressed && styles.pressed,
+              !canAddLink && styles.disabled,
+              canAddLink && pressed && styles.pressed,
             ]}
           >
             <Text style={styles.addLinkButtonText}>Add</Text>
@@ -356,6 +364,7 @@ export default function NewLoopScreen() {
             }}
             style={({ pressed }) => [
               styles.attachTile,
+              styles.attachTileSoon,
               { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
               pressed && styles.pressed,
             ]}
@@ -370,6 +379,7 @@ export default function NewLoopScreen() {
             }}
             style={({ pressed }) => [
               styles.attachTile,
+              styles.attachTileSoon,
               { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
               pressed && styles.pressed,
             ]}
@@ -384,6 +394,7 @@ export default function NewLoopScreen() {
             }}
             style={({ pressed }) => [
               styles.attachTile,
+              styles.attachTileSoon,
               { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
               pressed && styles.pressed,
             ]}
@@ -398,6 +409,7 @@ export default function NewLoopScreen() {
             }}
             style={({ pressed }) => [
               styles.attachTile,
+              styles.attachTileSoon,
               { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
               pressed && styles.pressed,
             ]}
@@ -443,13 +455,13 @@ export default function NewLoopScreen() {
           style={({ pressed }) => [
             styles.saveButton,
             { backgroundColor: theme.colors.primary },
-            pressed && styles.pressed,
-            saving && styles.disabled,
+            !canSave && styles.disabled,
+            canSave && pressed && styles.pressed,
           ]}
           onPress={handleSave}
-          disabled={saving}
+          disabled={!canSave}
         >
-          <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Create Loop'}</Text>
+          <Text style={styles.saveButtonText}>{saving ? 'Saving…' : 'Create loop'}</Text>
         </Pressable>
       </ScreenScroll>
     </KeyboardAvoidingView>
@@ -458,10 +470,17 @@ export default function NewLoopScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  firstLabel: {
+    marginTop: 0,
+  },
   label: {
     ...typography.callout,
     marginBottom: spacing.sm,
     marginTop: spacing.lg,
+  },
+  helperText: {
+    ...typography.caption,
+    marginBottom: spacing.sm,
   },
   input: {
     borderRadius: radius.md,
@@ -487,6 +506,9 @@ const styles = StyleSheet.create({
   chipText: {
     ...typography.caption,
     fontWeight: '800',
+  },
+  chipPressed: {
+    opacity: 0.85,
   },
   section: {
     marginTop: spacing.lg,
@@ -543,6 +565,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  attachTileSoon: {
+    opacity: 0.88,
   },
   attachIcon: {
     fontSize: 16,

@@ -9,7 +9,7 @@ interface EmptyStateProps {
   compact?: boolean;
 }
 
-export function EmptyState({ icon = '○', title, message, compact = false }: EmptyStateProps) {
+export function EmptyState({ icon = '◌', title, message, compact = false }: EmptyStateProps) {
   const { theme } = useTheme();
   return (
     <View

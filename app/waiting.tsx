@@ -28,8 +28,9 @@ export default function WaitingScreen() {
         waitingLoops.map((loop) => <LoopCard key={loop.id} loop={loop} />)
       ) : (
         <EmptyState
+          icon="⏳"
           title="Nothing waiting"
-          message="You're not waiting on anyone right now."
+          message="When you're blocked on someone else, create a waiting-on loop to track it here."
         />
       )}
     </ScreenScroll>

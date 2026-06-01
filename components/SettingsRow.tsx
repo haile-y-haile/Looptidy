@@ -1,6 +1,8 @@
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { ComingSoonBadge } from './ComingSoonBadge';
 import { radius, spacing, typography } from '../lib/theme';
+import { showComingSoon } from '../lib/comingSoon';
 
 type RightAccessory =
   | { type: 'chevron' }
@@ -15,6 +17,7 @@ interface SettingsRowProps {
   onPress?: () => void;
   right?: RightAccessory;
   tone?: 'default' | 'danger';
+  comingSoon?: boolean;
 }
 
 export function SettingsRow({
@@ -24,34 +27,51 @@ export function SettingsRow({
   onPress,
   right = { type: 'chevron' },
   tone = 'default',
+  comingSoon = false,
 }: SettingsRowProps) {
   const { theme } = useTheme();
   const isDanger = tone === 'danger';
 
+  const handlePress = () => {
+    if (comingSoon) {
+      showComingSoon(title);
+      return;
+    }
+    onPress?.();
+  };
+
+  const isInteractive = comingSoon || !!onPress;
+  const resolvedRight = comingSoon ? { type: 'none' as const } : right;
+
   return (
     <Pressable
-      onPress={onPress}
-      disabled={!onPress}
+      onPress={isInteractive ? handlePress : undefined}
+      disabled={!isInteractive}
       style={({ pressed }) => [
         styles.row,
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
+          opacity: comingSoon ? 0.92 : 1,
         },
-        pressed && styles.pressed,
+        isInteractive && pressed && styles.pressed,
+        !isInteractive && styles.staticRow,
       ]}
     >
       <View style={styles.left}>
         {icon ? <Text style={[styles.icon, { color: theme.colors.textMuted }]}>{icon}</Text> : null}
         <View style={styles.texts}>
-          <Text
-            style={[
-              styles.title,
-              { color: isDanger ? theme.colors.danger : theme.colors.text },
-            ]}
-          >
-            {title}
-          </Text>
+          <View style={styles.titleRow}>
+            <Text
+              style={[
+                styles.title,
+                { color: isDanger ? theme.colors.danger : theme.colors.text },
+              ]}
+            >
+              {title}
+            </Text>
+            {comingSoon ? <ComingSoonBadge compact /> : null}
+          </View>
           {subtitle ? (
             <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               {subtitle}
@@ -61,18 +81,18 @@ export function SettingsRow({
       </View>
 
       <View style={styles.right}>
-        {right.type === 'value' ? (
-          <Text style={[styles.value, { color: theme.colors.textMuted }]}>{right.value}</Text>
+        {resolvedRight.type === 'value' ? (
+          <Text style={[styles.value, { color: theme.colors.textMuted }]}>{resolvedRight.value}</Text>
         ) : null}
-        {right.type === 'switch' ? (
+        {resolvedRight.type === 'switch' ? (
           <Switch
-            value={right.value}
-            onValueChange={right.onChange}
+            value={resolvedRight.value}
+            onValueChange={resolvedRight.onChange}
             trackColor={{ false: theme.colors.borderLight, true: theme.colors.primary }}
             thumbColor={theme.colors.surface}
           />
         ) : null}
-        {right.type === 'chevron' ? (
+        {resolvedRight.type === 'chevron' ? (
           <Text style={[styles.chevron, { color: theme.colors.textMuted }]}>›</Text>
         ) : null}
       </View>
@@ -90,6 +110,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
+  },
+  staticRow: {
+    opacity: 1,
   },
   pressed: {
     opacity: 0.92,
@@ -109,6 +132,12 @@ const styles = StyleSheet.create({
   },
   texts: {
     flex: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
   title: {
     ...typography.callout,
@@ -132,4 +161,3 @@ const styles = StyleSheet.create({
     marginTop: -1,
   },
 });
-

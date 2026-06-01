@@ -90,7 +90,8 @@ export default function SettingsScreen() {
         >
           <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Settings</Text>
           <Text style={[styles.heroSubtitle, { color: theme.colors.textSecondary }]}>
-            Local-first preferences and placeholders for future account features.
+            LoopTidy stores everything on your iPhone. Appearance works today; account features
+            are on the way.
           </Text>
 
           <View style={styles.pillsRow}>
@@ -117,36 +118,40 @@ export default function SettingsScreen() {
       </Animated.View>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Account</Text>
-      <SettingsRow icon="👤" title="Profile" subtitle="UI placeholder" onPress={() => {}} />
-      <SettingsRow icon="🔐" title="Security" subtitle="UI placeholder" onPress={() => {}} />
-      <SettingsRow icon="🕵️" title="Privacy" subtitle="UI placeholder" onPress={() => {}} />
+      <SettingsRow icon="👤" title="Profile" subtitle="Manage your name and photo" comingSoon />
+      <SettingsRow icon="🔐" title="Security" subtitle="Password and device security" comingSoon />
+      <SettingsRow icon="🕵️" title="Privacy" subtitle="Data and visibility controls" comingSoon />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Preferences</Text>
       <SettingsRow
         icon="🎨"
         title="Appearance"
-        subtitle="Dark mode works locally"
+        subtitle="Use the pills above to switch themes"
         right={{ type: 'value', value: appearanceLabel }}
-        onPress={() => {}}
       />
-      <SettingsRow icon="🌐" title="Language" subtitle="UI placeholder" onPress={() => {}} />
-      <SettingsRow icon="♿" title="Accessibility" subtitle="UI placeholder" onPress={() => {}} />
-      <SettingsRow icon="🔔" title="Notifications" subtitle="No push notifications in MVP" onPress={() => {}} />
+      <SettingsRow icon="🌐" title="Language" subtitle="English only for now" comingSoon />
+      <SettingsRow icon="♿" title="Accessibility" subtitle="Text size and motion" comingSoon />
+      <SettingsRow
+        icon="🔔"
+        title="Notifications"
+        subtitle="Reminders are not available yet"
+        comingSoon
+      />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Data</Text>
-      <SettingsRow icon="💾" title="Backup & Restore" subtitle="UI placeholder" onPress={() => {}} />
+      <SettingsRow icon="💾" title="Backup & Restore" subtitle="Cloud backup and export" comingSoon />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Help</Text>
-      <SettingsRow icon="📄" title="Legal" subtitle="Privacy policy and terms (placeholder)" onPress={() => {}} />
-      <SettingsRow icon="💬" title="Support" subtitle="Contact and help (placeholder)" onPress={() => {}} />
+      <SettingsRow icon="📄" title="Legal" subtitle="Privacy policy and terms" comingSoon />
+      <SettingsRow icon="💬" title="Support" subtitle="Contact and help center" comingSoon />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Danger Zone</Text>
       <SettingsRow
         icon="⚠️"
         title="Delete Account"
-        subtitle="UI-only placeholder (no account system yet)"
+        subtitle="Requires an account — not available yet"
         tone="danger"
-        onPress={() => {}}
+        comingSoon
       />
 
       <View style={{ height: spacing.xxl }} />
@@ -194,4 +199,3 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 });
-

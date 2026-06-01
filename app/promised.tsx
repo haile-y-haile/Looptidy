@@ -28,8 +28,9 @@ export default function PromisedScreen() {
         promisedLoops.map((loop) => <LoopCard key={loop.id} loop={loop} />)
       ) : (
         <EmptyState
+          icon="🤝"
           title="No open promises"
-          message="You haven't committed to any follow-ups that are still open."
+          message="Commitments you make to others will show up here until they're done."
         />
       )}
     </ScreenScroll>

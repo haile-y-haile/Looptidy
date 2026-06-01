@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { StatCard } from '../components/StatCard';
-import { SectionHeader } from '../components/SectionHeader';
 import { LoopCard } from '../components/LoopCard';
 import { EmptyState } from '../components/EmptyState';
 import { ScreenScroll } from '../components/ScreenScroll';
@@ -19,7 +18,8 @@ import { getOnboardingComplete } from '../lib/preferences';
 import { hapticLight, hapticSuccess } from '../lib/haptics';
 import { radius, spacing, typography } from '../lib/theme';
 import type { LoopType, OpenLoop, Priority, RiskLevel } from '../types';
-import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue } from '../lib/utils';
+import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue, loopTypeLabels } from '../lib/utils';
+import { showComingSoon } from '../lib/comingSoon';
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -280,6 +280,55 @@ export default function TodayScreen() {
         </View>
       </GlassCard>
 
+      <GlassCard style={styles.focusCard} intensity={45} contentPadding={spacing.xxl}>
+        <Text style={[styles.focusLabel, { color: theme.colors.textMuted }]}>Today's focus</Text>
+        {focusLoop ? (
+          <>
+            <Text style={[styles.focusTitle, { color: theme.colors.text }]} numberOfLines={2}>
+              {focusLoop.title}
+            </Text>
+            <Text style={[styles.focusSub, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+              {focusLoop.dueDate
+                ? `Due ${formatRelativeDate(focusLoop.dueDate)}`
+                : loopTypeLabels[focusLoop.type]}
+              {focusLoop.waitingOn ? ` · Waiting on ${focusLoop.waitingOn.name}` : ''}
+            </Text>
+            <View style={styles.focusActions}>
+              <Pressable
+                onPress={() => {
+                  void hapticLight();
+                  router.push(`/loops/${focusLoop.id}`);
+                }}
+                style={({ pressed }) => [
+                  styles.focusButtonPrimary,
+                  { backgroundColor: theme.colors.primary },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.focusButtonPrimaryText}>Open</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  void hapticLight();
+                  showComingSoon('Follow-up nudges');
+                }}
+                style={({ pressed }) => [
+                  styles.focusButtonSecondary,
+                  { backgroundColor: theme.colors.surface2, borderColor: theme.colors.border },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={[styles.focusButtonSecondaryText, { color: theme.colors.text }]}>
+                  Nudge
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <EmptyState compact title="All clear" message="No urgent loops need attention right now." />
+        )}
+      </GlassCard>
+
       <View style={styles.actions}>
         <Pressable
           style={({ pressed }) => [
@@ -305,60 +354,6 @@ export default function TodayScreen() {
         </Pressable>
       </View>
 
-      <SectionHeader
-        title="Due Soon"
-        action="See all"
-        onAction={() => router.push('/loops')}
-      />
-      {/* Focus */}
-      <GlassCard style={styles.focusCard} intensity={45} contentPadding={spacing.xxl}>
-        <Text style={[styles.focusLabel, { color: theme.colors.textMuted }]}>Today Focus</Text>
-        {focusLoop ? (
-          <>
-            <Text style={[styles.focusTitle, { color: theme.colors.text }]} numberOfLines={2}>
-              {focusLoop.title}
-            </Text>
-            <Text style={[styles.focusSub, { color: theme.colors.textSecondary }]} numberOfLines={2}>
-              {focusLoop.dueDate ? `Due ${formatRelativeDate(focusLoop.dueDate)}` : `Type: ${focusLoop.type}`}
-              {focusLoop.waitingOn ? ` • Waiting on ${focusLoop.waitingOn.name}` : ''}
-            </Text>
-            <View style={styles.focusActions}>
-              <Pressable
-                onPress={() => {
-                  void hapticLight();
-                  router.push(`/loops/${focusLoop.id}`);
-                }}
-                style={({ pressed }) => [
-                  styles.focusButtonPrimary,
-                  { backgroundColor: theme.colors.primary },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.focusButtonPrimaryText}>Open</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  void hapticLight();
-                  router.push('/waiting');
-                }}
-                style={({ pressed }) => [
-                  styles.focusButtonSecondary,
-                  { backgroundColor: theme.colors.surface2, borderColor: theme.colors.border },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={[styles.focusButtonSecondaryText, { color: theme.colors.text }]}>
-                  Nudge
-                </Text>
-              </Pressable>
-            </View>
-          </>
-        ) : (
-          <EmptyState compact title="No focus loop" message="You're clear right now." />
-        )}
-      </GlassCard>
-
-      {/* Segments + chips */}
       <SegmentedControl
         value={tab}
         onChange={(next) => {
@@ -505,8 +500,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.lg,
   },
   primaryButton: {
     flex: 1,
@@ -546,10 +540,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   focusCard: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    padding: spacing.xxl,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     marginBottom: spacing.lg,
   },
   focusLabel: {
