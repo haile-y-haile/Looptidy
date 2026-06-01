@@ -16,8 +16,7 @@ LoopTidy is **local-only** today. Open-loop data (follow-ups, blockers, commitme
 
 Please **do not** report security issues in public GitHub issues.
 
-Email security concerns to: ****  
-Subject line: `LoopTidy Security`
+Use [GitHub private vulnerability reporting](https://github.com/haile-y-haile/Looptidy/security/advisories/new) if it is enabled on the repository. Otherwise, open a minimal public issue titled **Security — private contact requested** without exploit details or sensitive data, and a maintainer will follow up.
 
 Include:
 
@@ -25,8 +24,6 @@ Include:
 - Steps to reproduce
 - App version and iOS version
 - Whether data leaves the device (for current builds, loop content should not)
-
-You may also use GitHub **Private vulnerability reporting** if enabled on the repository.
 
 ## Public issues — please do not post
 

@@ -27,7 +27,6 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "",
         "appleTeamId": "6VC59B7Y5S"
       }
     }

@@ -60,7 +60,12 @@ Version and iOS build number are read from `app.json`. The production profile ma
 
 ## Submit to TestFlight
 
-Set `ascAppId` in `eas.json` (App Store Connect → LoopTidy → App Information → Apple ID) for non-interactive submit, then:
+Configure submit credentials locally (do not commit personal Apple IDs to the repo):
+
+- Set `EXPO_APPLE_ID` to your Apple ID email in the shell, **or** add `"appleId"` under `submit.production.ios` in `eas.json` locally only.
+- Set `ascAppId` in `eas.json` (App Store Connect → LoopTidy → App Information → Apple ID) for non-interactive submit.
+
+Then run:
 
 ```bash
 npm run submit:ios
