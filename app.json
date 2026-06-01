@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hailehaile.looptidy",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "CFBundleDisplayName": "LoopTidy",
         "ITSAppUsesNonExemptEncryption": false
