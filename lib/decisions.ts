@@ -3,6 +3,7 @@ import type { Decision, DecisionStatus, OpenLoop, RiskLevel } from '../types';
 const VALID_STATUSES: DecisionStatus[] = [
   'decision_needed',
   'options_reviewed',
+  'recommended',
   'decided',
   'revisiting',
   'archived',
@@ -33,9 +34,13 @@ export function normalizeDecision(raw: Partial<Decision> & { id: string }, loopI
     finalDecision,
     rationale: raw.rationale ?? (status === 'decided' ? raw.outcome : undefined),
     impact: raw.impact,
+    tradeoffs: raw.tradeoffs,
+    recommendedOption: raw.recommendedOption,
     riskLevel: raw.riskLevel ?? 'medium',
+    decisionDeadline: raw.decisionDeadline,
     decidedAt: raw.decidedAt ?? (status === 'decided' ? now : undefined),
     revisitAt: raw.revisitAt,
+    nextAction: raw.nextAction,
     createdAt: raw.createdAt ?? now,
     updatedAt: raw.updatedAt ?? now,
   };

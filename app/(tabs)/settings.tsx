@@ -143,6 +143,32 @@ export default function SettingsScreen() {
         comingSoon
       />
 
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>PM tools</Text>
+      <SettingsRow
+        icon={settingsIcons.backup}
+        title="Decision Speed"
+        subtitle="Guided flow from question to decision"
+        onPress={() => router.push('/decision-speed')}
+      />
+      <SettingsRow
+        icon={settingsIcons.backup}
+        title="Ownership"
+        subtitle="Unclear owners, follow-ups, and escalations"
+        onPress={() => router.push('/ownership')}
+      />
+      <SettingsRow
+        icon={settingsIcons.backup}
+        title="Scope Guard"
+        subtitle="Capture and review scope changes"
+        onPress={() => router.push('/scope-guard')}
+      />
+      <SettingsRow
+        icon={settingsIcons.backup}
+        title="Feedback"
+        subtitle="Triage feedback into loops and decisions"
+        onPress={() => router.push('/feedback')}
+      />
+
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Data</Text>
       <SettingsRow
         icon={settingsIcons.backup}

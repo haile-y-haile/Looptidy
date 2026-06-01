@@ -66,6 +66,7 @@ export function decisionStatusLabel(status: DecisionStatus): string {
   const map: Record<DecisionStatus, string> = {
     decision_needed: 'Decision needed',
     options_reviewed: 'Options reviewed',
+    recommended: 'Recommended',
     decided: 'Decided',
     revisiting: 'Revisiting',
     archived: 'Archived',

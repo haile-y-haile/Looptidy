@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFeedback } from '../context/FeedbackContext';
 import { useLoops } from '../context/LoopContext';
+import { useScopeChanges } from '../context/ScopeContext';
 import { useTheme } from '../context/ThemeContext';
 import { GlassCard } from '../components/GlassCard';
 import { ProgressBar } from '../components/ProgressBar';
@@ -15,8 +17,13 @@ export default function InsightsScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { loops } = useLoops();
+  const { scopeChanges } = useScopeChanges();
+  const { feedbackItems } = useFeedback();
 
-  const insights = useMemo(() => computeInsights(loops), [loops]);
+  const insights = useMemo(
+    () => computeInsights(loops, scopeChanges, feedbackItems),
+    [loops, scopeChanges, feedbackItems]
+  );
   const messages = useMemo(() => buildInsightMessages(insights), [insights]);
 
   const maxType = Math.max(1, ...insights.byType.map((t) => t.count));
@@ -101,6 +108,46 @@ export default function InsightsScreen() {
             value={insights.decisionsNeededCount}
             color={theme.colors.purple}
           />
+        </GlassCard>
+
+        <GlassCard style={styles.card} intensity={32}>
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>PM signals</Text>
+          <View style={styles.statsRow}>
+            <StatCard label="Decisions pending" value={insights.decisionsPending} embedded />
+            <StatCard
+              label="Decided this week"
+              value={insights.decisionsMadeThisWeek}
+              color={theme.colors.success}
+              embedded
+            />
+          </View>
+          <View style={[styles.statsRow, styles.statsGap]}>
+            <StatCard label="Unclear ownership" value={insights.unclearOwnership} embedded />
+            <StatCard
+              label="Escalated"
+              value={insights.escalatedLoops}
+              color={theme.colors.danger}
+              embedded
+            />
+          </View>
+          <View style={[styles.statsRow, styles.statsGap]}>
+            <StatCard label="Scope captured" value={insights.scopeChangesCaptured} embedded />
+            <StatCard
+              label="High-impact scope"
+              value={insights.highImpactScope}
+              color={theme.colors.warning}
+              embedded
+            />
+          </View>
+          <View style={styles.statsRow}>
+            <StatCard label="Feedback captured" value={insights.feedbackCaptured} embedded />
+            <StatCard
+              label="Feedback converted"
+              value={insights.feedbackConverted}
+              color={theme.colors.primary}
+              embedded
+            />
+          </View>
         </GlassCard>
 
         <GlassCard style={styles.card} intensity={32}>

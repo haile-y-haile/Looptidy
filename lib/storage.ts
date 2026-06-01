@@ -30,6 +30,13 @@ function normalizeLoop(raw: OpenLoop): OpenLoop {
     snoozedUntil: raw.snoozedUntil,
     reminderEnabled,
     localNotificationId: raw.localNotificationId,
+    accountableOwner: raw.accountableOwner,
+    nextActionOwner: raw.nextActionOwner,
+    nextCheckInAt: raw.nextCheckInAt,
+    lastFollowUpAt: raw.lastFollowUpAt,
+    accountabilityStatus: raw.accountabilityStatus,
+    escalationLevel: raw.escalationLevel ?? 'none',
+    accountabilityNotes: raw.accountabilityNotes ?? '',
   };
 }
 

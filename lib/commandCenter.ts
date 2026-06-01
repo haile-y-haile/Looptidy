@@ -29,6 +29,11 @@ export const COMMAND_CENTER_FILTERS: { key: CommandCenterFilter; label: string }
   { key: 'high_risk', label: 'High Risk' },
   { key: 'overdue', label: 'Overdue' },
   { key: 'closed', label: 'Closed' },
+  { key: 'ownership_unclear', label: 'Owner unclear' },
+  { key: 'escalated', label: 'Escalated' },
+  { key: 'decision_needed', label: 'Decision needed' },
+  { key: 'scope_change', label: 'Scope change' },
+  { key: 'feedback', label: 'Feedback' },
 ];
 
 export const COMMAND_CENTER_SORTS: { key: CommandCenterSort; label: string }[] = [
@@ -180,6 +185,26 @@ export function getCommandCenterEmptyState(
     closed: {
       title: 'No closed loops',
       message: 'Loops you close are kept here for reference.',
+    },
+    ownership_unclear: {
+      title: 'Ownership is clear',
+      message: 'Loops with unclear accountability will appear here.',
+    },
+    escalated: {
+      title: 'Nothing escalated',
+      message: 'Escalated accountability issues will show here.',
+    },
+    decision_needed: {
+      title: 'No decisions needed',
+      message: 'Open decision loops and pending decision records appear here.',
+    },
+    scope_change: {
+      title: 'No scope changes',
+      message: 'Capture scope changes in Scope Guard to review them here.',
+    },
+    feedback: {
+      title: 'No feedback',
+      message: 'Captured feedback items will appear here when you filter or search.',
     },
   };
   return (

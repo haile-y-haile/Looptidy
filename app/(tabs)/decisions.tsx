@@ -50,18 +50,52 @@ export default function DecisionsScreen() {
         Track choices, rationale, impact, and revisits — tied to your open loops.
       </Text>
 
+      <View style={styles.topActions}>
+        <Pressable
+          onPress={() => {
+            void hapticLight();
+            router.push('/decision-speed');
+          }}
+          style={({ pressed }) => [
+            styles.addBtn,
+            { backgroundColor: theme.colors.primary, flex: 1 },
+            pressed && { opacity: 0.9 },
+          ]}
+        >
+          <Text style={styles.addBtnText}>Decision Speed</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            void hapticLight();
+            router.push('/decision-detail?loopId=' + (neededLoops[0]?.id ?? loops[0]?.id ?? ''));
+          }}
+          style={({ pressed }) => [
+            styles.addBtnOutline,
+            { borderColor: theme.colors.border, flex: 1 },
+            pressed && { opacity: 0.9 },
+          ]}
+        >
+          <Text style={[styles.addBtnOutlineText, { color: theme.colors.text }]}>Add decision</Text>
+        </Pressable>
+      </View>
+
       <Pressable
         onPress={() => {
           void hapticLight();
-          router.push('/decision-detail?loopId=' + (neededLoops[0]?.id ?? loops[0]?.id ?? ''));
+          router.push('/feedback');
         }}
         style={({ pressed }) => [
-          styles.addBtn,
-          { backgroundColor: theme.colors.primary },
+          styles.feedbackLink,
+          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
           pressed && { opacity: 0.9 },
         ]}
       >
-        <Text style={styles.addBtnText}>+ Add decision</Text>
+        <Text style={[styles.feedbackLinkText, { color: theme.colors.text }]}>
+          Feedback pipeline →
+        </Text>
+        <Text style={[styles.feedbackLinkSub, { color: theme.colors.textMuted }]}>
+          Turn feedback into loops or decisions
+        </Text>
       </Pressable>
 
       <GlassCard style={styles.statsCard} intensity={32}>
@@ -151,11 +185,39 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
   },
+  feedbackLink: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  feedbackLinkText: {
+    ...typography.callout,
+    fontWeight: '800',
+  },
+  feedbackLinkSub: {
+    ...typography.caption,
+    marginTop: spacing.xs,
+  },
+  topActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
   addBtn: {
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
-    marginBottom: spacing.lg,
+  },
+  addBtnOutline: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  addBtnOutlineText: {
+    ...typography.callout,
+    fontWeight: '800',
   },
   addBtnText: {
     ...typography.callout,

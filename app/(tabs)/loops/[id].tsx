@@ -17,6 +17,7 @@ import { DetailActionBar } from '../../../components/DetailActionBar';
 import { EmptyState } from '../../../components/EmptyState';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { ReminderPanel } from '../../../components/ReminderPanel';
+import { AccountabilityPanel } from '../../../components/AccountabilityPanel';
 import { ScreenScroll } from '../../../components/ScreenScroll';
 import { ScreenCentered } from '../../../components/ScreenCentered';
 import { hapticLight, hapticSuccess } from '../../../lib/haptics';
@@ -170,7 +171,26 @@ export default function LoopDetailScreen() {
           <MetaRow label="Updated" value={formatDate(loop.updatedAt)} isLast />
         </View>
 
-        {!isClosed ? <ReminderPanel loop={loop} /> : null}
+        {!isClosed ? (
+          <>
+            {loop.type === 'decision_needed' ? (
+              <Pressable
+                onPress={() => router.push(`/decision-speed?loopId=${loop.id}`)}
+                style={({ pressed }) => [
+                  styles.speedLink,
+                  { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+                  pressed && { opacity: 0.9 },
+                ]}
+              >
+                <Text style={[styles.speedLinkText, { color: theme.colors.primary }]}>
+                  Open Decision Speed →
+                </Text>
+              </Pressable>
+            ) : null}
+            <AccountabilityPanel loop={loop} />
+            <ReminderPanel loop={loop} />
+          </>
+        ) : null}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sharing</Text>
@@ -546,4 +566,15 @@ const styles = StyleSheet.create({
     ...typography.callout,
   },
   pressed: { opacity: 0.8 },
+  speedLink: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  speedLinkText: {
+    ...typography.callout,
+    fontWeight: '800',
+  },
 });

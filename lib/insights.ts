@@ -1,4 +1,9 @@
-import type { Category, LoopType, OpenLoop } from '../types';
+import type { Category, FeedbackItem, LoopType, OpenLoop, ScopeChange } from '../types';
+import { getAccountabilitySummary } from './accountability';
+import { getDecisionsMadeThisWeek } from './pmSignals';
+import { flattenDecisions } from './decisions';
+import { getScopeChangeSummary } from './scopeGuard';
+import { getFeedbackSummary } from './feedback';
 import { isOpenLoop } from './utils';
 import { categoryLabels, loopTypeLabels } from './utils';
 
@@ -20,6 +25,14 @@ export interface LoopInsights {
   topCategories: { category: Category; count: number; label: string }[];
   agingBuckets: { label: string; count: number }[];
   closedThisWeekGoal: number;
+  decisionsPending: number;
+  decisionsMadeThisWeek: number;
+  unclearOwnership: number;
+  escalatedLoops: number;
+  scopeChangesCaptured: number;
+  highImpactScope: number;
+  feedbackCaptured: number;
+  feedbackConverted: number;
 }
 
 function startOfWeek(d = new Date()): Date {
@@ -46,7 +59,11 @@ function isOverdueLoop(loop: OpenLoop): boolean {
   return due < now;
 }
 
-export function computeInsights(loops: OpenLoop[]): LoopInsights {
+export function computeInsights(
+  loops: OpenLoop[],
+  scopeChanges: ScopeChange[] = [],
+  feedbackItems: FeedbackItem[] = []
+): LoopInsights {
   const weekStart = startOfWeek();
   const open = loops.filter(isOpenLoop);
   const closedThisWeek = loops.filter(
@@ -111,6 +128,11 @@ export function computeInsights(loops: OpenLoop[]): LoopInsights {
   const closureRatePercent =
     loops.length > 0 ? Math.round((closedAll / loops.length) * 100) : null;
 
+  const acc = getAccountabilitySummary(loops);
+  const scopeSum = getScopeChangeSummary(scopeChanges);
+  const fbSum = getFeedbackSummary(feedbackItems);
+  const decisions = flattenDecisions(loops);
+
   return {
     totalOpen: open.length,
     closedThisWeek,
@@ -133,6 +155,14 @@ export function computeInsights(loops: OpenLoop[]): LoopInsights {
     topCategories,
     agingBuckets,
     closedThisWeekGoal: Math.max(closedThisWeek, 3),
+    decisionsPending: decisions.filter((d) => d.status === 'decision_needed').length,
+    decisionsMadeThisWeek: getDecisionsMadeThisWeek(loops),
+    unclearOwnership: acc.unclear,
+    escalatedLoops: acc.escalated,
+    scopeChangesCaptured: scopeSum.total,
+    highImpactScope: scopeSum.highImpact,
+    feedbackCaptured: fbSum.total,
+    feedbackConverted: fbSum.converted,
   };
 }
 

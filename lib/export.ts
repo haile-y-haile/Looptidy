@@ -1,4 +1,4 @@
-import type { LoopTidyBackup, OpenLoop, WeeklyReview } from '../types';
+import type { FeedbackItem, LoopTidyBackup, OpenLoop, ScopeChange, WeeklyReview } from '../types';
 import { BACKUP_FORMAT_VERSION } from '../types';
 import { flattenDecisions } from './decisions';
 import { isOpenLoop } from './utils';
@@ -16,12 +16,19 @@ function rowsToCsv(headers: string[], rows: string[][]): string {
   return lines.join('\n');
 }
 
-export function buildFullBackup(loops: OpenLoop[], weeklyReviews: WeeklyReview[]): LoopTidyBackup {
+export function buildFullBackup(
+  loops: OpenLoop[],
+  weeklyReviews: WeeklyReview[],
+  scopeChanges: ScopeChange[] = [],
+  feedbackItems: FeedbackItem[] = []
+): LoopTidyBackup {
   return {
     version: BACKUP_FORMAT_VERSION,
     exportedAt: new Date().toISOString(),
     loops,
     weeklyReviews,
+    scopeChanges,
+    feedbackItems,
   };
 }
 
@@ -41,6 +48,10 @@ export function openLoopsToCsv(loops: OpenLoop[]): string {
     'dueDate',
     'waitingOn',
     'promisedTo',
+    'accountableOwner',
+    'nextActionOwner',
+    'accountabilityStatus',
+    'escalationLevel',
     'createdAt',
     'updatedAt',
   ];
@@ -55,6 +66,10 @@ export function openLoopsToCsv(loops: OpenLoop[]): string {
     l.dueDate ?? '',
     l.waitingOn?.name ?? '',
     l.promisedTo?.name ?? '',
+    l.accountableOwner?.name ?? '',
+    l.nextActionOwner?.name ?? '',
+    l.accountabilityStatus ?? '',
+    l.escalationLevel ?? '',
     l.createdAt,
     l.updatedAt,
   ]);
@@ -71,6 +86,7 @@ export function decisionsToCsv(loops: OpenLoop[]): string {
     'finalDecision',
     'rationale',
     'impact',
+    'nextAction',
     'riskLevel',
     'decidedAt',
     'revisitAt',
@@ -84,11 +100,49 @@ export function decisionsToCsv(loops: OpenLoop[]): string {
     d.finalDecision ?? '',
     d.rationale ?? '',
     d.impact ?? '',
+    d.nextAction ?? '',
     d.riskLevel,
     d.decidedAt ?? '',
     d.revisitAt ?? '',
   ]);
   return rowsToCsv(headers, rows.map((r) => r.map(String)));
+}
+
+export function scopeChangesToCsv(items: ScopeChange[]): string {
+  const headers = ['id', 'title', 'status', 'changeType', 'impact', 'requestedBy', 'decision', 'loopId'];
+  const rows = items.map((s) => [
+    s.id,
+    s.title,
+    s.status,
+    s.changeType,
+    s.impact,
+    s.requestedBy ?? '',
+    s.decision ?? '',
+    s.loopId ?? '',
+  ]);
+  return rowsToCsv(headers, rows.map((r) => r.map(String)));
+}
+
+export function scopeChangesToJson(items: ScopeChange[]): string {
+  return JSON.stringify(items, null, 2);
+}
+
+export function feedbackToCsv(items: FeedbackItem[]): string {
+  const headers = ['id', 'title', 'source', 'urgency', 'status', 'theme', 'summary'];
+  const rows = items.map((f) => [
+    f.id,
+    f.title,
+    f.source,
+    f.urgency,
+    f.status,
+    f.theme ?? '',
+    f.summary,
+  ]);
+  return rowsToCsv(headers, rows.map((r) => r.map(String)));
+}
+
+export function feedbackToJson(items: FeedbackItem[]): string {
+  return JSON.stringify(items, null, 2);
 }
 
 export function weeklyReviewsToCsv(reviews: WeeklyReview[]): string {

@@ -2,7 +2,10 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFeedback } from '../../../context/FeedbackContext';
 import { useLoops } from '../../../context/LoopContext';
+import { useScopeChanges } from '../../../context/ScopeContext';
+import { GlassCard } from '../../../components/GlassCard';
 import { useTheme } from '../../../context/ThemeContext';
 import { EmptyState } from '../../../components/EmptyState';
 import { FilterChip } from '../../../components/FilterChip';
@@ -22,7 +25,12 @@ import {
   type CommandCenterSort,
 } from '../../../lib/commandCenter';
 import type { CommandCenterFilter } from '../../../lib/loopFilters';
-import { spacing, typography } from '../../../lib/theme';
+import {
+  FEEDBACK_SOURCE_LABELS,
+  filterFeedbackByQuery,
+} from '../../../lib/feedback';
+import { filterScopeChangesByQuery, SCOPE_STATUS_LABELS } from '../../../lib/scopeGuard';
+import { radius, spacing, typography } from '../../../lib/theme';
 
 type ReminderFilterKey = 'due_today' | 'upcoming' | 'snoozed' | 'overdue' | null;
 
@@ -39,6 +47,8 @@ export default function CommandCenterScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { loops, loading } = useLoops();
+  const { scopeChanges } = useScopeChanges();
+  const { feedbackItems } = useFeedback();
   const params = useLocalSearchParams<{ filter?: string; sort?: string }>();
 
   const initialFilter = useMemo(() => {
@@ -68,6 +78,21 @@ export default function CommandCenterScreen() {
     [loops, filter, sort, query, reminderFilter]
   );
 
+  const scopeResults = useMemo(() => {
+    if (filter === 'scope_change') return filterScopeChangesByQuery(scopeChanges, query);
+    if (filter === 'all' && query.trim()) return filterScopeChangesByQuery(scopeChanges, query);
+    return [];
+  }, [filter, scopeChanges, query]);
+
+  const feedbackResults = useMemo(() => {
+    if (filter === 'feedback') return filterFeedbackByQuery(feedbackItems, query);
+    if (filter === 'all' && query.trim()) return filterFeedbackByQuery(feedbackItems, query);
+    return [];
+  }, [filter, feedbackItems, query]);
+
+  const showLoopList = filter !== 'scope_change' && filter !== 'feedback';
+  const totalResults = (showLoopList ? results.length : 0) + scopeResults.length + feedbackResults.length;
+
   const hasActiveFilters =
     filter !== 'all' || query.trim().length > 0 || reminderFilter !== null;
 
@@ -87,10 +112,10 @@ export default function CommandCenterScreen() {
       <ScreenScroll contentContainerStyle={{ paddingTop: spacing.md + insets.top }}>
         <Text style={[styles.title, { color: theme.colors.text }]}>Command Center</Text>
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          Search, filter, and sort your open loops, blockers, and commitments.
+          Search loops, decisions, accountability notes, scope changes, and feedback.
         </Text>
 
-        <SearchField value={query} onChangeText={setQuery} placeholder="Search loops…" />
+        <SearchField value={query} onChangeText={setQuery} placeholder="Search everything…" />
 
         <View style={styles.toolbar}>
           <Pressable
@@ -114,7 +139,7 @@ export default function CommandCenterScreen() {
         </View>
 
         <Text style={[styles.count, { color: theme.colors.textMuted }]}>
-          {results.length} result{results.length === 1 ? '' : 's'}
+          {totalResults} result{totalResults === 1 ? '' : 's'}
         </Text>
 
         <ScrollView
@@ -165,8 +190,57 @@ export default function CommandCenterScreen() {
 
         {loading ? (
           <ListSkeleton rows={5} />
-        ) : results.length > 0 ? (
-          results.map((loop, index) => <LoopCard key={loop.id} loop={loop} index={index} />)
+        ) : totalResults > 0 ? (
+          <>
+            {showLoopList && results.length > 0 ? (
+              <>
+                {filter === 'all' && (scopeResults.length > 0 || feedbackResults.length > 0) ? (
+                  <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Loops</Text>
+                ) : null}
+                {results.map((loop, index) => (
+                  <LoopCard key={loop.id} loop={loop} index={index} />
+                ))}
+              </>
+            ) : null}
+            {scopeResults.length > 0 ? (
+              <>
+                <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Scope changes</Text>
+                {scopeResults.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => router.push('/scope-guard')}
+                    style={({ pressed }) => pressed && { opacity: 0.9 }}
+                  >
+                    <GlassCard style={styles.auxCard} intensity={24}>
+                      <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
+                      <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
+                        {SCOPE_STATUS_LABELS[item.status]} · {item.impact} impact
+                      </Text>
+                    </GlassCard>
+                  </Pressable>
+                ))}
+              </>
+            ) : null}
+            {feedbackResults.length > 0 ? (
+              <>
+                <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Feedback</Text>
+                {feedbackResults.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => router.push('/feedback')}
+                    style={({ pressed }) => pressed && { opacity: 0.9 }}
+                  >
+                    <GlassCard style={styles.auxCard} intensity={24}>
+                      <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
+                      <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
+                        {FEEDBACK_SOURCE_LABELS[item.source]} · {item.urgency} urgency
+                      </Text>
+                    </GlassCard>
+                  </Pressable>
+                ))}
+              </>
+            ) : null}
+          </>
         ) : (
           <EmptyState title={empty.title} message={empty.message} illustration />
         )}
@@ -250,5 +324,16 @@ const styles = StyleSheet.create({
   newBtnText: {
     ...typography.headline,
     color: '#FFFFFF',
+  },
+  auxCard: {
+    marginBottom: spacing.md,
+  },
+  auxTitle: {
+    ...typography.callout,
+    fontWeight: '800',
+  },
+  auxMeta: {
+    ...typography.caption,
+    marginTop: spacing.xs,
   },
 });

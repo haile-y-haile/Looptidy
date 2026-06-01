@@ -4,7 +4,9 @@ import { Stack } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { useFeedback } from '../context/FeedbackContext';
 import { useLoops } from '../context/LoopContext';
+import { useScopeChanges } from '../context/ScopeContext';
 import { useTheme } from '../context/ThemeContext';
 import { GlassCard } from '../components/GlassCard';
 import { ScreenScroll } from '../components/ScreenScroll';
@@ -13,7 +15,11 @@ import {
   backupToJson,
   buildFullBackup,
   decisionsToCsv,
+  feedbackToCsv,
+  feedbackToJson,
   openLoopsToCsv,
+  scopeChangesToCsv,
+  scopeChangesToJson,
   weeklyReviewsToCsv,
   weeklyReviewsToJson,
 } from '../lib/export';
@@ -39,6 +45,8 @@ export default function BackupRestoreScreen() {
   const { theme } = useTheme();
   const { loops, replaceAllLoops, resetToDemoData, deleteAllLocalData, refreshLoops } =
     useLoops();
+  const { scopeChanges, replaceAllScopeChanges, clearAll: clearScope } = useScopeChanges();
+  const { feedbackItems, replaceAllFeedback, clearAll: clearFeedback } = useFeedback();
   const [busy, setBusy] = useState(false);
 
   const runExport = async (fn: () => Promise<void>) => {
@@ -57,7 +65,7 @@ export default function BackupRestoreScreen() {
   const exportFullJson = () =>
     runExport(async () => {
       const reviews = await getWeeklyReviews();
-      const backup = buildFullBackup(loops, reviews);
+      const backup = buildFullBackup(loops, reviews, scopeChanges, feedbackItems);
       await shareText(
         `looptidy-backup-${Date.now()}.json`,
         backupToJson(backup),
@@ -95,6 +103,26 @@ export default function BackupRestoreScreen() {
       );
     });
 
+  const exportScopeJson = () =>
+    runExport(async () => {
+      await shareText(`looptidy-scope-${Date.now()}.json`, scopeChangesToJson(scopeChanges), 'application/json');
+    });
+
+  const exportScopeCsv = () =>
+    runExport(async () => {
+      await shareText(`looptidy-scope-${Date.now()}.csv`, scopeChangesToCsv(scopeChanges), 'text/csv');
+    });
+
+  const exportFeedbackJson = () =>
+    runExport(async () => {
+      await shareText(`looptidy-feedback-${Date.now()}.json`, feedbackToJson(feedbackItems), 'application/json');
+    });
+
+  const exportFeedbackCsv = () =>
+    runExport(async () => {
+      await shareText(`looptidy-feedback-${Date.now()}.csv`, feedbackToCsv(feedbackItems), 'text/csv');
+    });
+
   const importBackup = async () => {
     void hapticLight();
     const result = await DocumentPicker.getDocumentAsync({
@@ -115,7 +143,7 @@ export default function BackupRestoreScreen() {
 
       Alert.alert(
         'Restore backup?',
-        'This replaces all loops and weekly review history on this device.',
+        'This replaces loops, weekly reviews, scope changes, and feedback on this device.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -125,6 +153,8 @@ export default function BackupRestoreScreen() {
               void (async () => {
                 await replaceAllLoops(validation.backup.loops);
                 await replaceWeeklyReviews(validation.backup.weeklyReviews);
+                await replaceAllScopeChanges(validation.backup.scopeChanges ?? []);
+                await replaceAllFeedback(validation.backup.feedbackItems ?? []);
                 await refreshLoops();
                 void hapticSuccess();
                 Alert.alert('Restore complete', 'Your LoopTidy data was restored from backup.');
@@ -138,6 +168,40 @@ export default function BackupRestoreScreen() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const confirmResetScope = () => {
+    Alert.alert('Reset scope changes?', 'Removes all captured scope changes on this device.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Reset',
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            await clearScope();
+            void hapticSuccess();
+            Alert.alert('Done', 'Scope changes have been cleared.');
+          })();
+        },
+      },
+    ]);
+  };
+
+  const confirmResetFeedback = () => {
+    Alert.alert('Reset feedback?', 'Removes all feedback items on this device.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Reset',
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            await clearFeedback();
+            void hapticSuccess();
+            Alert.alert('Done', 'Feedback has been cleared.');
+          })();
+        },
+      },
+    ]);
   };
 
   const confirmResetDemo = () => {
@@ -159,7 +223,7 @@ export default function BackupRestoreScreen() {
   const confirmDeleteAll = () => {
     Alert.alert(
       'Delete all local LoopTidy data?',
-      'Removes all loops and weekly review history on this device. This cannot be undone.',
+      'Removes all loops, reviews, scope changes, and feedback on this device. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -169,6 +233,8 @@ export default function BackupRestoreScreen() {
             void (async () => {
               await deleteAllLocalData();
               await clearWeeklyReviews();
+              await clearScope();
+              await clearFeedback();
               void hapticSuccess();
               Alert.alert('Deleted', 'All local LoopTidy data has been removed.');
             })();
@@ -201,9 +267,13 @@ export default function BackupRestoreScreen() {
             onPress={() => void exportReviewsJson()}
             disabled={busy}
           />
+          <ExportRow label="Weekly reviews (CSV)" onPress={() => void exportReviewsCsv()} disabled={busy} />
+          <ExportRow label="Scope changes (JSON)" onPress={() => void exportScopeJson()} disabled={busy} />
+          <ExportRow label="Scope changes (CSV)" onPress={() => void exportScopeCsv()} disabled={busy} />
+          <ExportRow label="Feedback (JSON)" onPress={() => void exportFeedbackJson()} disabled={busy} />
           <ExportRow
-            label="Weekly reviews (CSV)"
-            onPress={() => void exportReviewsCsv()}
+            label="Feedback (CSV)"
+            onPress={() => void exportFeedbackCsv()}
             disabled={busy}
             isLast
           />
@@ -230,7 +300,9 @@ export default function BackupRestoreScreen() {
           ]}
         >
           <DangerRow label="Reset demo data" onPress={confirmResetDemo} />
-          <DangerRow label="Delete all local loops" onPress={confirmDeleteAll} isLast />
+          <DangerRow label="Reset scope changes" onPress={confirmResetScope} />
+          <DangerRow label="Reset feedback" onPress={confirmResetFeedback} />
+          <DangerRow label="Delete all local data" onPress={confirmDeleteAll} isLast />
           <Text style={[styles.dangerHint, { color: theme.colors.textSecondary }]}>
             Account deletion is unavailable — LoopTidy has no cloud accounts yet.
           </Text>

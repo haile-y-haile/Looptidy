@@ -17,6 +17,7 @@ import type { RiskLevel } from '../types';
 const STATUSES: DecisionStatus[] = [
   'decision_needed',
   'options_reviewed',
+  'recommended',
   'decided',
   'revisiting',
   'archived',
@@ -49,6 +50,11 @@ export default function DecisionDetailScreen() {
   const [impact, setImpact] = useState(existing?.impact ?? '');
   const [riskLevel, setRiskLevel] = useState<RiskLevel>(existing?.riskLevel ?? 'medium');
   const [revisitAt, setRevisitAt] = useState(existing?.revisitAt ?? '');
+  const [owner, setOwner] = useState(existing?.owner ?? '');
+  const [tradeoffs, setTradeoffs] = useState(existing?.tradeoffs ?? '');
+  const [recommendedOption, setRecommendedOption] = useState(existing?.recommendedOption ?? '');
+  const [nextAction, setNextAction] = useState(existing?.nextAction ?? '');
+  const [decisionDeadline, setDecisionDeadline] = useState(existing?.decisionDeadline ?? '');
   const [busy, setBusy] = useState(false);
 
   if (!loop) {
@@ -75,6 +81,11 @@ export default function DecisionDetailScreen() {
         impact: impact.trim() || undefined,
         riskLevel,
         revisitAt: revisitAt.trim() || undefined,
+        owner: owner.trim() || undefined,
+        tradeoffs: tradeoffs.trim() || undefined,
+        recommendedOption: recommendedOption.trim() || undefined,
+        nextAction: nextAction.trim() || undefined,
+        decisionDeadline: decisionDeadline.trim() || undefined,
         decidedAt: status === 'decided' ? new Date().toISOString() : existing?.decidedAt,
       };
       if (isNew) {
@@ -93,6 +104,19 @@ export default function DecisionDetailScreen() {
       <Stack.Screen options={{ title: isNew ? 'Add decision' : 'Decision' }} />
       <ScreenScroll>
         <Text style={[styles.loopRef, { color: theme.colors.textMuted }]}>{loop.title}</Text>
+
+        <Pressable
+          onPress={() => router.push(`/decision-speed?loopId=${loop.id}${decisionId ? `&decisionId=${decisionId}` : ''}`)}
+          style={({ pressed }) => [
+            styles.speedLink,
+            { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+            pressed && { opacity: 0.9 },
+          ]}
+        >
+          <Text style={[styles.speedLinkText, { color: theme.colors.primary }]}>
+            Open Decision Speed →
+          </Text>
+        </Pressable>
 
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Title</Text>
         <TextInput
@@ -137,6 +161,44 @@ export default function DecisionDetailScreen() {
           toneForValue={(r) => getRiskColor(r)}
         />
 
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Owner</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
+          value={owner}
+          onChangeText={setOwner}
+          placeholder="Who owns this decision?"
+          placeholderTextColor={theme.colors.textMuted}
+        />
+
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Tradeoffs</Text>
+        <TextInput
+          style={[
+            styles.input,
+            styles.multiline,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
+          value={tradeoffs}
+          onChangeText={setTradeoffs}
+          placeholder="Key tradeoffs between options"
+          placeholderTextColor={theme.colors.textMuted}
+          multiline
+        />
+
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Recommended option</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
+          value={recommendedOption}
+          onChangeText={setRecommendedOption}
+          placeholder="Your recommended path"
+          placeholderTextColor={theme.colors.textMuted}
+        />
+
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Final decision</Text>
         <TextInput
           style={[
@@ -179,6 +241,30 @@ export default function DecisionDetailScreen() {
           multiline
         />
 
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Next action</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
+          value={nextAction}
+          onChangeText={setNextAction}
+          placeholder="What happens after the decision?"
+          placeholderTextColor={theme.colors.textMuted}
+        />
+
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Decision deadline</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
+          ]}
+          value={decisionDeadline}
+          onChangeText={setDecisionDeadline}
+          placeholder="YYYY-MM-DD"
+          placeholderTextColor={theme.colors.textMuted}
+        />
+
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Revisit date</Text>
         <TextInput
           style={[
@@ -210,7 +296,18 @@ export default function DecisionDetailScreen() {
 const styles = StyleSheet.create({
   loopRef: {
     ...typography.caption,
+    marginBottom: spacing.sm,
+  },
+  speedLink: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    alignItems: 'center',
     marginBottom: spacing.lg,
+  },
+  speedLinkText: {
+    ...typography.callout,
+    fontWeight: '800',
   },
   label: {
     ...typography.callout,

@@ -111,6 +111,58 @@ export default function LoopsScreen() {
           <Pressable
             onPress={() => {
               void hapticLight();
+              router.push('/ownership');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Ownership</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Accountability signals
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/scope-guard');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Scope Guard</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Track scope changes
+            </Text>
+          </Pressable>
+        </View>
+        <View style={styles.hubRow}>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/feedback');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Feedback</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Feedback pipeline
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/decision-speed');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Decision Speed</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Resolve decisions fast
+            </Text>
+          </Pressable>
+        </View>
+        <View style={styles.hubRow}>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
               router.push('/people');
             }}
             style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}

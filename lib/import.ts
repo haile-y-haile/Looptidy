@@ -1,4 +1,4 @@
-import type { LoopTidyBackup, OpenLoop, WeeklyReview } from '../types';
+import type { FeedbackItem, LoopTidyBackup, OpenLoop, ScopeChange, WeeklyReview } from '../types';
 import { BACKUP_FORMAT_VERSION } from '../types';
 import { normalizeDecision } from './decisions';
 
@@ -31,6 +31,14 @@ function isWeeklyReviewArray(value: unknown): value is WeeklyReview[] {
   );
 }
 
+function isScopeArray(value: unknown): value is ScopeChange[] {
+  return Array.isArray(value);
+}
+
+function isFeedbackArray(value: unknown): value is FeedbackItem[] {
+  return Array.isArray(value);
+}
+
 export function validateBackupJson(raw: string): ImportValidationResult {
   let parsed: unknown;
   try {
@@ -45,7 +53,7 @@ export function validateBackupJson(raw: string): ImportValidationResult {
 
   const obj = parsed as Record<string, unknown>;
 
-  if (obj.version !== BACKUP_FORMAT_VERSION && obj.version !== 1) {
+  if (obj.version !== BACKUP_FORMAT_VERSION && obj.version !== 1 && obj.version !== 2) {
     return {
       ok: false,
       error: `Unsupported backup version. Expected ${BACKUP_FORMAT_VERSION}.`,
@@ -57,6 +65,8 @@ export function validateBackupJson(raw: string): ImportValidationResult {
   }
 
   const weeklyReviews = isWeeklyReviewArray(obj.weeklyReviews) ? obj.weeklyReviews : [];
+  const scopeChanges = isScopeArray(obj.scopeChanges) ? (obj.scopeChanges as ScopeChange[]) : [];
+  const feedbackItems = isFeedbackArray(obj.feedbackItems) ? (obj.feedbackItems as FeedbackItem[]) : [];
 
   const loops = obj.loops.map((loop) => ({
     ...loop,
@@ -72,6 +82,8 @@ export function validateBackupJson(raw: string): ImportValidationResult {
       exportedAt: typeof obj.exportedAt === 'string' ? obj.exportedAt : new Date().toISOString(),
       loops,
       weeklyReviews,
+      scopeChanges,
+      feedbackItems,
     },
   };
 }

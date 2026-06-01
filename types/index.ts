@@ -26,6 +26,21 @@ export type Category =
   | 'home'
   | 'other';
 
+export type AccountabilityStatus =
+  | 'clear'
+  | 'unclear'
+  | 'waiting_on_owner'
+  | 'needs_follow_up'
+  | 'escalated'
+  | 'resolved';
+
+export type EscalationLevel =
+  | 'none'
+  | 'soft_follow_up'
+  | 'firm_follow_up'
+  | 'escalation_needed'
+  | 'escalated';
+
 export interface Person {
   id: string;
   name: string;
@@ -43,6 +58,7 @@ export interface Reminder {
 export type DecisionStatus =
   | 'decision_needed'
   | 'options_reviewed'
+  | 'recommended'
   | 'decided'
   | 'revisiting'
   | 'archived';
@@ -61,15 +77,18 @@ export interface Decision {
   status: DecisionStatus;
   owner?: string;
   options: DecisionOption[];
+  tradeoffs?: string;
+  recommendedOption?: string;
   finalDecision?: string;
   rationale?: string;
   impact?: string;
   riskLevel: RiskLevel;
-  decidedAt?: string;
+  decisionDeadline?: string;
   revisitAt?: string;
+  nextAction?: string;
+  decidedAt?: string;
   createdAt: string;
   updatedAt: string;
-  /** @deprecated Legacy fields — migrated on load */
   question?: string;
   outcome?: string;
   decidedBy?: string;
@@ -106,8 +125,14 @@ export interface OpenLoop {
   owner: Person;
   waitingOn?: Person;
   promisedTo?: Person;
+  accountableOwner?: Person;
+  nextActionOwner?: Person;
+  nextCheckInAt?: string;
+  lastFollowUpAt?: string;
+  accountabilityStatus?: AccountabilityStatus;
+  escalationLevel?: EscalationLevel;
+  accountabilityNotes?: string;
   dueDate?: string;
-  /** @deprecated Legacy shape; prefer reminderAt / reminderEnabled */
   reminder?: Reminder;
   reminderAt?: string;
   reminderLabel?: string;
@@ -122,6 +147,95 @@ export interface OpenLoop {
   closedAt?: string;
 }
 
+export type ScopeChangeType =
+  | 'new_request'
+  | 'requirement_change'
+  | 'timeline_change'
+  | 'priority_change'
+  | 'resource_change'
+  | 'decision_change'
+  | 'blocker_added'
+  | 'other';
+
+export type ScopeChangeStatus =
+  | 'captured'
+  | 'under_review'
+  | 'accepted'
+  | 'parked'
+  | 'rejected'
+  | 'converted_to_loop'
+  | 'resolved';
+
+export type ImpactLevel = 'none' | 'low' | 'medium' | 'high';
+
+export interface ScopeChange {
+  id: string;
+  loopId?: string;
+  title: string;
+  description: string;
+  requestedBy?: string;
+  owner?: string;
+  source?: string;
+  changeType: ScopeChangeType;
+  status: ScopeChangeStatus;
+  priority: Priority;
+  riskLevel: RiskLevel;
+  impact: ImpactLevel;
+  effort?: string;
+  deadlineImpact?: string;
+  costImpact?: string;
+  reason?: string;
+  decision?: string;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+export type FeedbackSource =
+  | 'customer'
+  | 'stakeholder'
+  | 'teammate'
+  | 'manager'
+  | 'vendor'
+  | 'user_research'
+  | 'meeting'
+  | 'support'
+  | 'personal_observation'
+  | 'other';
+
+export type FeedbackStatus =
+  | 'captured'
+  | 'triaged'
+  | 'linked_to_loop'
+  | 'linked_to_decision'
+  | 'converted_to_loop'
+  | 'converted_to_decision'
+  | 'archived';
+
+export type FeedbackSentiment = 'positive' | 'neutral' | 'negative' | 'mixed';
+
+export type FeedbackUrgency = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface FeedbackItem {
+  id: string;
+  title: string;
+  summary: string;
+  source: FeedbackSource;
+  sourcePerson?: string;
+  category?: string;
+  sentiment: FeedbackSentiment;
+  urgency: FeedbackUrgency;
+  status: FeedbackStatus;
+  linkedLoopIds: string[];
+  linkedDecisionIds: string[];
+  tags: string[];
+  theme?: string;
+  suggestedAction?: string;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
 export interface WeeklyReview {
   id: string;
   startedAt: string;
@@ -130,18 +244,19 @@ export interface WeeklyReview {
   closedLoopIds: string[];
   notes: string;
   createdAt: string;
-  /** @deprecated Legacy weekly review fields */
   weekStart?: string;
   weekEnd?: string;
   loopsClosed?: number;
   loopsOpened?: number;
 }
 
-export const BACKUP_FORMAT_VERSION = 2;
+export const BACKUP_FORMAT_VERSION = 3;
 
 export interface LoopTidyBackup {
   version: number;
   exportedAt: string;
   loops: OpenLoop[];
   weeklyReviews: WeeklyReview[];
+  scopeChanges?: ScopeChange[];
+  feedbackItems?: FeedbackItem[];
 }

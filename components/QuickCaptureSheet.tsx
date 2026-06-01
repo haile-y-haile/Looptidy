@@ -20,6 +20,10 @@ export function QuickCaptureSheet({
   const pick = (templateId: CaptureTemplateId) => {
     void hapticLight();
     onClose();
+    if (templateId === 'decision_needed') {
+      router.push('/decision-speed');
+      return;
+    }
     router.push({ pathname: '/loops/new', params: { template: templateId } });
   };
 

@@ -13,6 +13,10 @@ import { hapticLight, hapticSuccess } from '../lib/haptics';
 import { motion } from '../lib/motion';
 import { radius, shadows, spacing, typography } from '../lib/theme';
 import {
+  getAccountabilityStatus,
+  isNextCheckInToday,
+} from '../lib/accountability';
+import {
   isReminderDueToday,
   isReminderSnoozed,
   isLoopDueToday,
@@ -187,6 +191,21 @@ export function LoopCard({ loop, index = 0 }: LoopCardProps) {
             color={theme.colors.danger}
             backgroundColor={theme.colors.dangerLight}
           />
+        ) : null}
+        {getAccountabilityStatus(loop) === 'unclear' ? (
+          <Badge label="Owner unclear" color={theme.colors.warning} backgroundColor={theme.colors.warningLight} />
+        ) : null}
+        {getAccountabilityStatus(loop) === 'needs_follow_up' ? (
+          <Badge label="Needs follow-up" color={theme.colors.warning} backgroundColor={theme.colors.warningLight} />
+        ) : null}
+        {getAccountabilityStatus(loop) === 'escalated' ? (
+          <Badge label="Escalated" color={theme.colors.danger} backgroundColor={theme.colors.dangerLight} />
+        ) : null}
+        {getAccountabilityStatus(loop) === 'waiting_on_owner' ? (
+          <Badge label="Waiting on owner" color={theme.colors.purple} backgroundColor={theme.colors.purpleLight} />
+        ) : null}
+        {isNextCheckInToday(loop) ? (
+          <Badge label="Check-in today" color={theme.colors.primary} backgroundColor={theme.colors.primaryLight} />
         ) : null}
         {loop.riskLevel === 'high' || loop.riskLevel === 'medium' ? (
           <Badge

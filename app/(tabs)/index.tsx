@@ -23,12 +23,22 @@ import type { LoopType, OpenLoop, Priority, RiskLevel } from '../../types';
 import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue, loopTypeLabels } from '../../lib/utils';
 import { showComingSoon } from '../../lib/comingSoon';
 import { quickActionIcons } from '../../lib/icons';
+import { useScopeChanges } from '../../context/ScopeContext';
+import { useFeedback } from '../../context/FeedbackContext';
+import { PMSignalsCard } from '../../components/PMSignalsCard';
+import { computePMSignals } from '../../lib/pmSignals';
 
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { loops, loading, refreshLoops } = useLoops();
+  const { scopeChanges } = useScopeChanges();
+  const { feedbackItems } = useFeedback();
+  const pmSignals = useMemo(
+    () => computePMSignals(loops, scopeChanges, feedbackItems),
+    [loops, scopeChanges, feedbackItems]
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
@@ -223,7 +233,7 @@ export default function TodayScreen() {
           accent="warning"
           onPress={() => {
             void hapticLight();
-            router.push({ pathname: '/loops/new', params: { type: 'decision_needed' } });
+            router.push('/decision-speed');
           }}
         />
         <ActionTile
@@ -269,6 +279,28 @@ export default function TodayScreen() {
             embedded
             onPress={() => router.push('/decisions')}
           />
+        </View>
+      </GlassCard>
+
+      <PMSignalsCard signals={pmSignals} />
+
+      <GlassCard style={styles.pmTools} intensity={28} contentPadding={spacing.md}>
+        <Text style={[styles.pmToolsTitle, { color: theme.colors.text }]}>PM tools</Text>
+        <View style={styles.pmToolsRow}>
+          <Pressable onPress={() => router.push('/decision-speed')} style={styles.pmTool}>
+            <Text style={[styles.pmToolText, { color: theme.colors.primary }]}>Decision Speed</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/ownership')} style={styles.pmTool}>
+            <Text style={[styles.pmToolText, { color: theme.colors.primary }]}>Ownership</Text>
+          </Pressable>
+        </View>
+        <View style={styles.pmToolsRow}>
+          <Pressable onPress={() => router.push('/scope-guard')} style={styles.pmTool}>
+            <Text style={[styles.pmToolText, { color: theme.colors.primary }]}>Scope Guard</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/feedback')} style={styles.pmTool}>
+            <Text style={[styles.pmToolText, { color: theme.colors.primary }]}>Feedback</Text>
+          </Pressable>
         </View>
       </GlassCard>
 
@@ -605,6 +637,26 @@ const styles = StyleSheet.create({
   },
   insightsLinkText: {
     ...typography.callout,
+    fontWeight: '800',
+  },
+  pmTools: {
+    marginBottom: spacing.lg,
+  },
+  pmToolsTitle: {
+    ...typography.callout,
+    fontWeight: '800',
+    marginBottom: spacing.sm,
+  },
+  pmToolsRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  pmTool: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+  },
+  pmToolText: {
+    ...typography.caption,
     fontWeight: '800',
   },
 });

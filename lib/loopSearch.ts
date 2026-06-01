@@ -8,7 +8,12 @@ export function filterLoopsByQuery<T extends OpenLoop>(loops: T[], query: string
 }
 
 export function buildSearchHaystack(loop: OpenLoop): string {
-  const decisionText = loop.decisions.map((d) => `${d.question} ${d.outcome}`).join(' ');
+  const decisionText = loop.decisions
+    .map(
+      (d) =>
+        `${d.title} ${d.summary ?? ''} ${d.finalDecision ?? ''} ${d.rationale ?? ''} ${d.question ?? ''} ${d.outcome ?? ''}`
+    )
+    .join(' ');
   const timelineText = loop.timeline
     .map((e) => `${e.title} ${e.description ?? ''}`)
     .join(' ');
@@ -22,6 +27,9 @@ export function buildSearchHaystack(loop: OpenLoop): string {
     loop.owner?.name ?? '',
     categoryLabels[loop.category],
     loop.reminderLabel ?? '',
+    loop.accountabilityNotes ?? '',
+    loop.accountableOwner?.name ?? '',
+    loop.nextActionOwner?.name ?? '',
     decisionText,
     timelineText,
   ]

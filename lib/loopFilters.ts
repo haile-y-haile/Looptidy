@@ -1,4 +1,5 @@
 import type { OpenLoop } from '../types';
+import { getAccountabilityStatus } from './accountability';
 import { isOpenLoop, isOverdue, isDueSoon } from './utils';
 import { isReminderOverdue } from './reminders';
 
@@ -8,7 +9,12 @@ export type CommandCenterFilter =
   | LoopListFilter
   | 'decisions'
   | 'high_risk'
-  | 'overdue';
+  | 'overdue'
+  | 'ownership_unclear'
+  | 'escalated'
+  | 'decision_needed'
+  | 'scope_change'
+  | 'feedback';
 
 export const LOOP_LIST_FILTERS: { key: LoopListFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -60,6 +66,23 @@ export function getLoopsForCommandFilter(
       );
     case 'closed':
       return loops.filter((l) => l.status === 'closed' || l.status === 'archived');
+    case 'ownership_unclear':
+      return loops.filter((l) => isOpenLoop(l) && getAccountabilityStatus(l) === 'unclear');
+    case 'escalated':
+      return loops.filter(
+        (l) =>
+          isOpenLoop(l) &&
+          (getAccountabilityStatus(l) === 'escalated' ||
+            l.escalationLevel === 'escalated' ||
+            l.escalationLevel === 'escalation_needed')
+      );
+    case 'decision_needed':
+      return loops.filter(
+        (l) => isOpenLoop(l) && (l.type === 'decision_needed' || l.decisions.some((d) => d.status === 'decision_needed'))
+      );
+    case 'scope_change':
+    case 'feedback':
+      return [];
     case 'all':
     default:
       return loops.filter(isOpenLoop);
