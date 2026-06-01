@@ -1,18 +1,32 @@
 {
   "expo": {
     "name": "LoopTidy",
-    "slug": "LoopTidy",
+    "slug": "looptidy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
     "scheme": "looptidy",
+    "userInterfaceStyle": "automatic",
+    "description": "Track follow-ups, promises, waiting items, and decisions so open loops stop slipping through.",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F7FB"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hailehaile.looptidy",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleDisplayName": "LoopTidy",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.hailehaile.looptidy",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F5F7FB",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -24,7 +38,20 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F5F7FB",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "dark": {
+            "backgroundColor": "#0B1220",
+            "image": "./assets/splash-icon.png",
+            "imageWidth": 220
+          }
+        }
+      ]
     ]
   }
 }

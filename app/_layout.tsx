@@ -2,6 +2,7 @@ import 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SplashGate } from '../components/SplashGate';
 import { LoopProvider } from '../context/LoopContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 
@@ -38,7 +39,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <LoopProvider>
-          <RootStack />
+          <SplashGate>
+            <RootStack />
+          </SplashGate>
         </LoopProvider>
       </ThemeProvider>
     </SafeAreaProvider>
