@@ -24,6 +24,10 @@ export function QuickCaptureSheet({
       router.push('/decision-speed');
       return;
     }
+    if (templateId === 'meeting_dump') {
+      router.push('/meeting-dump');
+      return;
+    }
     router.push({ pathname: '/loops/new', params: { template: templateId } });
   };
 

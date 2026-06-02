@@ -16,17 +16,18 @@ import { FilterChip } from '../../components/FilterChip';
 import { CollapsibleSection } from '../../components/CollapsibleSection';
 import { ActionTile } from '../../components/ActionTile';
 import { GlassCard } from '../../components/GlassCard';
+import { BlindSpotCard } from '../../components/BlindSpotCard';
 import { getOnboardingComplete } from '../../lib/preferences';
 import { hapticLight, hapticSuccess } from '../../lib/haptics';
 import { radius, spacing, typography } from '../../lib/theme';
 import type { LoopType, OpenLoop, Priority, RiskLevel } from '../../types';
 import { formatRelativeDate, isDueSoon, isOpenLoop, isOverdue, loopTypeLabels } from '../../lib/utils';
-import { showComingSoon } from '../../lib/comingSoon';
 import { quickActionIcons } from '../../lib/icons';
 import { useScopeChanges } from '../../context/ScopeContext';
 import { useFeedback } from '../../context/FeedbackContext';
 import { PMSignalsCard } from '../../components/PMSignalsCard';
 import { computePMSignals } from '../../lib/pmSignals';
+import { getBlindSpots } from '../../lib/blindSpots';
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -63,6 +64,7 @@ export default function TodayScreen() {
   const headerEnter = useRef(new Animated.Value(0)).current;
 
   const openLoops = loops.filter(isOpenLoop);
+  const topBlindSpots = useMemo(() => getBlindSpots(loops, 3), [loops]);
   const waitingCount = openLoops.filter((l) => l.type === 'waiting_on_others').length;
   const promisedCount = openLoops.filter((l) => l.type === 'promised_by_me').length;
   const decisionCount = openLoops.filter(
@@ -247,6 +249,28 @@ export default function TodayScreen() {
           }}
         />
       </View>
+      <View style={styles.actionGrid}>
+        <ActionTile
+          title="Blind Spots"
+          subtitle="Catch what may slip"
+          icon={quickActionIcons.blindSpots}
+          accent="warning"
+          onPress={() => {
+            void hapticLight();
+            router.push('/blind-spots');
+          }}
+        />
+        <ActionTile
+          title="Meeting dump"
+          subtitle="Extract an action plan"
+          icon={quickActionIcons.meetingDump}
+          accent="primary"
+          onPress={() => {
+            void hapticLight();
+            router.push('/meeting-dump');
+          }}
+        />
+      </View>
 
       <GlassCard style={styles.statsPanel} intensity={32} contentPadding={spacing.lg}>
         <View style={styles.statsRowEmbedded}>
@@ -283,6 +307,33 @@ export default function TodayScreen() {
       </GlassCard>
 
       <PMSignalsCard signals={pmSignals} />
+
+      <GlassCard style={styles.blindSpotsCard} intensity={36} contentPadding={spacing.lg}>
+        <View style={styles.cardHeaderRow}>
+          <View style={styles.cardHeaderText}>
+            <Text style={[styles.pmToolsTitle, { color: theme.colors.text }]}>Top Blind Spots</Text>
+            <Text style={[styles.blindSpotsSub, { color: theme.colors.textMuted }]}>
+              Loops most likely to slip.
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/blind-spots');
+            }}
+            style={({ pressed }) => [pressed && styles.pressed]}
+          >
+            <Text style={[styles.pmToolText, { color: theme.colors.primary }]}>View all</Text>
+          </Pressable>
+        </View>
+        {topBlindSpots.length > 0 ? (
+          topBlindSpots.map((spot) => (
+            <BlindSpotCard key={spot.loop.id} spot={spot} compact />
+          ))
+        ) : (
+          <EmptyState compact title="No blind spots" message="Nothing is quietly heating up right now." />
+        )}
+      </GlassCard>
 
       <GlassCard style={styles.pmTools} intensity={28} contentPadding={spacing.md}>
         <Text style={[styles.pmToolsTitle, { color: theme.colors.text }]}>PM tools</Text>
@@ -334,7 +385,7 @@ export default function TodayScreen() {
               <Pressable
                 onPress={() => {
                   void hapticLight();
-                  showComingSoon('Follow-up nudges');
+                  router.push(`/loops/${focusLoop.id}`);
                 }}
                 style={({ pressed }) => [
                   styles.focusButtonSecondary,

@@ -163,6 +163,32 @@ export default function LoopsScreen() {
           <Pressable
             onPress={() => {
               void hapticLight();
+              router.push('/blind-spots');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Blind Spots</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Catch loops likely to slip
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/meeting-dump');
+            }}
+            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
+          >
+            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Meeting Dump</Text>
+            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
+              Notes to action plan
+            </Text>
+          </Pressable>
+        </View>
+        <View style={styles.hubRow}>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
               router.push('/people');
             }}
             style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}

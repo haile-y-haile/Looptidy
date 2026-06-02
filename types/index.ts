@@ -96,10 +96,41 @@ export interface Decision {
 
 export interface TimelineEvent {
   id: string;
-  type: 'created' | 'updated' | 'status_change' | 'note' | 'decision' | 'closed';
+  type: 'created' | 'updated' | 'status_change' | 'note' | 'decision' | 'closed' | 'follow_up';
   title: string;
   description?: string;
   timestamp: string;
+}
+
+export type FollowUpMessageType =
+  | 'gentle_nudge'
+  | 'direct_reminder'
+  | 'urgent_follow_up'
+  | 'escalation'
+  | 'still_needed'
+  | 'closure_message'
+  | 'thank_you_closeout'
+  | 'deadline_reminder'
+  | 'what_do_you_need';
+
+export type FollowUpTone =
+  | 'warm'
+  | 'professional'
+  | 'short'
+  | 'firm'
+  | 'friendly'
+  | 'executive'
+  | 'casual'
+  | 'polite_direct';
+
+export interface FollowUpHistoryEntry {
+  id: string;
+  message: string;
+  messageType: FollowUpMessageType;
+  tone: FollowUpTone;
+  action: 'copied' | 'shared' | 'saved' | 'sent';
+  createdAt: string;
+  nextFollowUpDate?: string;
 }
 
 export type AttachmentType = 'link' | 'document' | 'photo' | 'audio' | 'video';
@@ -139,6 +170,7 @@ export interface OpenLoop {
   snoozedUntil?: string;
   reminderEnabled?: boolean;
   localNotificationId?: string;
+  followUpHistory?: FollowUpHistoryEntry[];
   attachments: LoopAttachment[];
   decisions: Decision[];
   timeline: TimelineEvent[];

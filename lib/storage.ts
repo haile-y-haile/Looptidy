@@ -30,6 +30,7 @@ function normalizeLoop(raw: OpenLoop): OpenLoop {
     snoozedUntil: raw.snoozedUntil,
     reminderEnabled,
     localNotificationId: raw.localNotificationId,
+    followUpHistory: Array.isArray(raw.followUpHistory) ? raw.followUpHistory : [],
     accountableOwner: raw.accountableOwner,
     nextActionOwner: raw.nextActionOwner,
     nextCheckInAt: raw.nextCheckInAt,
