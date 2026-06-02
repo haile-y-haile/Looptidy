@@ -626,6 +626,22 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.md,
   },
+  blindSpotsCard: {
+    marginBottom: spacing.lg,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  cardHeaderText: {
+    flex: 1,
+  },
+  blindSpotsSub: {
+    ...typography.caption,
+  },
   focusCard: {
     marginTop: spacing.sm,
     marginBottom: spacing.lg,
