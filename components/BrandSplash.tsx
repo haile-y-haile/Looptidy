@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Image, StyleSheet, Text, View } from 'react-native';
-import LottieView from 'lottie-react-native';
+import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -8,12 +7,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useTheme } from '../context/ThemeContext';
-import { TAGLINE } from '../lib/fonts';
+import { AnimatedLogo } from './AnimatedLogo';
+import { LoopTidyLogoSvg } from './LoopTidyLogoSvg';
 import { motion } from '../lib/motion';
-import { spacing, typography } from '../lib/theme';
-import { BrandLockup } from './BrandLockup';
 
-const LOTTIE = require('../assets/lottie/brand-splash.json');
+const LANDING_LOGO_SIZE = 220;
+const SPLASH_FADE_MS = motion.brandSplashFade;
+const SPLASH_PLAY_MS = motion.brandSplashTotal - SPLASH_FADE_MS;
 
 type BrandSplashProps = {
   visible: boolean;
@@ -24,6 +24,8 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
   const { theme } = useTheme();
   const overlayOpacity = useSharedValue(1);
   const finishedRef = useRef(false);
+  const playStartedAt = useRef<number | null>(null);
+  const sequenceDoneRef = useRef(false);
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
 
   const finish = () => {
@@ -32,19 +34,33 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
     onFinish();
   };
 
-  const fadeOut = (fade: number) => {
+  const fadeOut = () => {
     overlayOpacity.value = withTiming(
       0,
-      { duration: fade, easing: motion.easing.out },
+      { duration: SPLASH_FADE_MS, easing: motion.easing.out },
       (done) => {
         if (done) runOnJS(finish)();
       }
     );
   };
 
+  const endSplashAfterMinimumPlay = () => {
+    const started = playStartedAt.current ?? Date.now();
+    const elapsed = Date.now() - started;
+    const wait = Math.max(0, SPLASH_PLAY_MS - elapsed);
+    setTimeout(() => fadeOut(), wait);
+  };
+
+  const onSequenceComplete = () => {
+    sequenceDoneRef.current = true;
+    endSplashAfterMinimumPlay();
+  };
+
   useEffect(() => {
     if (!visible) return;
     finishedRef.current = false;
+    sequenceDoneRef.current = false;
+    playStartedAt.current = Date.now();
     overlayOpacity.value = 1;
     setReduceMotion(null);
 
@@ -55,12 +71,10 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
 
   useEffect(() => {
     if (!visible || reduceMotion === null) return;
-
     if (reduceMotion) {
-      const timer = setTimeout(() => fadeOut(150), 900);
+      const timer = setTimeout(() => endSplashAfterMinimumPlay(), SPLASH_PLAY_MS);
       return () => clearTimeout(timer);
     }
-    // Lottie path: fade triggered by onAnimationFinish
     return undefined;
   }, [visible, reduceMotion]);
 
@@ -72,7 +86,7 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
 
   return (
     <Animated.View
-      pointerEvents="box-none"
+      pointerEvents="auto"
       style={[
         StyleSheet.absoluteFill,
         styles.overlay,
@@ -82,23 +96,15 @@ export function BrandSplash({ visible, onFinish }: BrandSplashProps) {
     >
       <View style={styles.center}>
         {reduceMotion ? (
-          <BrandLockup variant="splash" logoSize={104} animate />
+          <LoopTidyLogoSvg size={LANDING_LOGO_SIZE} staticFrame gradientId="looptidy-splash-static" />
         ) : (
-          <View style={styles.lottieBlock}>
-            <View style={styles.lottieRow}>
-              <LottieView
-                source={LOTTIE}
-                autoPlay
-                loop={false}
-                style={styles.lottie}
-                onAnimationFinish={(isCancelled) => {
-                  if (!isCancelled) fadeOut(280);
-                }}
-              />
-              <Image source={require('../assets/icon.png')} style={styles.iconOverlay} />
-            </View>
-            <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>{TAGLINE}</Text>
-          </View>
+          <AnimatedLogo
+            size={LANDING_LOGO_SIZE}
+            autoPlay
+            enableIdle={false}
+            enableTapReplay={false}
+            onSequenceComplete={onSequenceComplete}
+          />
         )}
       </View>
     </Animated.View>
@@ -115,29 +121,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
-  },
-  lottieBlock: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  lottieRow: {
-    width: 160,
-    height: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lottie: {
-    width: 160,
-    height: 160,
-  },
-  iconOverlay: {
-    position: 'absolute',
-    width: 64,
-    height: 64,
-  },
-  tagline: {
-    ...typography.tagline,
-    textAlign: 'center',
-    maxWidth: 280,
   },
 });

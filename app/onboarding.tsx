@@ -1,62 +1,69 @@
-import { View, Text, StyleSheet, Pressable, Animated, Easing, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Animated,
+  Easing,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BrandLockup } from '../components/BrandLockup';
+import { AnimatedLogo } from '../components/AnimatedLogo';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
+import { TAGLINE } from '../lib/fonts';
 import { getOnboardingComplete, setOnboardingComplete } from '../lib/preferences';
+import { showComingSoon } from '../lib/comingSoon';
 import { radius, spacing, typography } from '../lib/theme';
+
+type AuthProvider = 'apple' | 'google' | 'email';
 
 function AuthButton({
   label,
-  tone = 'primary',
+  provider,
   onPress,
-  disabled = false,
 }: {
   label: string;
-  tone?: 'primary' | 'secondary' | 'ghost';
+  provider: AuthProvider;
   onPress: () => void;
-  disabled?: boolean;
 }) {
   const { theme } = useTheme();
-  const style = useMemo(() => {
-    switch (tone) {
-      case 'secondary':
-        return {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-          text: theme.colors.text,
-        };
-      case 'ghost':
-        return {
-          backgroundColor: 'transparent',
-          borderColor: theme.colors.border,
-          text: theme.colors.textSecondary,
-        };
-      case 'primary':
-      default:
-        return {
-          backgroundColor: theme.colors.primary,
-          borderColor: theme.colors.primary,
-          text: '#FFFFFF',
-        };
+
+  const icon = useMemo(() => {
+    switch (provider) {
+      case 'apple':
+        return 'logo-apple' as const;
+      case 'google':
+        return 'logo-google' as const;
+      case 'email':
+        return 'mail-outline' as const;
     }
-  }, [theme, tone]);
+  }, [provider]);
 
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
       style={({ pressed }) => [
         styles.authButton,
-        { backgroundColor: style.backgroundColor, borderColor: style.borderColor },
-        disabled && styles.disabled,
-        !disabled && pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+        },
+        styles.comingSoon,
+        pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
       ]}
     >
-      <Text style={[styles.authButtonText, { color: style.text }]}>{label}</Text>
+      <Ionicons
+        name={icon}
+        size={20}
+        color={provider === 'apple' && theme.isDark ? '#FFFFFF' : theme.colors.text}
+      />
+      <Text style={[styles.authButtonText, { color: theme.colors.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -66,7 +73,7 @@ export default function OnboardingScreen() {
   const { theme } = useTheme();
   const [hydrated, setHydrated] = useState(false);
 
-  const logoEnter = useRef(new Animated.Value(0)).current;
+  const heroEnter = useRef(new Animated.Value(0)).current;
   const cardEnter = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -84,8 +91,8 @@ export default function OnboardingScreen() {
 
   useEffect(() => {
     if (!hydrated) return;
-    Animated.stagger(90, [
-      Animated.timing(logoEnter, {
+    Animated.stagger(100, [
+      Animated.timing(heroEnter, {
         toValue: 1,
         duration: 520,
         easing: Easing.out(Easing.cubic),
@@ -98,11 +105,15 @@ export default function OnboardingScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [cardEnter, hydrated, logoEnter]);
+  }, [cardEnter, heroEnter, hydrated]);
 
   const continueToApp = async () => {
     await setOnboardingComplete(true);
     router.replace('/');
+  };
+
+  const placeholderSignIn = () => {
+    showComingSoon('Sign-in is coming soon. Use Get started to use LoopTidy on this device.');
   };
 
   if (!hydrated) {
@@ -134,14 +145,20 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Animated.View
-          style={{
-            opacity: logoEnter,
-            transform: [
-              { translateY: logoEnter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
-            ],
-          }}
+          style={[
+            styles.hero,
+            {
+              opacity: heroEnter,
+              transform: [
+                { translateY: heroEnter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
+              ],
+            },
+          ]}
         >
-          <BrandLockup variant="full" logoSize={88} animate />
+          <View style={styles.logoSlot}>
+            <AnimatedLogo size={88} enableTapReplay enableIdle />
+          </View>
+          <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>{TAGLINE}</Text>
         </Animated.View>
 
         <Animated.View
@@ -160,21 +177,20 @@ export default function OnboardingScreen() {
           >
             <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Welcome</Text>
             <Text style={[styles.cardSubtitle, { color: theme.colors.textSecondary }]}>
-              Your data stays on this device. Sign-in options are coming soon — for now, jump
-              straight in.
+              Your loops stay on this device. Sign in when accounts arrive — or get started now.
             </Text>
 
-            <PrimaryButton label="Get started" onPress={continueToApp} style={{ marginBottom: spacing.sm }} />
+            <AuthButton label="Continue with Apple" provider="apple" onPress={placeholderSignIn} />
+            <AuthButton label="Continue with Google" provider="google" onPress={placeholderSignIn} />
+            <AuthButton label="Continue with Email" provider="email" onPress={placeholderSignIn} />
 
             <View style={styles.dividerRow}>
               <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
-              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>sign-in coming soon</Text>
+              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or</Text>
               <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
             </View>
 
-            <AuthButton label="Continue with Apple" tone="secondary" disabled onPress={continueToApp} />
-            <AuthButton label="Continue with Google" tone="secondary" disabled onPress={continueToApp} />
-            <AuthButton label="Continue with Email" tone="secondary" disabled onPress={continueToApp} />
+            <PrimaryButton label="Get started" onPress={continueToApp} />
           </View>
         </Animated.View>
       </ScrollView>
@@ -196,27 +212,21 @@ const styles = StyleSheet.create({
     padding: spacing.xxl,
     justifyContent: 'center',
   },
-  brand: {
-    flexDirection: 'row',
+  hero: {
     alignItems: 'center',
+    marginBottom: spacing.xxxl,
     gap: spacing.md,
   },
-  logoDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 18,
-    elevation: 10,
-  },
-  brandTitle: {
-    ...typography.largeTitle,
+  logoSlot: {
+    width: 88,
+    height: 88,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tagline: {
-    ...typography.body,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xl,
+    ...typography.tagline,
+    textAlign: 'center',
+    maxWidth: 280,
   },
   card: {
     borderRadius: radius.lg,
@@ -225,17 +235,23 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     ...typography.title,
+    textAlign: 'center',
   },
   cardSubtitle: {
     ...typography.body,
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
+    textAlign: 'center',
   },
   authButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
     borderRadius: radius.full,
     borderWidth: 1,
     paddingVertical: spacing.md,
-    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
   authButtonText: {
@@ -243,7 +259,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   disabled: {
-    opacity: 0.45,
+    opacity: 0.55,
+  },
+  comingSoon: {
+    opacity: 0.72,
   },
   dividerRow: {
     flexDirection: 'row',

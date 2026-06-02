@@ -5,6 +5,9 @@ export const motion = {
   normal: 280,
   slow: 520,
   brand: 900,
+  /** Full logo landing moment (animation + fade-out) */
+  brandSplashTotal: 3500,
+  brandSplashFade: 320,
   stagger: 40,
   easing: {
     out: Easing.bezier(0.22, 1, 0.36, 1),
