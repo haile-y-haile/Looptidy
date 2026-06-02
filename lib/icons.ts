@@ -6,6 +6,8 @@ export const quickActionIcons = {
   promise: 'hand-left-outline',
   decision: 'git-branch-outline',
   review: 'journal-outline',
+  blindSpots: 'eye-outline',
+  meetingDump: 'document-text-outline',
 } as const satisfies Record<string, AppIconName>;
 
 export const settingsIcons = {

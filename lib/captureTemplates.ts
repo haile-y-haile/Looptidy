@@ -5,6 +5,7 @@ export type CaptureTemplateId =
   | 'promise_i_made'
   | 'blocked_by_something'
   | 'decision_needed'
+  | 'meeting_dump'
   | 'due_soon'
   | 'follow_up_later';
 
@@ -74,6 +75,19 @@ export const CAPTURE_TEMPLATES: CaptureTemplate[] = [
     titlePlaceholder: 'e.g. Choose vendor for Q3 tooling',
     descriptionPlaceholder: 'Options, stakes, and who needs to weigh in…',
     personLabel: 'Stakeholder (optional)',
+  },
+  {
+    id: 'meeting_dump',
+    label: 'Meeting dump',
+    subtitle: 'Turn messy notes into loops',
+    type: 'follow_up',
+    status: 'open',
+    priority: 'medium',
+    riskLevel: 'low',
+    category: 'work',
+    titlePlaceholder: 'Paste meeting notes to extract action items',
+    descriptionPlaceholder: 'Use Meeting Dump for bulk notes and suggested loops...',
+    personLabel: 'Related person (optional)',
   },
   {
     id: 'due_soon',

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedback } from '../context/FeedbackContext';
 import { useLoops } from '../context/LoopContext';
@@ -11,9 +11,12 @@ import { ProgressBar } from '../components/ProgressBar';
 import { ScreenScroll } from '../components/ScreenScroll';
 import { StatCard } from '../components/StatCard';
 import { buildInsightMessages, computeInsights } from '../lib/insights';
+import { getBlindSpotSummary } from '../lib/blindSpots';
+import { hapticLight } from '../lib/haptics';
 import { spacing, typography } from '../lib/theme';
 
 export default function InsightsScreen() {
+  const router = useRouter();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { loops } = useLoops();
@@ -25,6 +28,7 @@ export default function InsightsScreen() {
     [loops, scopeChanges, feedbackItems]
   );
   const messages = useMemo(() => buildInsightMessages(insights), [insights]);
+  const blindSpotSummary = useMemo(() => getBlindSpotSummary(loops), [loops]);
 
   const maxType = Math.max(1, ...insights.byType.map((t) => t.count));
 
@@ -65,6 +69,36 @@ export default function InsightsScreen() {
             embedded
           />
         </View>
+
+        <GlassCard style={styles.card} intensity={32}>
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Blind Spots</Text>
+          <View style={styles.statsRow}>
+            <StatCard label="Total" value={blindSpotSummary.total} embedded />
+            <StatCard
+              label="Likely to slip"
+              value={blindSpotSummary.likelyToSlip}
+              color={theme.colors.danger}
+              embedded
+            />
+          </View>
+          <View style={[styles.statsRow, styles.statsGap]}>
+            <StatCard label="At risk" value={blindSpotSummary.atRisk} color={theme.colors.warning} embedded />
+            <StatCard label="Needs attention" value={blindSpotSummary.needsAttention} embedded />
+          </View>
+          <Pressable
+            onPress={() => {
+              void hapticLight();
+              router.push('/blind-spots');
+            }}
+            style={({ pressed }) => [
+              styles.linkButton,
+              { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <Text style={[styles.linkButtonText, { color: theme.colors.primary }]}>Open Blind Spots</Text>
+          </Pressable>
+        </GlassCard>
 
         <GlassCard style={styles.card} intensity={32}>
           <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
@@ -215,6 +249,17 @@ const styles = StyleSheet.create({
   cardTitle: {
     ...typography.headline,
     marginBottom: spacing.md,
+  },
+  linkButton: {
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+  },
+  linkButtonText: {
+    ...typography.callout,
+    fontWeight: '800',
   },
   insightLine: {
     ...typography.body,

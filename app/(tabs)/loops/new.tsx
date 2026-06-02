@@ -225,6 +225,10 @@ export default function NewLoopScreen() {
           selectedId={templateId}
           onSelect={(id) => {
             void hapticLight();
+            if (id === 'meeting_dump') {
+              router.push('/meeting-dump');
+              return;
+            }
             applyTemplate(id);
           }}
         />
