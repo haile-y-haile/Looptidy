@@ -4,6 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { DatePickerField } from '../components/DatePickerField';
 import { ScreenScroll } from '../components/ScreenScroll';
 import { EmptyState } from '../components/EmptyState';
 import { ChipSelector } from '../components/ChipSelector';
@@ -254,27 +255,19 @@ export default function DecisionDetailScreen() {
         />
 
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Decision deadline</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
-          ]}
+        <DatePickerField
           value={decisionDeadline}
-          onChangeText={setDecisionDeadline}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor={theme.colors.textMuted}
+          onChange={setDecisionDeadline}
+          mode="date"
+          placeholder="Select decision deadline"
         />
 
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Revisit date</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
-          ]}
+        <DatePickerField
           value={revisitAt}
-          onChangeText={setRevisitAt}
-          placeholder="2026-06-01 or Jun 15, 2026"
-          placeholderTextColor={theme.colors.textMuted}
+          onChange={setRevisitAt}
+          mode="date"
+          placeholder="Select revisit date"
         />
 
         <Pressable onPress={() => router.push(`/loops/${loop.id}`)}>

@@ -23,7 +23,7 @@ export function buildLoopNudgeMessage(loop: OpenLoop): string {
   return lines.join('\n');
 }
 
-export function buildPersonNudge(person: PersonSummary, loops: OpenLoop[]): string {
+function buildPersonNudge(person: PersonSummary, loops: OpenLoop[]): string {
   return buildNudgeMessage(person, loops);
 }
 

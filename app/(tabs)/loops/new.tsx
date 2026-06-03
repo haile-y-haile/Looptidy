@@ -15,6 +15,7 @@ import { useLoops } from '../../../context/LoopContext';
 import { useTheme } from '../../../context/ThemeContext';
 import type { LoopAttachment, LoopType, Priority, RiskLevel, Category, LoopStatus } from '../../../types';
 import { CaptureTemplatePicker } from '../../../components/CaptureTemplatePicker';
+import { DatePickerField } from '../../../components/DatePickerField';
 import { ChipSelector } from '../../../components/ChipSelector';
 import { ScreenScroll } from '../../../components/ScreenScroll';
 import { hapticLight, hapticSuccess } from '../../../lib/haptics';
@@ -23,8 +24,9 @@ import {
   LOOP_TYPE_HELP,
   type CaptureTemplateId,
 } from '../../../lib/captureTemplates';
-import { parseReminderInput, requestReminderPermission, scheduleLoopReminder } from '../../../lib/reminders';
+import { requestReminderPermission, scheduleLoopReminder } from '../../../lib/reminders';
 import { radius, spacing, typography } from '../../../lib/theme';
+import { analyzeLoopText } from '../../../lib/heuristics';
 import { generateId, loopTypeLabels, categoryLabels, getPriorityColor, getRiskColor, priorityLabels, riskLevelLabels } from '../../../lib/utils';
 
 const loopTypes: LoopType[] = [
@@ -79,6 +81,17 @@ export default function NewLoopScreen() {
   const [attachments, setAttachments] = useState<LoopAttachment[]>([]);
   const [saving, setSaving] = useState(false);
 
+  const [userModifiedOptions, setUserModifiedOptions] = useState(false);
+
+  useEffect(() => {
+    if (userModifiedOptions) return;
+    const heuristics = analyzeLoopText(`${title} ${description}`);
+    
+    if (heuristics.type) setType(heuristics.type);
+    if (heuristics.priority) setPriority(heuristics.priority);
+    if (heuristics.riskLevel) setRiskLevel(heuristics.riskLevel);
+    if (heuristics.waitingOnName && !personName) setPersonName(heuristics.waitingOnName);
+  }, [title, description, userModifiedOptions, personName]);
   const activeTemplate = useMemo(
     () => (templateId ? getCaptureTemplate(templateId) : undefined),
     [templateId]
@@ -131,11 +144,12 @@ export default function NewLoopScreen() {
         ? { id: `person-${Date.now()}`, name: personName.trim() }
         : undefined;
 
-      const reminderAt = parseReminderInput(reminderWhen);
+      const reminderAt = reminderWhen.trim() || undefined;
       let reminderEnabled = false;
-      if (reminderWhen.trim()) {
-        if (!reminderAt) {
-          Alert.alert('Invalid reminder', 'Use a date like Tomorrow 9am or 2026-06-01.');
+      if (reminderAt) {
+        const when = new Date(reminderAt);
+        if (Number.isNaN(when.getTime())) {
+          Alert.alert('Invalid reminder', 'Choose a valid reminder date and time.');
           setSaving(false);
           return;
         }
@@ -270,7 +284,10 @@ export default function NewLoopScreen() {
                 { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
                 type === t && { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
               ]}
-              onPress={() => setType(t)}
+              onPress={() => {
+                setType(t);
+                setUserModifiedOptions(true);
+              }}
             >
               <Text
                 style={[
@@ -301,27 +318,21 @@ export default function NewLoopScreen() {
         />
 
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Due date</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
-          ]}
+        <DatePickerField
           value={dueDate}
-          onChangeText={setDueDate}
-          placeholder="Mar 15, 2026 or 2026-03-15"
-          placeholderTextColor={theme.colors.textMuted}
+          onChange={setDueDate}
+          mode="date"
+          placeholder="Select due date"
+          style={styles.pickerField}
         />
 
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Local reminder (optional)</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text },
-          ]}
+        <DatePickerField
           value={reminderWhen}
-          onChangeText={setReminderWhen}
-          placeholder="Tomorrow 9am — on-device nudge only"
-          placeholderTextColor={theme.colors.textMuted}
+          onChange={setReminderWhen}
+          mode="datetime"
+          placeholder="Select reminder date & time"
+          style={styles.pickerField}
         />
         <Text style={[styles.helperText, { color: theme.colors.textMuted }]}>
           Permission is requested only when you save with a reminder set.
@@ -333,7 +344,7 @@ export default function NewLoopScreen() {
           label="Priority"
           options={priorities}
           value={priority}
-          onChange={setPriority}
+          onChange={(v) => { setPriority(v); setUserModifiedOptions(true); }}
           formatLabel={(p) => priorityLabels[p]}
           toneForValue={(p) => getPriorityColor(p)}
         />
@@ -342,7 +353,7 @@ export default function NewLoopScreen() {
           label="Risk level"
           options={riskLevels}
           value={riskLevel}
-          onChange={setRiskLevel}
+          onChange={(v) => { setRiskLevel(v); setUserModifiedOptions(true); }}
           formatLabel={(r) => riskLevelLabels[r]}
           toneForValue={(r) => getRiskColor(r)}
         />
@@ -357,7 +368,10 @@ export default function NewLoopScreen() {
                 { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
                 category === c && { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
               ]}
-              onPress={() => setCategory(c)}
+              onPress={() => {
+                setCategory(c);
+                setUserModifiedOptions(true);
+              }}
             >
               <Text
                 style={[
@@ -374,7 +388,7 @@ export default function NewLoopScreen() {
 
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Attachments</Text>
         <Text style={[styles.helperText, { color: theme.colors.textMuted }]}>
-          Links save on this device. Photos and documents — coming soon.
+          Links save securely on this device.
         </Text>
 
         <View style={styles.attachRow}>
@@ -447,6 +461,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: spacing.md,
     ...typography.body,
+  },
+  pickerField: {
+    marginBottom: spacing.sm,
   },
   textArea: {
     minHeight: 80,

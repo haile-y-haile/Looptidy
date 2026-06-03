@@ -1,5 +1,7 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import { useRouter as useExpoRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { CAPTURE_TEMPLATES, type CaptureTemplateId } from '../lib/captureTemplates';
@@ -14,8 +16,35 @@ export function QuickCaptureSheet({
   onClose: () => void;
 }) {
   const { theme } = useTheme();
-  const router = useRouter();
+  const router = useExpoRouter();
   const insets = useSafeAreaInsets();
+  
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  useEffect(() => {
+    if (visible) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [visible]);
+
+  const handleSheetChanges = useCallback((index: number) => {
+    if (index === -1) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+      />
+    ),
+    []
+  );
 
   const pick = (templateId: CaptureTemplateId) => {
     void hapticLight();
@@ -28,55 +57,43 @@ export function QuickCaptureSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              paddingBottom: spacing.xxl + insets.bottom,
-            },
-          ]}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <Text style={[styles.title, { color: theme.colors.text }]}>Quick capture</Text>
-          <Text style={[styles.sub, { color: theme.colors.textSecondary }]}>
-            Start a new open loop with a template.
-          </Text>
-          {CAPTURE_TEMPLATES.map((t) => (
-            <Pressable
-              key={t.id}
-              onPress={() => pick(t.id)}
-              style={({ pressed }) => [
-                styles.row,
-                { borderColor: theme.colors.borderLight },
-                pressed && { opacity: 0.85 },
-              ]}
-            >
-              <Text style={[styles.rowTitle, { color: theme.colors.text }]}>{t.label}</Text>
-              <Text style={[styles.rowSub, { color: theme.colors.textMuted }]}>{t.subtitle}</Text>
-            </Pressable>
-          ))}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      index={0}
+      snapPoints={['50%', '70%']}
+      enablePanDownToClose
+      onChange={handleSheetChanges}
+      backdropComponent={renderBackdrop}
+      backgroundStyle={{ backgroundColor: theme.colors.surface }}
+      handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
+    >
+      <BottomSheetView style={[styles.sheet, { paddingBottom: spacing.xxl + insets.bottom }]}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Quick capture</Text>
+        <Text style={[styles.sub, { color: theme.colors.textSecondary }]}>
+          Start a new open loop with a template.
+        </Text>
+        {CAPTURE_TEMPLATES.map((t) => (
+          <Pressable
+            key={t.id}
+            onPress={() => pick(t.id)}
+            style={({ pressed }) => [
+              styles.row,
+              { borderColor: theme.colors.borderLight },
+              pressed && { opacity: 0.85 },
+            ]}
+          >
+            <Text style={[styles.rowTitle, { color: theme.colors.text }]}>{t.label}</Text>
+            <Text style={[styles.rowSub, { color: theme.colors.textMuted }]}>{t.subtitle}</Text>
+          </Pressable>
+        ))}
+      </BottomSheetView>
+    </BottomSheetModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
   sheet: {
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    borderWidth: 1,
     padding: spacing.lg,
-    maxHeight: '80%',
   },
   title: {
     ...typography.title,

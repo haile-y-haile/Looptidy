@@ -87,10 +87,6 @@ export function buildPeopleSummaries(loops: OpenLoop[]): PersonSummary[] {
   return [...map.values()].sort((a, b) => b.totalOpen - a.totalOpen || a.name.localeCompare(b.name));
 }
 
-export function findPersonKey(name: string): string {
-  return personKey(name);
-}
-
 export function getLoopsForPerson(loops: OpenLoop[], key: string): {
   waiting: OpenLoop[];
   promised: OpenLoop[];

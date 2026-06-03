@@ -4,7 +4,7 @@ import type { AppearanceMode } from '../lib/preferences';
 import { getAppearanceMode, setAppearanceMode } from '../lib/preferences';
 import { darkColors, lightColors, radius, shadows, spacing, typography } from '../lib/theme';
 
-export type ThemeColors = typeof lightColors;
+type ThemeColors = typeof lightColors;
 
 export interface Theme {
   mode: AppearanceMode;

@@ -10,6 +10,8 @@ import {
   Linking,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import Markdown from 'react-native-markdown-display';
+import RNUrlPreview from 'react-native-url-preview';
 import { useLoops } from '../../../context/LoopContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { Badge } from '../../../components/Badge';
@@ -21,7 +23,6 @@ import { AccountabilityPanel } from '../../../components/AccountabilityPanel';
 import { ScreenScroll } from '../../../components/ScreenScroll';
 import { ScreenCentered } from '../../../components/ScreenCentered';
 import { hapticLight, hapticSuccess } from '../../../lib/haptics';
-import { showComingSoon } from '../../../lib/comingSoon';
 import { radius, spacing, typography } from '../../../lib/theme';
 import { AppIcon } from '../../../components/AppIcon';
 import { attachmentIcons, emptyStateIcons } from '../../../lib/icons';
@@ -152,9 +153,19 @@ export default function LoopDetailScreen() {
           <Text style={[styles.personLine, { color: theme.colors.textSecondary }]}>{personLine}</Text>
         ) : null}
         {loop.description ? (
-          <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            {loop.description}
-          </Text>
+          <View style={styles.descriptionWrap}>
+            <Markdown
+              style={{
+                body: { ...styles.description, color: theme.colors.textSecondary },
+                link: { color: theme.colors.primary },
+                heading1: { color: theme.colors.text, marginTop: spacing.sm, marginBottom: spacing.xs },
+                heading2: { color: theme.colors.text, marginTop: spacing.sm, marginBottom: spacing.xs },
+                strong: { color: theme.colors.text, fontWeight: 'bold' },
+              }}
+            >
+              {loop.description}
+            </Markdown>
+          </View>
         ) : null}
 
         <View
@@ -193,64 +204,61 @@ export default function LoopDetailScreen() {
         ) : null}
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sharing</Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.shareCard,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-              pressed && styles.pressed,
-            ]}
-            onPress={() => {
-              void hapticLight();
-              showComingSoon('Loop sharing');
-            }}
-          >
-            <Text style={[styles.shareTitle, { color: theme.colors.text }]}>Share this loop</Text>
-            <Text style={[styles.shareSub, { color: theme.colors.textSecondary }]}>
-              Share with other LoopTidy users once accounts launch.
-            </Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Attachments</Text>
           {loop.attachments.length > 0 ? (
-            loop.attachments.map((a) => (
-              <Pressable
-                key={a.id}
-                style={({ pressed }) => [
-                  styles.attachmentRow,
-                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-                  pressed && styles.pressed,
-                ]}
-                onPress={() => {
-                  void hapticLight();
-                  if (a.type === 'link' && a.url) {
-                    void Linking.openURL(a.url);
-                    return;
-                  }
-                  showComingSoon('File attachments');
-                }}
-              >
-                <AppIcon name={attachmentIcons[a.type]} size={18} tone="muted" />
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={[styles.attachmentTitle, { color: theme.colors.text }]}
-                    numberOfLines={1}
-                  >
-                    {a.title}
-                  </Text>
-                  {a.url ? (
+            loop.attachments.map((a) => {
+              const isLink = a.type === 'link' && a.url;
+              if (isLink) {
+                return (
+                  <View key={a.id} style={{ marginBottom: spacing.md, overflow: 'hidden', borderRadius: radius.md }}>
+                    <RNUrlPreview
+                      text={a.url!}
+                      containerStyle={[styles.attachmentRow, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, padding: 0 }]}
+                      imageStyle={{ width: 80, height: 80, borderTopLeftRadius: radius.md, borderBottomLeftRadius: radius.md }}
+                      faviconStyle={{ width: 16, height: 16 }}
+                      titleStyle={[styles.attachmentTitle, { color: theme.colors.text, marginTop: spacing.xs, marginHorizontal: spacing.sm }]}
+                      descriptionStyle={[styles.attachmentMeta, { color: theme.colors.textSecondary, marginHorizontal: spacing.sm, marginBottom: spacing.sm }]}
+                    />
+                  </View>
+                );
+              }
+              return (
+                <Pressable
+                  key={a.id}
+                  disabled={!isLink}
+                  style={({ pressed }) => [
+                    styles.attachmentRow,
+                    { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                    isLink && pressed && styles.pressed,
+                    !isLink && { opacity: 0.6 },
+                  ]}
+                  onPress={() => {
+                    if (isLink) {
+                      void hapticLight();
+                      void Linking.openURL(a.url!);
+                    }
+                  }}
+                >
+                  <AppIcon name={attachmentIcons[a.type]} size={18} tone="muted" />
+                  <View style={{ flex: 1 }}>
                     <Text
-                      style={[styles.attachmentMeta, { color: theme.colors.textMuted }]}
+                      style={[styles.attachmentTitle, { color: theme.colors.text }]}
                       numberOfLines={1}
                     >
-                      {a.url}
+                      {a.title}
                     </Text>
-                  ) : null}
-                </View>
-              </Pressable>
-            ))
+                    {a.url ? (
+                      <Text
+                        style={[styles.attachmentMeta, { color: theme.colors.textMuted }]}
+                        numberOfLines={1}
+                      >
+                        {a.url}
+                      </Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+              );
+            })
           ) : (
             <Text style={[styles.muted, { color: theme.colors.textMuted }]}>
               No attachments yet. Add a link when creating or editing a loop.
@@ -442,6 +450,8 @@ const styles = StyleSheet.create({
   },
   description: {
     ...typography.body,
+  },
+  descriptionWrap: {
     marginBottom: spacing.lg,
   },
   metaCard: {

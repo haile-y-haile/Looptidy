@@ -94,15 +94,6 @@ export function defaultReminderLabel(loop: OpenLoop): string {
   return loop.reminderLabel?.trim() || `Follow up: ${loop.title}`;
 }
 
-export async function getReminderPermissionStatus(): Promise<
-  'granted' | 'denied' | 'undetermined'
-> {
-  const { status } = await Notifications.getPermissionsAsync();
-  if (status === 'granted') return 'granted';
-  if (status === 'denied') return 'denied';
-  return 'undetermined';
-}
-
 export async function requestReminderPermission(): Promise<boolean> {
   const existing = await Notifications.getPermissionsAsync();
   if (existing.status === 'granted') return true;
@@ -153,24 +144,6 @@ export async function cancelLoopReminder(loop: OpenLoop): Promise<void> {
   );
 }
 
-export async function resyncAllLoopReminders(loops: OpenLoop[]): Promise<OpenLoop[]> {
-  const next: OpenLoop[] = [];
-  for (const loop of loops) {
-    if (!loop.reminderEnabled || !isOpenLoop(loop)) {
-      if (loop.localNotificationId) {
-        await cancelLoopReminder(loop);
-        next.push({ ...loop, localNotificationId: undefined });
-      } else {
-        next.push(loop);
-      }
-      continue;
-    }
-    const notificationId = await scheduleLoopReminder(loop);
-    next.push({ ...loop, localNotificationId: notificationId ?? undefined });
-  }
-  return next;
-}
-
 export function formatReminderDisplay(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -180,12 +153,4 @@ export function formatReminderDisplay(iso: string): string {
     hour: 'numeric',
     minute: '2-digit',
   });
-}
-
-export function parseReminderInput(text: string): string | undefined {
-  const trimmed = text.trim();
-  if (!trimmed) return undefined;
-  const parsed = new Date(trimmed);
-  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString();
-  return undefined;
 }

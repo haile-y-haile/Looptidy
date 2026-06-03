@@ -82,7 +82,7 @@ export const SCOPE_CHANGE_TYPE_LABELS: Record<ScopeChange['changeType'], string>
   other: 'Other',
 };
 
-export function buildScopeSearchHaystack(item: ScopeChange): string {
+function buildScopeSearchHaystack(item: ScopeChange): string {
   return [
     item.title,
     item.description ?? '',

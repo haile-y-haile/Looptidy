@@ -5,6 +5,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { GlassCard } from '../components/GlassCard';
+import { DatePickerField } from '../components/DatePickerField';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenScroll } from '../components/ScreenScroll';
 import { DECISION_SPEED_STEPS, buildDecisionSummaryText, draftToDecision, type DecisionSpeedDraft } from '../lib/decisionSpeed';
@@ -158,7 +159,15 @@ export default function DecisionSpeedScreen() {
             />
             <Field label="Rationale" value={draft.rationale} onChange={(t) => patch({ rationale: t })} theme={theme} multiline />
             <Field label="Next action" value={draft.nextAction} onChange={(t) => patch({ nextAction: t })} theme={theme} />
-            <Field label="Revisit date" value={draft.revisitAt} onChange={(t) => patch({ revisitAt: t })} theme={theme} />
+            <View style={{ marginBottom: spacing.md }}>
+              <Text style={[styles.fieldLabel, { color: theme.colors.textSecondary }]}>Revisit date</Text>
+              <DatePickerField
+                value={draft.revisitAt}
+                onChange={(t) => patch({ revisitAt: t })}
+                mode="date"
+                placeholder="Select revisit date"
+              />
+            </View>
           </>
         );
     }

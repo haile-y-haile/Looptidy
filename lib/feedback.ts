@@ -15,10 +15,6 @@ export function getHighUrgencyFeedback(items: FeedbackItem[]): FeedbackItem[] {
   );
 }
 
-export function getFeedbackByStatus(items: FeedbackItem[], status: FeedbackStatus): FeedbackItem[] {
-  return items.filter((f) => f.status === status);
-}
-
 export interface FeedbackSummary {
   total: number;
   untriaged: number;
@@ -81,23 +77,7 @@ export function convertFeedbackToLoop(
   };
 }
 
-export function convertFeedbackToDecisionInput(item: FeedbackItem, loopId: string) {
-  return createDecisionInput(
-    {
-      id: loopId,
-      title: item.title,
-      description: item.summary,
-    } as OpenLoop,
-    {
-      title: item.title,
-      summary: item.summary,
-      status: 'decision_needed',
-      impact: item.suggestedAction,
-    }
-  );
-}
-
-export function buildFeedbackSearchHaystack(item: FeedbackItem): string {
+function buildFeedbackSearchHaystack(item: FeedbackItem): string {
   return [
     item.title,
     item.summary ?? '',

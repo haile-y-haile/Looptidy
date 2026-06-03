@@ -1,4 +1,6 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { COMMAND_CENTER_SORTS, type CommandCenterSort } from '../lib/commandCenter';
@@ -17,77 +19,85 @@ export function SortSheet({
 }) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  useEffect(() => {
+    if (visible) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [visible]);
+
+  const handleSheetChanges = useCallback((index: number) => {
+    if (index === -1) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+      />
+    ),
+    []
+  );
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              paddingBottom: spacing.xxl + insets.bottom,
-            },
-          ]}
-          onPress={(e) => e.stopPropagation()}
-        >
-          <View style={[styles.grabber, { backgroundColor: theme.colors.border }]} />
-          <Text style={[styles.title, { color: theme.colors.text }]}>Sort loops</Text>
-          {COMMAND_CENTER_SORTS.map((opt) => {
-            const selected = value === opt.key;
-            return (
-              <Pressable
-                key={opt.key}
-                onPress={() => {
-                  onSelect(opt.key);
-                  onClose();
-                }}
-                style={({ pressed }) => [
-                  styles.option,
-                  {
-                    backgroundColor: selected ? theme.colors.primaryLight : 'transparent',
-                    borderColor: theme.colors.borderLight,
-                  },
-                  pressed && { opacity: 0.85 },
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      index={0}
+      snapPoints={['40%', '60%']}
+      enablePanDownToClose
+      onChange={handleSheetChanges}
+      backdropComponent={renderBackdrop}
+      backgroundStyle={{ backgroundColor: theme.colors.surface }}
+      handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
+    >
+      <BottomSheetView style={[styles.sheet, { paddingBottom: spacing.xxl + insets.bottom }]}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Sort loops</Text>
+        {COMMAND_CENTER_SORTS.map((opt) => {
+          const selected = value === opt.key;
+          return (
+            <Pressable
+              key={opt.key}
+              onPress={() => {
+                onSelect(opt.key);
+                onClose();
+              }}
+              style={({ pressed }) => [
+                styles.option,
+                {
+                  backgroundColor: selected ? theme.colors.primaryLight : 'transparent',
+                  borderColor: theme.colors.borderLight,
+                },
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  { color: selected ? theme.colors.primary : theme.colors.text },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.optionText,
-                    { color: selected ? theme.colors.primary : theme.colors.text },
-                  ]}
-                >
-                  {opt.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </Pressable>
-      </Pressable>
-    </Modal>
+                {opt.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </BottomSheetView>
+    </BottomSheetModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
   sheet: {
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    borderWidth: 1,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-  },
-  grabber: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: spacing.lg,
   },
   title: {
     ...typography.headline,

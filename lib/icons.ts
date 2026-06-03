@@ -1,13 +1,6 @@
 import type { AppIconName } from '../components/AppIcon';
 import type { AttachmentType } from '../types';
 
-export const quickActionIcons = {
-  waiting: 'hourglass-outline',
-  promise: 'hand-left-outline',
-  decision: 'git-branch-outline',
-  review: 'journal-outline',
-} as const satisfies Record<string, AppIconName>;
-
 export const settingsIcons = {
   profile: 'person-outline',
   security: 'lock-closed-outline',

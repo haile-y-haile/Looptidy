@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useLoops } from '../context/LoopContext';
@@ -25,17 +25,23 @@ export default function OwnershipScreen() {
   const { theme } = useTheme();
   const summary = useMemo(() => getAccountabilitySummary(loops), [loops]);
 
-  const sections = useMemo(
+  const rawSections = useMemo(
     () => [
-      { title: 'Unclear ownership', data: getLoopsWithUnclearOwnership(loops) },
-      { title: 'Waiting on someone', data: getWaitingOnOthers(loops) },
-      { title: 'Promises I made', data: getPromisedByMe(loops) },
-      { title: 'Needs follow-up', data: getLoopsNeedingFollowUp(loops) },
-      { title: 'Escalated', data: getEscalatedLoops(loops) },
-      { title: 'No next action owner', data: getLoopsWithoutNextActionOwner(loops) },
+      { id: 'unclear', title: 'Unclear ownership', data: getLoopsWithUnclearOwnership(loops) },
+      { id: 'waiting', title: 'Waiting on someone', data: getWaitingOnOthers(loops) },
+      { id: 'promised', title: 'Promises I made', data: getPromisedByMe(loops) },
+      { id: 'needs_follow_up', title: 'Needs follow-up', data: getLoopsNeedingFollowUp(loops) },
+      { id: 'escalated', title: 'Escalated', data: getEscalatedLoops(loops) },
+      { id: 'no_action_owner', title: 'No next action owner', data: getLoopsWithoutNextActionOwner(loops) },
     ],
     [loops]
   );
+
+  const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (id: string) => {
+    setCollapsedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <>
@@ -54,21 +60,24 @@ export default function OwnershipScreen() {
             <StatCard label="Promised" value={summary.promised} embedded />
           </View>
         </GlassCard>
-        {sections.map((sec) => (
-          <CollapsibleSection
-            key={sec.title}
-            title={sec.title}
-            count={sec.data.length}
-            collapsed={sec.data.length === 0}
-            onToggle={() => {}}
-          >
-            {sec.data.length > 0 ? (
-              sec.data.map((loop, i) => <LoopCard key={loop.id} loop={loop} index={i} />)
-            ) : (
-              <EmptyState compact title="Clear" message="Nothing in this bucket." />
-            )}
-          </CollapsibleSection>
-        ))}
+        {rawSections.map((sec) => {
+          const isCollapsed = collapsedMap[sec.id] ?? sec.data.length === 0;
+          return (
+            <CollapsibleSection
+              key={sec.id}
+              title={sec.title}
+              count={sec.data.length}
+              collapsed={isCollapsed}
+              onToggle={() => toggleSection(sec.id)}
+            >
+              {sec.data.length > 0 ? (
+                sec.data.map((loop, i) => <LoopCard key={loop.id} loop={loop} index={i} />)
+              ) : (
+                <EmptyState compact title="Clear" message="Nothing in this bucket." />
+              )}
+            </CollapsibleSection>
+          );
+        })}
       </ScreenScroll>
     </>
   );

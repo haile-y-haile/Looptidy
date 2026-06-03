@@ -12,6 +12,8 @@ import { ScreenScroll } from '../components/ScreenScroll';
 import { StatCard } from '../components/StatCard';
 import { buildInsightMessages, computeInsights } from '../lib/insights';
 import { spacing, typography } from '../lib/theme';
+import { LineChart } from 'react-native-gifted-charts';
+import { ImpactMatrix } from '../components/ImpactMatrix';
 
 export default function InsightsScreen() {
   const { theme } = useTheme();
@@ -68,14 +70,30 @@ export default function InsightsScreen() {
 
         <GlassCard style={styles.card} intensity={32}>
           <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-            Closure progress this week
+            Closure velocity (Last 7 Days)
           </Text>
-          <ProgressBar
-            label="Loops closed"
-            value={insights.closedThisWeek}
-            max={insights.closedThisWeekGoal}
-            color={theme.colors.success}
-          />
+          <View style={{ marginTop: spacing.md, alignItems: 'center' }}>
+            <LineChart
+              data={[{ value: insights.openedThisWeek }, { value: insights.closedThisWeek }]}
+              color={theme.colors.primary}
+              thickness={3}
+              dataPointsColor={theme.colors.primary}
+              hideRules
+              hideYAxisText
+              hideAxesAndRules
+              width={280}
+              height={120}
+              curved
+            />
+          </View>
+          <View style={{ marginTop: spacing.lg }}>
+            <ProgressBar
+              label="Loops closed"
+              value={insights.closedThisWeek}
+              max={insights.closedThisWeekGoal}
+              color={theme.colors.success}
+            />
+          </View>
           {insights.closureRatePercent !== null ? (
             <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
               {insights.closureRatePercent}% of all loops are closed (lifetime).
@@ -108,6 +126,7 @@ export default function InsightsScreen() {
             value={insights.decisionsNeededCount}
             color={theme.colors.purple}
           />
+          <ImpactMatrix loops={loops.filter(l => l.status === 'open')} />
         </GlassCard>
 
         <GlassCard style={styles.card} intensity={32}>

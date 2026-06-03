@@ -64,9 +64,6 @@ export const darkColors: ThemeColors = {
   overlay: 'rgba(255, 255, 255, 0.06)',
 };
 
-// Back-compat alias (existing imports). Prefer `useTheme().theme.colors`.
-export const colors = lightColors;
-
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -126,8 +123,6 @@ export const typography = {
   },
 } as const;
 
-export { motion } from './motion';
-
 export const shadows = {
   card: {
     shadowColor: '#101828',
@@ -144,14 +139,3 @@ export const shadows = {
     elevation: 8,
   },
 } as const;
-
-export const surfaceFlat = {
-  backgroundColor: 'transparent' as const,
-  borderWidth: 0,
-};
-
-export const surfaceElevated = {
-  borderWidth: 1,
-  borderRadius: radius.lg,
-  ...shadows.soft,
-};

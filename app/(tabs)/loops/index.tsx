@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { QuickCaptureSheet } from '../../../components/QuickCaptureSheet';
-import { GlassCard } from '../../../components/GlassCard';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,8 +21,9 @@ import {
   LOOP_LIST_FILTERS,
   type LoopListFilter,
 } from '../../../lib/loopFilters';
-import { spacing, typography } from '../../../lib/theme';
+import { radius, spacing, typography } from '../../../lib/theme';
 import { isDueSoon, isOpenLoop, isOverdue } from '../../../lib/utils';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoopsScreen() {
   const router = useRouter();
@@ -69,7 +69,10 @@ export default function LoopsScreen() {
           </Text>
         </View>
         <Pressable
-          onPress={() => router.push('/loops/new')}
+          onPress={() => {
+            void hapticLight();
+            setQuickCaptureOpen(true);
+          }}
           style={({ pressed }) => [
             styles.addBtn,
             { backgroundColor: theme.colors.primary },
@@ -80,125 +83,36 @@ export default function LoopsScreen() {
         </Pressable>
       </View>
 
-      <GlassCard style={styles.hubCard} intensity={28} contentPadding={spacing.md}>
-        <View style={styles.hubRow}>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/loops/command-center');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Command Center</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Search, filter & sort
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/insights');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Insights</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Follow-through stats
-            </Text>
-          </Pressable>
-        </View>
-        <View style={styles.hubRow}>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/ownership');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Ownership</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Accountability signals
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/scope-guard');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Scope Guard</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Track scope changes
-            </Text>
-          </Pressable>
-        </View>
-        <View style={styles.hubRow}>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/feedback');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Feedback</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Feedback pipeline
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/decision-speed');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Decision Speed</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Resolve decisions fast
-            </Text>
-          </Pressable>
-        </View>
-        <View style={styles.hubRow}>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/people');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>People</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Commitments by person
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              void hapticLight();
-              router.push('/weekly-review');
-            }}
-            style={({ pressed }) => [styles.hubBtn, pressed && { opacity: 0.9 }]}
-          >
-            <Text style={[styles.hubBtnTitle, { color: theme.colors.text }]}>Weekly review</Text>
-            <Text style={[styles.hubBtnSub, { color: theme.colors.textMuted }]}>
-              Guided triage
-            </Text>
-          </Pressable>
-        </View>
+      <View style={styles.toolsRow}>
         <Pressable
           onPress={() => {
             void hapticLight();
-            setQuickCaptureOpen(true);
+            router.push('/loops/command-center');
           }}
           style={({ pressed }) => [
-            styles.quickBtn,
-            { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+            styles.toolBtn,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
             pressed && { opacity: 0.9 },
           ]}
         >
-          <Text style={[styles.quickBtnText, { color: theme.colors.primary }]}>Quick capture</Text>
+          <Ionicons name="apps-outline" size={16} color={theme.colors.text} />
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Command Center</Text>
         </Pressable>
-      </GlassCard>
+        <Pressable
+          onPress={() => {
+            void hapticLight();
+            router.push('/insights');
+          }}
+          style={({ pressed }) => [
+            styles.toolBtn,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+            pressed && { opacity: 0.9 },
+          ]}
+        >
+          <Ionicons name="bar-chart-outline" size={16} color={theme.colors.text} />
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Insights</Text>
+        </Pressable>
+      </View>
 
       <SearchField value={query} onChangeText={setQuery} />
 
@@ -280,6 +194,24 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     lineHeight: 28,
   },
+  toolsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  toolBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  toolBtnText: {
+    ...typography.caption,
+    fontWeight: '700',
+  },
   filterScroll: {
     marginHorizontal: -spacing.lg,
     marginTop: spacing.lg,
@@ -293,34 +225,5 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...typography.label,
     marginBottom: spacing.md,
-  },
-  hubCard: {
-    marginBottom: spacing.lg,
-  },
-  hubRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  hubBtn: {
-    flex: 1,
-  },
-  hubBtnTitle: {
-    ...typography.callout,
-    fontWeight: '800',
-  },
-  hubBtnSub: {
-    ...typography.caption,
-    marginTop: 2,
-  },
-  quickBtn: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  quickBtnText: {
-    ...typography.caption,
-    fontWeight: '800',
   },
 });

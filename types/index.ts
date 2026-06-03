@@ -48,7 +48,7 @@ export interface Person {
   role?: string;
 }
 
-export interface Reminder {
+interface Reminder {
   id: string;
   date: string;
   note?: string;

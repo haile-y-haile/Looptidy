@@ -2,71 +2,26 @@ import {
   View,
   Text,
   StyleSheet,
-  Pressable,
   Animated,
   Easing,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AnimatedLogo } from '../components/AnimatedLogo';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
 import { TAGLINE } from '../lib/fonts';
 import { getOnboardingComplete, setOnboardingComplete } from '../lib/preferences';
-import { showComingSoon } from '../lib/comingSoon';
 import { radius, spacing, typography } from '../lib/theme';
 
-type AuthProvider = 'apple' | 'google' | 'email';
-
-function AuthButton({
-  label,
-  provider,
-  onPress,
-}: {
-  label: string;
-  provider: AuthProvider;
-  onPress: () => void;
-}) {
-  const { theme } = useTheme();
-
-  const icon = useMemo(() => {
-    switch (provider) {
-      case 'apple':
-        return 'logo-apple' as const;
-      case 'google':
-        return 'logo-google' as const;
-      case 'email':
-        return 'mail-outline' as const;
-    }
-  }, [provider]);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.authButton,
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-        },
-        styles.comingSoon,
-        pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
-      ]}
-    >
-      <Ionicons
-        name={icon}
-        size={20}
-        color={provider === 'apple' && theme.isDark ? '#FFFFFF' : theme.colors.text}
-      />
-      <Text style={[styles.authButtonText, { color: theme.colors.text }]}>{label}</Text>
-    </Pressable>
-  );
-}
+const LOGO_GRADIENT = {
+  start: '#1DD4FE',
+  mid: '#2FBFFB',
+  end: '#6782F7',
+} as const;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -112,10 +67,6 @@ export default function OnboardingScreen() {
     router.replace('/');
   };
 
-  const placeholderSignIn = () => {
-    showComingSoon('Sign-in is coming soon. Use Get started to use LoopTidy on this device.');
-  };
-
   if (!hydrated) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -155,9 +106,10 @@ export default function OnboardingScreen() {
             },
           ]}
         >
-          <View style={styles.logoSlot}>
-            <AnimatedLogo size={88} enableTapReplay enableIdle />
-          </View>
+          <Text style={styles.wordmark} accessibilityRole="header">
+            <Text style={[styles.wordmarkLoop, { color: LOGO_GRADIENT.start }]}>Loop</Text>
+            <Text style={[styles.wordmarkTidy, { color: LOGO_GRADIENT.end }]}>Tidy</Text>
+          </Text>
           <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>{TAGLINE}</Text>
         </Animated.View>
 
@@ -177,18 +129,8 @@ export default function OnboardingScreen() {
           >
             <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Welcome</Text>
             <Text style={[styles.cardSubtitle, { color: theme.colors.textSecondary }]}>
-              Your loops stay on this device. Sign in when accounts arrive — or get started now.
+              Track follow-ups, blockers, commitments, and decisions — all on this device.
             </Text>
-
-            <AuthButton label="Continue with Apple" provider="apple" onPress={placeholderSignIn} />
-            <AuthButton label="Continue with Google" provider="google" onPress={placeholderSignIn} />
-            <AuthButton label="Continue with Email" provider="email" onPress={placeholderSignIn} />
-
-            <View style={styles.dividerRow}>
-              <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
-              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or</Text>
-              <View style={[styles.divider, { backgroundColor: theme.colors.borderLight }]} />
-            </View>
 
             <PrimaryButton label="Get started" onPress={continueToApp} />
           </View>
@@ -217,12 +159,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxxl,
     gap: spacing.md,
   },
-  logoSlot: {
-    width: 88,
-    height: 88,
-    alignItems: 'center',
-    justifyContent: 'center',
+  wordmark: {
+    ...typography.largeTitle,
+    fontSize: 52,
+    lineHeight: 58,
+    letterSpacing: -1.1,
   },
+  wordmarkLoop: {},
+  wordmarkTidy: {},
   tagline: {
     ...typography.tagline,
     textAlign: 'center',
@@ -242,42 +186,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
     textAlign: 'center',
-  },
-  authButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  authButtonText: {
-    ...typography.callout,
-    fontWeight: '700',
-  },
-  disabled: {
-    opacity: 0.55,
-  },
-  comingSoon: {
-    opacity: 0.72,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginVertical: spacing.md,
-  },
-  divider: {
-    height: 1,
-    flex: 1,
-  },
-  dividerText: {
-    ...typography.caption,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
   },
 });

@@ -85,7 +85,7 @@ function dueTimestamp(loop: OpenLoop): number {
   return Number.POSITIVE_INFINITY;
 }
 
-export function sortLoops(loops: OpenLoop[], sort: CommandCenterSort): OpenLoop[] {
+function sortLoops(loops: OpenLoop[], sort: CommandCenterSort): OpenLoop[] {
   const copy = [...loops];
   switch (sort) {
     case 'due_date':

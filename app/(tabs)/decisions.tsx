@@ -62,117 +62,74 @@ export default function DecisionsScreen() {
             pressed && { opacity: 0.9 },
           ]}
         >
-          <Text style={styles.addBtnText}>Decision Speed</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            void hapticLight();
-            router.push('/decision-detail?loopId=' + (neededLoops[0]?.id ?? loops[0]?.id ?? ''));
-          }}
-          style={({ pressed }) => [
-            styles.addBtnOutline,
-            { borderColor: theme.colors.border, flex: 1 },
-            pressed && { opacity: 0.9 },
-          ]}
-        >
-          <Text style={[styles.addBtnOutlineText, { color: theme.colors.text }]}>Add decision</Text>
+          <Text style={styles.addBtnText}>Start decision (Decision Speed)</Text>
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={() => {
-          void hapticLight();
-          router.push('/feedback');
-        }}
-        style={({ pressed }) => [
-          styles.feedbackLink,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-          pressed && { opacity: 0.9 },
-        ]}
-      >
-        <Text style={[styles.feedbackLinkText, { color: theme.colors.text }]}>
-          Feedback pipeline →
-        </Text>
-        <Text style={[styles.feedbackLinkSub, { color: theme.colors.textMuted }]}>
-          Turn feedback into loops or decisions
-        </Text>
-      </Pressable>
-
-      <GlassCard style={styles.statsCard} intensity={32}>
+      <GlassCard style={styles.statsCard} intensity={28} contentPadding={spacing.lg}>
         <View style={styles.statsRow}>
-          <StatCard label="Needed" value={stats.needed} color={theme.colors.warning} embedded />
-          <StatCard label="Decided" value={stats.decided} color={theme.colors.success} embedded />
+          <StatCard
+            label="Total decisions"
+            value={stats.needed + stats.optionsReviewed + stats.decided + stats.revisiting}
+            embedded
+          />
+          <StatCard
+            label="Needed now"
+            value={stats.needed}
+            color={theme.colors.warning}
+            embedded
+          />
         </View>
-        <View style={[styles.statsRow, styles.statsGap]}>
-          <StatCard label="Revisiting" value={stats.revisiting} embedded />
-          <StatCard label="Revisit soon" value={stats.revisitSoon} color={theme.colors.primary} embedded />
+        <View style={[styles.statsRow, { marginTop: spacing.sm }]}>
+          <StatCard
+            label="Pending revisit"
+            value={stats.revisitSoon}
+            color={theme.colors.purple}
+            embedded
+          />
+          <StatCard
+            label="High risk"
+            value={stats.highRisk}
+            color={theme.colors.danger}
+            embedded
+          />
         </View>
-        <StatCard label="High risk" value={stats.highRisk} color={theme.colors.danger} />
       </GlassCard>
 
-      <Section title="Decisions needed" count={neededLoops.length}>
-        {neededLoops.length > 0 ? (
-          neededLoops.map((loop, i) => <LoopCard key={loop.id} loop={loop} index={i} />)
-        ) : (
-          <EmptyState compact title="All clear" message="No open decision loops right now." />
-        )}
-      </Section>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Needed now</Text>
+      {neededLoops.length > 0 ? (
+        neededLoops.map((loop) => <LoopCard key={loop.id} loop={loop} />)
+      ) : (
+        <EmptyState
+          compact
+          title="No decisions pending"
+          message="You're all caught up."
+        />
+      )}
 
-      <Section title="Revisit soon" count={revisit.length}>
-        {revisit.length > 0 ? (
-          revisit.map((d) => <DecisionRecordCard key={d.id} decision={d} />)
-        ) : (
-          <EmptyState compact title="Nothing to revisit" message="Set revisit dates on decisions." />
-        )}
-      </Section>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Revisit soon</Text>
+      {revisit.length > 0 ? (
+        revisit.map((dec) => <DecisionRecordCard key={dec.id} decision={dec} />)
+      ) : (
+        <EmptyState compact title="Clear calendar" message="No decisions scheduled for revisit." />
+      )}
 
-      <Section title="High-risk decisions" count={highRisk.length}>
-        {highRisk.length > 0 ? (
-          highRisk.map((d) => <DecisionRecordCard key={d.id} decision={d} expandedDefault />)
-        ) : (
-          <EmptyState compact title="No high-risk items" message="Decisions at high risk appear here." />
-        )}
-      </Section>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>High risk choices</Text>
+      {highRisk.length > 0 ? (
+        highRisk.map((dec) => <DecisionRecordCard key={dec.id} decision={dec} />)
+      ) : (
+        <EmptyState compact title="Low risk" message="No recent high-risk decisions." />
+      )}
 
-      <Section title="Recently decided" count={recent.length}>
-        {recent.length > 0 ? (
-          recent.map((d) => <DecisionRecordCard key={d.id} decision={d} />)
-        ) : (
-          <EmptyState compact title="No decisions yet" message="Record outcomes as you decide." />
-        )}
-      </Section>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recently decided</Text>
+      {recent.length > 0 ? (
+        recent.map((dec) => <DecisionRecordCard key={dec.id} decision={dec} />)
+      ) : (
+        <EmptyState compact title="Quiet week" message="No decisions made recently." />
+      )}
 
-      <Section title="All decisions" count={allDecisions.length}>
-        {allDecisions.length > 0 ? (
-          allDecisions.map((d) => <DecisionRecordCard key={d.id} decision={d} />)
-        ) : (
-          <EmptyState
-            title="No decisions yet"
-            message="Capture rationale and impact when you resolve open choices."
-          />
-        )}
-      </Section>
+      <View style={{ height: spacing.xxl }} />
     </ScreenScroll>
-  );
-}
-
-function Section({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count: number;
-  children: React.ReactNode;
-}) {
-  const { theme } = useTheme();
-  return (
-    <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-        {title} {count > 0 ? `(${count})` : ''}
-      </Text>
-      {children}
-    </View>
   );
 }
 
@@ -185,61 +142,32 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
   },
-  feedbackLink: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  feedbackLinkText: {
-    ...typography.callout,
-    fontWeight: '800',
-  },
-  feedbackLinkSub: {
-    ...typography.caption,
-    marginTop: spacing.xs,
-  },
   topActions: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   addBtn: {
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
-  },
-  addBtnOutline: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  addBtnOutlineText: {
-    ...typography.callout,
-    fontWeight: '800',
+    justifyContent: 'center',
   },
   addBtnText: {
     ...typography.callout,
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '700',
   },
   statsCard: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xxl,
   },
   statsRow: {
     flexDirection: 'row',
     gap: spacing.md,
   },
-  statsGap: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
   sectionTitle: {
     ...typography.headline,
     marginBottom: spacing.md,
+    marginTop: spacing.lg,
   },
 });

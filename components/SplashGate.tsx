@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { useFontsLoaded } from '../context/FontContext';
-import { BrandSplash } from './BrandSplash';
+import { getOnboardingComplete } from '../lib/preferences';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export function SplashGate({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const { loading } = useLoops();
   const { hydrationDone } = useTheme();
   const fontsLoaded = useFontsLoaded();
   const [nativeHidden, setNativeHidden] = useState(false);
-  const [brandDone, setBrandDone] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   const appReady = !loading && hydrationDone && fontsLoaded;
 
@@ -24,12 +26,33 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
       .catch(() => setNativeHidden(true));
   }, [appReady, nativeHidden]);
 
-  const showBrand = appReady && nativeHidden && !brandDone;
+  /** Route to onboarding early without blocking app rendering. */
+  useEffect(() => {
+    if (!appReady || onboardingChecked) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const onboardingDone = await getOnboardingComplete();
+        if (cancelled) return;
+        if (!onboardingDone) {
+          router.replace('/onboarding');
+        }
+      } catch {
+        // Never block app rendering if onboarding preference read fails.
+      } finally {
+        if (!cancelled) setOnboardingChecked(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [appReady, onboardingChecked, router]);
+
+  const showApp = appReady && nativeHidden;
 
   return (
     <View style={styles.root}>
-      {appReady && brandDone ? children : null}
-      <BrandSplash visible={showBrand} onFinish={() => setBrandDone(true)} />
+      {showApp ? children : null}
     </View>
   );
 }

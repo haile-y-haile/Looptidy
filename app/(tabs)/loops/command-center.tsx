@@ -107,6 +107,11 @@ export default function CommandCenterScreen() {
   const empty = getCommandCenterEmptyState(filter, query.trim().length > 0);
   const sortLabel = COMMAND_CENTER_SORTS.find((s) => s.key === sort)?.label ?? 'Sort';
 
+  const [smartFolders] = useState([
+    { id: '1', name: 'Critical My Bugs', filter: 'high_risk' as CommandCenterFilter, sort: 'urgent' as CommandCenterSort },
+    { id: '2', name: 'Client Feedback', filter: 'feedback' as CommandCenterFilter, sort: 'recent' as CommandCenterSort },
+  ]);
+
   return (
     <>
       <ScreenScroll contentContainerStyle={{ paddingTop: spacing.md + insets.top }}>
@@ -114,6 +119,37 @@ export default function CommandCenterScreen() {
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
           Search loops, decisions, accountability notes, scope changes, and feedback.
         </Text>
+
+        <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Smart Folders</Text>
+        <View style={styles.toolsGrid}>
+          {smartFolders.map(folder => (
+            <Pressable key={folder.id} onPress={() => { setFilter(folder.filter); setSort(folder.sort); }} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+              <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>{folder.name}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Tools</Text>
+        <View style={styles.toolsGrid}>
+          <Pressable onPress={() => router.push('/decision-speed')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Decision Speed</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/ownership')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Ownership</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/scope-guard')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Scope Guard</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/feedback')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Feedback</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/people')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>People</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/weekly-review')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Weekly Review</Text>
+          </Pressable>
+        </View>
 
         <SearchField value={query} onChangeText={setQuery} placeholder="Search everything…" />
 
@@ -275,6 +311,26 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.body,
     marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    ...typography.headline,
+    marginBottom: spacing.sm,
+  },
+  toolsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.xxl,
+  },
+  toolBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  toolBtnText: {
+    ...typography.callout,
+    fontWeight: '700',
   },
   toolbar: {
     flexDirection: 'row',

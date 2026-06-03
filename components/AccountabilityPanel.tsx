@@ -4,6 +4,7 @@ import type { OpenLoop } from '../types';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { Badge } from './Badge';
+import { DatePickerField } from './DatePickerField';
 import {
   accountabilityStatusLabel,
   escalationLevelLabel,
@@ -87,12 +88,13 @@ export function AccountabilityPanel({ loop }: { loop: OpenLoop }) {
         placeholder="Next action owner"
         placeholderTextColor={theme.colors.textMuted}
       />
-      <TextInput
-        style={[styles.input, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, color: theme.colors.text }]}
+      <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Next check-in</Text>
+      <DatePickerField
         value={checkIn}
-        onChangeText={setCheckIn}
-        placeholder="Next check-in date"
-        placeholderTextColor={theme.colors.textMuted}
+        onChange={setCheckIn}
+        mode="date"
+        placeholder="Select next check-in date"
+        style={{ marginBottom: spacing.sm }}
       />
       <Pressable
         onPress={() =>

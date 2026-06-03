@@ -9,17 +9,36 @@
     "userInterfaceStyle": "automatic",
     "description": "An open-loop tracker for follow-ups, blockers, commitments, and decisions.",
     "splash": {
-      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#F6F8FB"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hailehaile.looptidy",
-      "buildNumber": "8",
+      "buildNumber": "24",
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": ["35F9.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          }
+        ],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": []
+      },
       "infoPlist": {
         "CFBundleDisplayName": "LoopTidy",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "LoopTidy uses Face ID to securely lock your local data and protect your sensitive decisions."
       }
     },
     "android": {
@@ -43,16 +62,14 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#F6F8FB",
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 220,
           "dark": {
-            "backgroundColor": "#0B1220",
-            "image": "./assets/splash-icon.png",
-            "imageWidth": 220
+            "backgroundColor": "#0B1220"
           }
         }
       ],
-      "./plugins/withRemovePushEntitlement"
+      "./plugins/withRemovePushEntitlement",
+      "@react-native-community/datetimepicker",
+      "expo-sqlite"
     ],
     "extra": {
       "router": {},

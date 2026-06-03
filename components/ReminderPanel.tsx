@@ -4,6 +4,7 @@ import type { OpenLoop } from '../types';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { Badge } from './Badge';
+import { DatePickerField } from './DatePickerField';
 import { PrimaryButton } from './PrimaryButton';
 import { hapticLight, hapticSuccess } from '../lib/haptics';
 import {
@@ -12,7 +13,6 @@ import {
   formatReminderDisplay,
   getEffectiveReminderTime,
   isReminderSnoozed,
-  parseReminderInput,
   requestReminderPermission,
   scheduleLoopReminder,
   cancelLoopReminder,
@@ -54,9 +54,11 @@ export function ReminderPanel({ loop }: { loop: OpenLoop }) {
   };
 
   const handleSetReminder = async () => {
-    const at = parseReminderInput(reminderInput);
-    if (!at) {
-      Alert.alert('Invalid date', 'Use a date like Mar 15, 2026 or 2026-03-15 09:00.');
+    if (!reminderInput.trim()) return;
+    const at = reminderInput.trim();
+    const when = new Date(at);
+    if (Number.isNaN(when.getTime())) {
+      Alert.alert('Invalid date', 'Choose a valid reminder date and time.');
       return;
     }
     void hapticLight();
@@ -155,19 +157,12 @@ export function ReminderPanel({ loop }: { loop: OpenLoop }) {
       {!hasReminder ? (
         <>
           <Text style={[styles.label, { color: theme.colors.textSecondary }]}>When</Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                color: theme.colors.text,
-              },
-            ]}
+          <DatePickerField
             value={reminderInput}
-            onChangeText={setReminderInput}
-            placeholder="Tomorrow 9am or 2026-06-01"
-            placeholderTextColor={theme.colors.textMuted}
+            onChange={setReminderInput}
+            mode="datetime"
+            placeholder="Select reminder date & time"
+            style={{ marginBottom: spacing.sm }}
           />
           <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Label (optional)</Text>
           <TextInput

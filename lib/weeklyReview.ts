@@ -87,7 +87,7 @@ function startOfWeek(d = new Date()): Date {
   return copy;
 }
 
-export function closedThisWeek(loops: OpenLoop[]): OpenLoop[] {
+function closedThisWeek(loops: OpenLoop[]): OpenLoop[] {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
   return loops.filter((l) => {

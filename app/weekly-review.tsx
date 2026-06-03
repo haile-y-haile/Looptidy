@@ -39,6 +39,7 @@ export default function WeeklyReviewScreen() {
   const [startedAt] = useState(() => new Date().toISOString());
   const [history, setHistory] = useState<Awaited<ReturnType<typeof getWeeklyReviews>>>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>({});
 
   const summary = useMemo(() => getReviewSummary(loops), [loops]);
   const guidedStep = GUIDED_REVIEW_STEPS[guidedIndex];
@@ -142,13 +143,16 @@ export default function WeeklyReviewScreen() {
 
           {REVIEW_SECTIONS.map((section) => {
             const sectionLoops = getLoopsForReviewSection(loops, section.key);
+            const isCollapsed = collapsedMap[section.key] ?? sectionLoops.length === 0;
             return (
               <CollapsibleSection
                 key={section.key}
                 title={section.title}
                 count={sectionLoops.length}
-                collapsed={sectionLoops.length === 0}
-                onToggle={() => {}}
+                collapsed={isCollapsed}
+                onToggle={() => {
+                  setCollapsedMap((prev) => ({ ...prev, [section.key]: !isCollapsed }));
+                }}
               >
                 <Text style={[styles.sectionDesc, { color: theme.colors.textMuted }]}>
                   {section.description}

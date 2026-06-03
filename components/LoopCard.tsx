@@ -41,25 +41,67 @@ interface LoopCardProps {
   index?: number;
 }
 
-function CloseSwipeAction({
+function LeftSwipeActions({
   drag,
+  onNudge,
+}: {
+  drag: SharedValue<number>;
+  onNudge: () => void;
+}) {
+  const { theme } = useTheme();
+  const style = useAnimatedStyle(() => ({
+    transform: [{ translateX: drag.value - ACTION_WIDTH }],
+  }));
+
+  return (
+    <Animated.View style={[styles.actionWrapLeft, style]}>
+      <Pressable
+        onPress={onNudge}
+        style={({ pressed }) => [
+          styles.closeAction,
+          { backgroundColor: theme.colors.warning },
+          pressed && { opacity: 0.9 },
+        ]}
+      >
+        <AppIcon name="paper-plane-outline" size={22} color="#FFFFFF" />
+        <Text style={styles.closeLabel}>Nudge</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+function RightSwipeActions({
+  drag,
+  onSnooze,
   onClose,
 }: {
   drag: SharedValue<number>;
+  onSnooze: () => void;
   onClose: () => void;
 }) {
   const { theme } = useTheme();
   const style = useAnimatedStyle(() => ({
-    transform: [{ translateX: drag.value + ACTION_WIDTH }],
+    transform: [{ translateX: drag.value + ACTION_WIDTH * 2 }],
   }));
 
   return (
-    <Animated.View style={[styles.actionWrap, style]}>
+    <Animated.View style={[styles.actionWrap, style, { width: ACTION_WIDTH * 2, flexDirection: 'row' }]}>
+      <Pressable
+        onPress={onSnooze}
+        style={({ pressed }) => [
+          styles.closeAction,
+          { backgroundColor: theme.colors.primary, width: ACTION_WIDTH },
+          pressed && { opacity: 0.9 },
+        ]}
+      >
+        <AppIcon name="time-outline" size={22} color="#FFFFFF" />
+        <Text style={styles.closeLabel}>Snooze</Text>
+      </Pressable>
       <Pressable
         onPress={onClose}
         style={({ pressed }) => [
           styles.closeAction,
-          { backgroundColor: theme.colors.danger },
+          { backgroundColor: theme.colors.danger, width: ACTION_WIDTH },
           pressed && { opacity: 0.9 },
         ]}
       >
@@ -100,9 +142,24 @@ export function LoopCard({ loop, index = 0 }: LoopCardProps) {
 
   const renderRightActions = useCallback(
     (_progress: SharedValue<number>, drag: SharedValue<number>) => (
-      <CloseSwipeAction drag={drag} onClose={confirmClose} />
+      <RightSwipeActions drag={drag} onSnooze={() => {
+        void hapticLight();
+        swipeRef.current?.close();
+        router.push(`/loops/${loop.id}`);
+      }} onClose={confirmClose} />
     ),
-    [confirmClose]
+    [confirmClose, loop.id, router]
+  );
+
+  const renderLeftActions = useCallback(
+    (_progress: SharedValue<number>, drag: SharedValue<number>) => (
+      <LeftSwipeActions drag={drag} onNudge={() => {
+        void hapticLight();
+        swipeRef.current?.close();
+        router.push(`/loops/${loop.id}`);
+      }} />
+    ),
+    [loop.id, router]
   );
 
   const cardBody = (
@@ -225,8 +282,11 @@ export function LoopCard({ loop, index = 0 }: LoopCardProps) {
           ref={swipeRef}
           friction={2}
           overshootRight={false}
+          overshootLeft={false}
           rightThreshold={40}
+          leftThreshold={40}
           renderRightActions={renderRightActions}
+          renderLeftActions={renderLeftActions}
           containerStyle={styles.swipeContainer}
         >
           {cardBody}
@@ -306,6 +366,11 @@ const styles = StyleSheet.create({
   actionWrap: {
     width: ACTION_WIDTH,
     marginBottom: spacing.md,
+  },
+  actionWrapLeft: {
+    width: ACTION_WIDTH,
+    marginBottom: spacing.md,
+    alignItems: 'flex-end',
   },
   closeAction: {
     flex: 1,

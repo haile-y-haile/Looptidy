@@ -1,9 +1,7 @@
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { AppIcon, type AppIconName } from './AppIcon';
-import { ComingSoonBadge } from './ComingSoonBadge';
 import { radius, spacing, typography } from '../lib/theme';
-import { showComingSoon } from '../lib/comingSoon';
 
 type RightAccessory =
   | { type: 'chevron' }
@@ -18,7 +16,6 @@ interface SettingsRowProps {
   onPress?: () => void;
   right?: RightAccessory;
   tone?: 'default' | 'danger';
-  comingSoon?: boolean;
 }
 
 export function SettingsRow({
@@ -28,32 +25,21 @@ export function SettingsRow({
   onPress,
   right = { type: 'chevron' },
   tone = 'default',
-  comingSoon = false,
 }: SettingsRowProps) {
   const { theme } = useTheme();
   const isDanger = tone === 'danger';
 
-  const handlePress = () => {
-    if (comingSoon) {
-      showComingSoon(title);
-      return;
-    }
-    onPress?.();
-  };
-
-  const isInteractive = comingSoon || !!onPress;
-  const resolvedRight = comingSoon ? { type: 'none' as const } : right;
+  const isInteractive = !!onPress;
 
   return (
     <Pressable
-      onPress={isInteractive ? handlePress : undefined}
+      onPress={onPress}
       disabled={!isInteractive}
       style={({ pressed }) => [
         styles.row,
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
-          opacity: comingSoon ? 0.92 : 1,
         },
         isInteractive && pressed && styles.pressed,
         !isInteractive && styles.staticRow,
@@ -78,7 +64,6 @@ export function SettingsRow({
             >
               {title}
             </Text>
-            {comingSoon ? <ComingSoonBadge compact /> : null}
           </View>
           {subtitle ? (
             <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
@@ -89,18 +74,18 @@ export function SettingsRow({
       </View>
 
       <View style={styles.right}>
-        {resolvedRight.type === 'value' ? (
-          <Text style={[styles.value, { color: theme.colors.textMuted }]}>{resolvedRight.value}</Text>
+        {right.type === 'value' ? (
+          <Text style={[styles.value, { color: theme.colors.textMuted }]}>{right.value}</Text>
         ) : null}
-        {resolvedRight.type === 'switch' ? (
+        {right.type === 'switch' ? (
           <Switch
-            value={resolvedRight.value}
-            onValueChange={resolvedRight.onChange}
+            value={right.value}
+            onValueChange={right.onChange}
             trackColor={{ false: theme.colors.borderLight, true: theme.colors.primary }}
             thumbColor={theme.colors.surface}
           />
         ) : null}
-        {resolvedRight.type === 'chevron' ? (
+        {right.type === 'chevron' ? (
           <AppIcon name="chevron-forward" size={18} color={theme.colors.textMuted} />
         ) : null}
       </View>

@@ -123,50 +123,30 @@ export default function SettingsScreen() {
       </Animated.View>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Account</Text>
-      <SettingsRow icon={settingsIcons.profile} title="Profile" subtitle="Manage your name and photo" comingSoon />
-      <SettingsRow icon={settingsIcons.security} title="Security" subtitle="Password and device security" comingSoon />
-      <SettingsRow icon={settingsIcons.privacy} title="Privacy" subtitle="Data and visibility controls" comingSoon />
+      <View style={[styles.accountCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Text style={[styles.accountCardTitle, { color: theme.colors.text }]}>Sign in</Text>
+        <Text style={[styles.accountCardSubtitle, { color: theme.colors.textSecondary }]}>
+          Sync your loops across devices.
+        </Text>
+        <View style={styles.accountCardActions}>
+          <Pressable style={[styles.accountBtnPrimary, { backgroundColor: theme.colors.primary }]}>
+            <Text style={styles.accountBtnPrimaryText}>Sign in</Text>
+          </Pressable>
+          <Pressable style={[styles.accountBtnSecondary, { borderColor: theme.colors.border }]}>
+            <Text style={[styles.accountBtnSecondaryText, { color: theme.colors.text }]}>Create account</Text>
+          </Pressable>
+        </View>
+        <Text style={[styles.accountCardFooter, { color: theme.colors.textMuted }]}>
+          All data is securely stored locally on this device. Cloud syncing is disabled by default for privacy.
+        </Text>
+      </View>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Preferences</Text>
       <SettingsRow
-        icon={settingsIcons.appearance}
-        title="Appearance"
-        subtitle="Use the pills above to switch themes"
-        right={{ type: 'value', value: appearanceLabel }}
-      />
-      <SettingsRow icon={settingsIcons.language} title="Language" subtitle="English only for now" comingSoon />
-      <SettingsRow icon={settingsIcons.accessibility} title="Accessibility" subtitle="Text size and motion" comingSoon />
-      <SettingsRow
         icon={settingsIcons.notifications}
         title="Notifications"
-        subtitle="Reminders are not available yet"
-        comingSoon
-      />
-
-      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>PM tools</Text>
-      <SettingsRow
-        icon={settingsIcons.backup}
-        title="Decision Speed"
-        subtitle="Guided flow from question to decision"
-        onPress={() => router.push('/decision-speed')}
-      />
-      <SettingsRow
-        icon={settingsIcons.backup}
-        title="Ownership"
-        subtitle="Unclear owners, follow-ups, and escalations"
-        onPress={() => router.push('/ownership')}
-      />
-      <SettingsRow
-        icon={settingsIcons.backup}
-        title="Scope Guard"
-        subtitle="Capture and review scope changes"
-        onPress={() => router.push('/scope-guard')}
-      />
-      <SettingsRow
-        icon={settingsIcons.backup}
-        title="Feedback"
-        subtitle="Triage feedback into loops and decisions"
-        onPress={() => router.push('/feedback')}
+        subtitle="Reminders are set per loop in loop detail."
+        right={{ type: 'none' }}
       />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Data</Text>
@@ -185,18 +165,7 @@ export default function SettingsScreen() {
         onPress={() => router.push('/marketing')}
       />
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Help</Text>
-      <SettingsRow icon={settingsIcons.legal} title="Legal" subtitle="Privacy policy and terms" comingSoon />
-      <SettingsRow icon={settingsIcons.support} title="Support" subtitle="Contact and help center" comingSoon />
-
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Danger Zone</Text>
-      <SettingsRow
-        icon={settingsIcons.danger}
-        title="Delete Account"
-        subtitle="Unavailable until cloud accounts exist"
-        tone="danger"
-        comingSoon
-      />
       <SettingsRow
         icon={settingsIcons.danger}
         title="Delete all local data"
@@ -248,5 +217,53 @@ const styles = StyleSheet.create({
     ...typography.label,
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
+  },
+  accountCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+  },
+  accountCardTitle: {
+    ...typography.callout,
+    fontWeight: '700',
+  },
+  accountCardSubtitle: {
+    ...typography.body,
+    marginTop: 2,
+    marginBottom: spacing.md,
+  },
+  accountCardActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  accountBtnPrimary: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    alignItems: 'center',
+  },
+  accountBtnPrimaryText: {
+    ...typography.callout,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  accountBtnSecondary: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  accountBtnSecondaryText: {
+    ...typography.callout,
+    fontWeight: '700',
+  },
+  accountCardFooter: {
+    ...typography.caption,
+  },
+  footerText: {
+    ...typography.caption,
+    paddingHorizontal: spacing.sm,
   },
 });
