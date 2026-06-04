@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { QuickCaptureSheet } from '../../../components/QuickCaptureSheet';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -58,8 +59,8 @@ export default function LoopsScreen() {
 
   const emptyCopy = getEmptyStateForFilter(filter);
 
-  return (
-    <ScreenScroll contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}>
+  const header = (
+    <View style={{ paddingTop: spacing.lg + insets.top, paddingHorizontal: spacing.lg }}>
       <View style={styles.headerRow}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.text }]}>Loops</Text>
@@ -140,25 +141,41 @@ export default function LoopsScreen() {
         {getLoopFilterLabel(filter)}
         {query.trim() ? ` · “${query.trim()}”` : ''}
       </Text>
+    </View>
+  );
 
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       {loading ? (
-        <ListSkeleton rows={5} />
-      ) : filteredLoops.length > 0 ? (
-        filteredLoops.map((loop, index) => <LoopCard key={loop.id} loop={loop} index={index} />)
+        <ScreenScroll contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}>
+          {header}
+          <ListSkeleton rows={5} />
+        </ScreenScroll>
       ) : (
-        <EmptyState
-          title={query.trim() ? 'No matches' : emptyCopy.title}
-          message={
-            query.trim()
-              ? 'Try a different search or clear the filter.'
-              : emptyCopy.message
+        <Animated.FlatList
+          data={filteredLoops}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={header}
+          contentContainerStyle={{ paddingBottom: spacing.xxxl + insets.bottom }}
+          renderItem={({ item, index }) => (
+            <View style={{ paddingHorizontal: spacing.lg }}>
+              <LoopCard loop={item} index={index} />
+            </View>
+          )}
+          itemLayoutAnimation={LinearTransition.springify()}
+          ListEmptyComponent={
+            <View style={{ paddingHorizontal: spacing.lg }}>
+              <EmptyState
+                title={query.trim() ? 'No matches' : emptyCopy.title}
+                message={query.trim() ? 'Try a different search or clear the filter.' : emptyCopy.message}
+                illustration
+              />
+            </View>
           }
-          illustration
         />
       )}
-
       <QuickCaptureSheet visible={quickCaptureOpen} onClose={() => setQuickCaptureOpen(false)} />
-    </ScreenScroll>
+    </View>
   );
 }
 

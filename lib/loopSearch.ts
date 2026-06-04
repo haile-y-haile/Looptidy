@@ -42,14 +42,18 @@ function buildSearchDocument(loop: OpenLoop) {
   };
 }
 
+let lastIndexedLoops: any = null;
+
 export function filterLoopsByQuery<T extends OpenLoop>(loops: T[], query: string): T[] {
   const q = query.trim();
   if (!q) return loops;
 
-  // Rebuild index whenever we search to ensure it's up to date.
-  // In a massive app we'd do this incrementally, but for ~1000 loops this is ~20ms.
-  miniSearch.removeAll();
-  miniSearch.addAll(loops.map(buildSearchDocument));
+  // Rebuild index only if the loops array reference has changed.
+  if (lastIndexedLoops !== loops) {
+    miniSearch.removeAll();
+    miniSearch.addAll(loops.map(buildSearchDocument));
+    lastIndexedLoops = loops;
+  }
 
   const results = miniSearch.search(q);
   const matchedIds = new Set(results.map(r => r.id));

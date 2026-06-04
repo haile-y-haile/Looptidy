@@ -19,6 +19,8 @@ export async function getDb() {
       data TEXT NOT NULL,
       updated_at INTEGER NOT NULL
     );
+    CREATE INDEX IF NOT EXISTS idx_documents_type ON documents(type);
+    
     CREATE TABLE IF NOT EXISTS history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       timestamp INTEGER NOT NULL,
