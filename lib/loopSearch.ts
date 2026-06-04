@@ -42,7 +42,7 @@ function buildSearchDocument(loop: OpenLoop) {
   };
 }
 
-let lastIndexedLoops: any = null;
+let lastIndexedLoops: OpenLoop[] | null = null;
 
 export function filterLoopsByQuery<T extends OpenLoop>(loops: T[], query: string): T[] {
   const q = query.trim();

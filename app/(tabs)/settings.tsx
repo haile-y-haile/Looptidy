@@ -6,6 +6,7 @@ import { ScreenScroll } from '../../components/ScreenScroll';
 import { SettingsRow } from '../../components/SettingsRow';
 import { useTheme } from '../../context/ThemeContext';
 import type { AppearanceMode } from '../../lib/preferences';
+import { getBiometricLockEnabled, setBiometricLockEnabled } from '../../lib/preferences';
 import { radius, spacing, typography } from '../../lib/theme';
 import { settingsIcons } from '../../lib/icons';
 
@@ -48,10 +49,22 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { theme, setMode } = useTheme();
   const [mode, setModeLocal] = useState<AppearanceMode>(theme.mode);
+  const [biometricLock, setBiometricLock] = useState(false);
 
   useEffect(() => {
     setModeLocal(theme.mode);
   }, [theme.mode]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const enabled = await getBiometricLockEnabled();
+      if (!cancelled) setBiometricLock(enabled);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const headerEnter = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -142,6 +155,19 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Preferences</Text>
+      <SettingsRow
+        icon={settingsIcons.security}
+        title="App lock (Face ID)"
+        subtitle="Require Face ID or passcode when opening LoopTidy."
+        right={{
+          type: 'switch',
+          value: biometricLock,
+          onChange: (next) => {
+            setBiometricLock(next);
+            void setBiometricLockEnabled(next);
+          },
+        }}
+      />
       <SettingsRow
         icon={settingsIcons.notifications}
         title="Notifications"

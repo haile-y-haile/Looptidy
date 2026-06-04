@@ -8,6 +8,7 @@ const KEYS = {
   onboardingVersion: '@looptidy/onboardingVersion',
   appearance: '@looptidy/appearance', // 'system' | 'light' | 'dark'
   weeklyReviewBannerDismissed: '@looptidy/weeklyReviewBannerDismissed',
+  biometricLockEnabled: '@looptidy/biometricLockEnabled',
 } as const;
 
 export type AppearanceMode = 'system' | 'light' | 'dark';
@@ -50,4 +51,13 @@ export async function setWeeklyReviewBannerDismissed(): Promise<void> {
   const now = new Date();
   const currentWeek = `${now.getFullYear()}-W${Math.ceil((now.getDate() - now.getDay() + 1) / 7)}`;
   await AsyncStorage.setItem(KEYS.weeklyReviewBannerDismissed, currentWeek);
+}
+
+export async function getBiometricLockEnabled(): Promise<boolean> {
+  const raw = await AsyncStorage.getItem(KEYS.biometricLockEnabled);
+  return raw === 'true';
+}
+
+export async function setBiometricLockEnabled(value: boolean): Promise<void> {
+  await AsyncStorage.setItem(KEYS.biometricLockEnabled, value ? 'true' : 'false');
 }

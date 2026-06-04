@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
-import { useEffect, useState } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, ActivityIndicator, Pressable, Text, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -16,6 +16,9 @@ import { ScopeProvider } from '../context/ScopeContext';
 import { SpotlightProvider } from '../context/SpotlightContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { NotificationsHandler } from '../components/NotificationsHandler';
+import { LogoMark } from '../components/LogoMark';
+import { getBiometricLockEnabled } from '../lib/preferences';
+import { spacing, typography } from '../lib/theme';
 
 function RootStack() {
   const { theme } = useTheme();
@@ -53,56 +56,126 @@ function RootStack() {
   );
 }
 
-export default function RootLayout() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+type AuthState = 'checking' | 'locked' | 'authenticated';
 
-  useEffect(() => {
-    async function authenticate() {
+function BiometricGate({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+  const [authState, setAuthState] = useState<AuthState>('checking');
+
+  const tryAuthenticate = useCallback(async () => {
+    setAuthState('checking');
+    try {
+      const enabled = await getBiometricLockEnabled();
+      if (!enabled) {
+        setAuthState('authenticated');
+        return;
+      }
+
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      
-      if (hasHardware && isEnrolled) {
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: 'Unlock LoopTidy',
-          fallbackLabel: 'Use Passcode',
-        });
-        if (result.success) {
-          setIsAuthenticated(true);
-        }
-      } else {
-        // If device has no biometrics, just let them in
-        setIsAuthenticated(true);
+      if (!hasHardware || !isEnrolled) {
+        setAuthState('authenticated');
+        return;
       }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Unlock LoopTidy',
+        fallbackLabel: 'Use Passcode',
+        cancelLabel: 'Cancel',
+      });
+
+      setAuthState(result.success ? 'authenticated' : 'locked');
+    } catch {
+      setAuthState('locked');
     }
-    void authenticate();
   }, []);
 
-  if (!isAuthenticated) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#0B1220', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0D9488" />
-      </View>
-    );
+  useEffect(() => {
+    void tryAuthenticate();
+  }, [tryAuthenticate]);
+
+  if (authState === 'authenticated') {
+    return <>{children}</>;
   }
 
+  return (
+    <View style={[styles.lockScreen, { backgroundColor: theme.colors.background }]}>
+      {authState === 'checking' ? (
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      ) : (
+        <>
+          <LogoMark size={96} />
+          <Text style={[styles.lockTitle, { color: theme.colors.text }]}>LoopTidy is locked</Text>
+          <Text style={[styles.lockSubtitle, { color: theme.colors.textSecondary }]}>
+            Use Face ID or your device passcode to continue.
+          </Text>
+          <Pressable
+            onPress={() => void tryAuthenticate()}
+            style={({ pressed }) => [
+              styles.unlockBtn,
+              { backgroundColor: theme.colors.primary },
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <Text style={styles.unlockBtnText}>Unlock</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
+
+export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
           <FontProvider>
-            <LoopProvider>
-              <NotificationsHandler />
-              <ScopeProvider>
-                <FeedbackProvider>
-                  <SpotlightProvider>
-                    <RootStack />
-                  </SpotlightProvider>
-                </FeedbackProvider>
-              </ScopeProvider>
-            </LoopProvider>
+            <BiometricGate>
+              <LoopProvider>
+                <NotificationsHandler />
+                <ScopeProvider>
+                  <FeedbackProvider>
+                    <SpotlightProvider>
+                      <RootStack />
+                    </SpotlightProvider>
+                  </FeedbackProvider>
+                </ScopeProvider>
+              </LoopProvider>
+            </BiometricGate>
           </FontProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  lockScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xxl,
+    gap: spacing.md,
+  },
+  lockTitle: {
+    ...typography.title,
+    marginTop: spacing.lg,
+  },
+  lockSubtitle: {
+    ...typography.body,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  unlockBtn: {
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: 999,
+    marginTop: spacing.sm,
+  },
+  unlockBtnText: {
+    ...typography.callout,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+});

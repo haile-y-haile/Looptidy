@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { QuickCaptureSheet } from '../../../components/QuickCaptureSheet';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLoops } from '../../../context/LoopContext';
@@ -58,6 +58,7 @@ export default function LoopsScreen() {
   }, [loops, filter, query]);
 
   const emptyCopy = getEmptyStateForFilter(filter);
+  const listBottomPadding = (Platform.OS === 'ios' ? 100 : 72) + insets.bottom;
 
   const header = (
     <View style={{ paddingTop: spacing.lg + insets.top, paddingHorizontal: spacing.lg }}>
@@ -156,7 +157,9 @@ export default function LoopsScreen() {
           data={filteredLoops}
           keyExtractor={(item) => item.id}
           ListHeaderComponent={header}
-          contentContainerStyle={{ paddingBottom: spacing.xxxl + insets.bottom }}
+          contentContainerStyle={{ paddingBottom: listBottomPadding }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => (
             <View style={{ paddingHorizontal: spacing.lg }}>
               <LoopCard loop={item} index={index} />

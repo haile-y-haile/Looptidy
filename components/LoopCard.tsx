@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -112,7 +112,7 @@ function RightSwipeActions({
   );
 }
 
-export function LoopCard({ loop, index = 0 }: LoopCardProps) {
+export const LoopCard = memo(function LoopCard({ loop, index = 0 }: LoopCardProps) {
   const router = useRouter();
   const { closeLoop } = useLoops();
   const { theme } = useTheme();
@@ -296,7 +296,11 @@ export function LoopCard({ loop, index = 0 }: LoopCardProps) {
       )}
     </Animated.View>
   );
-}
+}, (prev, next) =>
+  prev.loop.id === next.loop.id &&
+  prev.loop.updatedAt === next.loop.updatedAt &&
+  prev.index === next.index
+);
 
 const styles = StyleSheet.create({
   swipeContainer: {
