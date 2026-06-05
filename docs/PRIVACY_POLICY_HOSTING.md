@@ -1,41 +1,39 @@
 # Privacy Policy Hosting — LoopTidy
 
-## Recommended public URL
-
-Publish the privacy policy at:
+## Public URL
 
 **https://haile-y-haile.github.io/Looptidy/privacy**
 
 Use this URL in **App Store Connect → App Privacy → Privacy Policy URL**.
 
-## Hosting options
+## What is published
 
-### Option A — GitHub Pages (recommended)
+| File | Purpose |
+|------|---------|
+| `docs/privacy/index.html` | Public privacy policy page (source: `privacy-policy.md` at repo root) |
+| `docs/.nojekyll` | Disables Jekyll processing so static HTML is served as-is |
 
-1. Enable GitHub Pages for the `haile-y-haile/Looptidy` repository (Settings → Pages).
-2. Publish from the `main` branch using the `/docs` folder or a dedicated `gh-pages` branch.
-3. Add a static HTML page at `docs/privacy/index.html` (or convert `privacy-policy.md` to HTML).
-4. Verify the URL loads in Safari without authentication.
+When updating the policy, edit `privacy-policy.md` first, then sync the HTML page to match.
 
-### Option B — Simple static host
+## Enable GitHub Pages (one-time)
 
-Any HTTPS host works (Netlify, Cloudflare Pages, etc.) as long as:
+1. Open **https://github.com/haile-y-haile/Looptidy/settings/pages**
+2. Under **Build and deployment** → **Source**, choose **Deploy from a branch**
+3. **Branch:** `main` · **Folder:** `/docs`
+4. Save. GitHub will publish within a few minutes.
+5. Verify **https://haile-y-haile.github.io/Looptidy/privacy** loads in Safari without login.
 
-- The URL is stable and public
-- Content matches `privacy-policy.md` in this repo
-- Contact email is **hello.hailelabs@gmail.com**
+Repository name casing in the URL (`Looptidy`) must match the GitHub repo name.
 
-## Do not use as final App Store URL
+## Contact
 
-- Raw GitHub markdown links (`raw.githubusercontent.com/...`) — poor formatting and not ideal for App Review
-- In-app-only text without a public URL
+**hello.hailelabs@gmail.com** — use the same email in App Store Connect Support URL or support page.
 
 ## In-app links
 
-The app links to the hosted URL via `lib/links.ts` → `links.privacyPolicy`.
+The app opens the hosted URL via `lib/links.ts` → `links.privacyPolicy` (Settings and About).
 
-Settings and About screens open this URL with `Linking.openURL`.
+## Do not use as App Store URL
 
-## Support contact
-
-**hello.hailelabs@gmail.com** — use the same email in App Store Connect Support URL field or a dedicated support page.
+- Raw GitHub markdown links (`raw.githubusercontent.com/...`)
+- In-app-only text without a public HTTPS page
