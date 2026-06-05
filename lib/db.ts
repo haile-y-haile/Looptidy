@@ -1,8 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { OpenLoop } from '../types';
-import { mockLoops } from './mockData';
-import { normalizeDecision } from './decisions';
+import { getAsyncStorageMigrated, setAsyncStorageMigrated } from './preferences';
 
 const ASYNC_STORAGE_KEY = '@looptidy/loops';
 
@@ -32,13 +31,19 @@ export async function getDb() {
 }
 
 export async function migrateFromAsyncStorageIfNeeded() {
-  const database = await getDb();
-  const existingCount = await database.getFirstAsync<{ count: number }>(`SELECT COUNT(*) as count FROM documents WHERE type = 'loop'`);
-  if (existingCount && existingCount.count > 0) {
-    return; // Already migrated
+  if (await getAsyncStorageMigrated()) {
+    return;
   }
 
-  // Check AsyncStorage
+  const database = await getDb();
+  const existingCount = await database.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count FROM documents WHERE type = 'loop'`
+  );
+  if (existingCount && existingCount.count > 0) {
+    await setAsyncStorageMigrated(true);
+    return;
+  }
+
   const raw = await AsyncStorage.getItem(ASYNC_STORAGE_KEY);
   if (raw) {
     try {
@@ -57,4 +62,6 @@ export async function migrateFromAsyncStorageIfNeeded() {
       console.error('Migration failed', e);
     }
   }
+
+  await setAsyncStorageMigrated(true);
 }

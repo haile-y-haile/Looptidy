@@ -9,13 +9,14 @@
     "userInterfaceStyle": "automatic",
     "description": "An open-loop tracker for follow-ups, blockers, commitments, and decisions.",
     "splash": {
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#F6F8FB"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hailehaile.looptidy",
-      "buildNumber": "25",
+      "buildNumber": "26",
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
           {
@@ -67,6 +68,8 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
           "backgroundColor": "#F6F8FB",
           "dark": {
             "backgroundColor": "#0B1220"

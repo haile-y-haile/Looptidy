@@ -27,6 +27,8 @@ export function ReminderPanel({ loop }: { loop: OpenLoop }) {
   const { updateLoop, addTimelineEvent } = useLoops();
   const [reminderInput, setReminderInput] = useState('');
   const [labelInput, setLabelInput] = useState(loop.reminderLabel ?? '');
+  const [changingTime, setChangingTime] = useState(false);
+  const [newReminderTime, setNewReminderTime] = useState('');
   const [busy, setBusy] = useState(false);
 
   const effective = getEffectiveReminderTime(loop);
@@ -187,6 +189,42 @@ export function ReminderPanel({ loop }: { loop: OpenLoop }) {
         </>
       ) : (
         <>
+          {changingTime ? (
+            <>
+              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>New reminder time</Text>
+              <DatePickerField
+                value={newReminderTime}
+                onChange={setNewReminderTime}
+                mode="datetime"
+                placeholder="Select reminder date & time"
+                style={{ marginBottom: spacing.sm }}
+              />
+              <PrimaryButton
+                label="Update reminder"
+                onPress={() => {
+                  void (async () => {
+                    if (!newReminderTime.trim()) return;
+                    await applyUpdate({
+                      reminderEnabled: true,
+                      reminderAt: newReminderTime.trim(),
+                      snoozedUntil: undefined,
+                      reminderLabel: labelInput.trim() || defaultReminderLabel(loop),
+                    });
+                    setChangingTime(false);
+                    setNewReminderTime('');
+                  })();
+                }}
+                disabled={!newReminderTime.trim() || busy}
+              />
+              <Pressable onPress={() => setChangingTime(false)}>
+                <Text style={[styles.clearLink, { color: theme.colors.textSecondary }]}>Cancel change</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Pressable onPress={() => setChangingTime(true)} disabled={busy}>
+              <Text style={[styles.clearLink, { color: theme.colors.primary }]}>Change time</Text>
+            </Pressable>
+          )}
           <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Snooze</Text>
           <View style={styles.snoozeRow}>
             {SNOOZE_PRESETS.map((p) => (

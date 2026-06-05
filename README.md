@@ -4,9 +4,7 @@
 
 An open-loop tracker for follow-ups, blockers, commitments, and decisions.
 
-LoopTidy is a local-first open-loop tracker for managing follow-ups, blockers, commitments, and unresolved decisions. It helps you keep track of what is **waiting**, what is **blocked**, what you **promised**, what is **due**, and what still needs a **decision**—with **risk** visible when a loop needs attention and **closure** when it no longer matters.
-
-Data stays on your device in the current release. There is no backend, no cloud sync, and no real account system yet.
+LoopTidy is a local-first open-loop tracker for managing follow-ups, blockers, commitments, and unresolved decisions. Data stays on your device — no backend, no cloud sync, and no account required in v1.
 
 ## Status
 
@@ -15,44 +13,39 @@ Data stays on your device in the current release. There is no backend, no cloud 
 | **App** | LoopTidy |
 | **Version** | 1.0.0 |
 | **Platform** | iOS |
-| **Availability** | TestFlight build available |
+| **Storage** | SQLite (loops) + on-device preferences |
 | **Repository** | https://github.com/haile-y-haile/Looptidy |
 
-Request TestFlight access: [GitHub — TestFlight beta access](https://github.com/haile-y-haile/Looptidy/issues/new?title=TestFlight%20beta%20access&body=Apple%20ID%20email%20for%20invite%3A%0A%0A)
+**Support:** hello.hailelabs@gmail.com  
+**Privacy Policy:** https://haile-y-haile.github.io/Looptidy/privacy
 
-## Core MVP features (1.0.0)
+## Core features (1.0.0)
 
 - **Today dashboard** — focus, due items, waiting, promised, and high-risk loops
-- **Open loop creation** — type, priority, risk, category, person, due date
-- **Open loop list** — all open and closed loops in one place
-- **Loop detail** — context, timeline, notes, decisions, closure
-- **Waiting on others** — loops where progress depends on someone else
-- **Promised by me** — commitments you made and their due dates
+- **Open loop creation & editing** — type, priority, risk, category, person, due date, attachments
+- **Loop lifecycle** — close, archive, reopen, delete
+- **Loop detail** — context, timeline, notes, decisions, local reminders
 - **Decision log** — unresolved and recorded decisions
-- **Weekly review placeholder** — stats snapshot and guided checklist
-- **Local persistence** — AsyncStorage on device
+- **Command Center** — search, filters, sorting across loops and related data
+- **Local reminders** — on-device notifications (permission requested when you set a reminder)
+- **Backup & restore** — JSON/CSV export and import on this device
 - **Dark mode** — system, light, or dark appearance
-- **Settings** — preferences and about
-- **Local link attachments** — save URLs on a loop (files coming later)
+- **Optional app lock** — Face ID / passcode (Settings)
 
 ## Current limitations
 
-- **Mock auth UI only** — onboarding shows sign-in options; only **Get started** is active
-- **No backend yet**
-- **No cloud sync yet**
-- **No real account system yet**
-- **No analytics**
-- **No ads**
-- **No push notifications**
+- **No backend or cloud sync**
+- **No real account system**
+- **No analytics or ads**
+- **No AI features in this release**
+- **Local notifications only** — no remote push server
 
 ## Tech stack
 
-- Expo
-- React Native
-- TypeScript
-- Expo Router
-- AsyncStorage
-- EAS Build
+- Expo · React Native · TypeScript · Expo Router
+- **expo-sqlite** for loop storage
+- AsyncStorage for preferences, scope, feedback, and weekly reviews
+- EAS Build for iOS distribution
 
 ## Build and run
 
@@ -63,33 +56,18 @@ npm install
 npx expo start
 ```
 
-| Command | Purpose |
-|---------|---------|
-| `npx expo start` | Start Metro (local development) |
-| `npx expo start --ios` | Open iOS Simulator |
-| Press `i` / scan QR | Simulator or **Expo Go** preview on a device |
-
 Pre-build checks and production commands: [BUILD.md](BUILD.md).
-
-## TestFlight
-
-1. Install [TestFlight](https://apps.apple.com/app/testflight/id899247664) on your iPhone or iPad.
-2. [Request a beta invite](https://github.com/haile-y-haile/Looptidy/issues/new?title=TestFlight%20beta%20access&body=Apple%20ID%20email%20for%20invite%3A%0A%0A) with your Apple ID email.
-3. Accept the invite and install LoopTidy from TestFlight.
-
-Maintainers: see [BUILD.md](BUILD.md) for `eas build` and `eas submit`.
 
 ## Documentation
 
 | Document | Purpose |
 |----------|---------|
-| [BUILD.md](BUILD.md) | Local dev, EAS, TestFlight upload |
+| [BUILD.md](BUILD.md) | Local dev and EAS |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
-| [ROADMAP.md](ROADMAP.md) | MVP complete, next, future |
+| [ROADMAP.md](ROADMAP.md) | Shipped vs planned |
 | [PRIVACY.md](PRIVACY.md) | Privacy practices |
 | [SUPPORT.md](SUPPORT.md) | Help and contact |
-| [SECURITY.md](SECURITY.md) | Security reports |
-| [LICENSE](LICENSE) | All Rights Reserved |
+| [docs/PRIVACY_POLICY_HOSTING.md](docs/PRIVACY_POLICY_HOSTING.md) | Hosted privacy URL setup |
 
 ## License
 

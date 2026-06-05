@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedback } from '../../../context/FeedbackContext';
@@ -12,7 +13,6 @@ import { FilterChip } from '../../../components/FilterChip';
 import { ListSkeleton } from '../../../components/ListSkeleton';
 import { LoopCard } from '../../../components/LoopCard';
 import { SearchField } from '../../../components/SearchField';
-import { ScreenScroll } from '../../../components/ScreenScroll';
 import { SortSheet } from '../../../components/SortSheet';
 import { hapticLight } from '../../../lib/haptics';
 import {
@@ -106,192 +106,217 @@ export default function CommandCenterScreen() {
 
   const empty = getCommandCenterEmptyState(filter, query.trim().length > 0);
   const sortLabel = COMMAND_CENTER_SORTS.find((s) => s.key === sort)?.label ?? 'Sort';
+  const listBottomPadding = (Platform.OS === 'ios' ? 100 : 72) + insets.bottom;
 
   const [smartFolders] = useState([
     { id: '1', name: 'Critical My Bugs', filter: 'high_risk' as CommandCenterFilter, sort: 'urgent' as CommandCenterSort },
     { id: '2', name: 'Client Feedback', filter: 'feedback' as CommandCenterFilter, sort: 'recent' as CommandCenterSort },
   ]);
 
-  return (
-    <>
-      <ScreenScroll contentContainerStyle={{ paddingTop: spacing.md + insets.top }}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Command Center</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          Search loops, decisions, accountability notes, scope changes, and feedback.
-        </Text>
+  const header = (
+    <View style={{ paddingTop: spacing.md + insets.top, paddingHorizontal: spacing.lg }}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Command Center</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+        Search loops, decisions, accountability notes, scope changes, and feedback.
+      </Text>
 
-        <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Smart Folders</Text>
-        <View style={styles.toolsGrid}>
-          {smartFolders.map(folder => (
-            <Pressable key={folder.id} onPress={() => { setFilter(folder.filter); setSort(folder.sort); }} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
-              <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>{folder.name}</Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Tools</Text>
-        <View style={styles.toolsGrid}>
-          <Pressable onPress={() => router.push('/decision-speed')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
-            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Decision Speed</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/ownership')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
-            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Ownership</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/scope-guard')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
-            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Scope Guard</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/feedback')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
-            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Feedback</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/people')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
-            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>People</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/weekly-review')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
-            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Weekly Review</Text>
-          </Pressable>
-        </View>
-
-        <SearchField value={query} onChangeText={setQuery} placeholder="Search everything…" />
-
-        <View style={styles.toolbar}>
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Smart Folders</Text>
+      <View style={styles.toolsGrid}>
+        {smartFolders.map((folder) => (
           <Pressable
+            key={folder.id}
             onPress={() => {
-              void hapticLight();
-              setSortOpen(true);
+              setFilter(folder.filter);
+              setSort(folder.sort);
             }}
             style={({ pressed }) => [
-              styles.sortBtn,
+              styles.toolBtn,
               { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
               pressed && { opacity: 0.9 },
             ]}
           >
-            <Text style={[styles.sortBtnText, { color: theme.colors.text }]}>{sortLabel}</Text>
+            <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>{folder.name}</Text>
           </Pressable>
-          {hasActiveFilters ? (
-            <Pressable onPress={clearAll} hitSlop={8}>
-              <Text style={[styles.clearText, { color: theme.colors.primary }]}>Clear filters</Text>
-            </Pressable>
-          ) : null}
-        </View>
+        ))}
+      </View>
 
-        <Text style={[styles.count, { color: theme.colors.textMuted }]}>
-          {totalResults} result{totalResults === 1 ? '' : 's'}
-        </Text>
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Tools</Text>
+      <View style={styles.toolsGrid}>
+        <Pressable onPress={() => router.push('/decision-speed')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Decision Speed</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/ownership')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Ownership</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/scope-guard')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Scope Guard</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/feedback')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Feedback</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/people')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>People</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/weekly-review')} style={({ pressed }) => [styles.toolBtn, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, pressed && { opacity: 0.9 }]}>
+          <Text style={[styles.toolBtnText, { color: theme.colors.text }]}>Weekly Review</Text>
+        </Pressable>
+      </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-          style={styles.chipScroll}
-        >
-          {COMMAND_CENTER_FILTERS.map((item) => (
-            <FilterChip
-              key={item.key}
-              label={item.label}
-              selected={filter === item.key}
-              onPress={() => {
-                void hapticLight();
-                setFilter(item.key);
-              }}
-              tone={
-                item.key === 'blocked' || item.key === 'overdue'
-                  ? 'danger'
-                  : item.key === 'due'
-                    ? 'warning'
-                    : 'default'
-              }
-            />
-          ))}
-        </ScrollView>
+      <SearchField value={query} onChangeText={setQuery} placeholder="Search everything…" />
 
-        <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Reminders</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-          style={styles.chipScroll}
-        >
-          {REMINDER_FILTERS.map((item) => (
-            <FilterChip
-              key={item.label}
-              label={item.label}
-              selected={reminderFilter === item.key}
-              onPress={() => {
-                void hapticLight();
-                setReminderFilter(item.key);
-              }}
-            />
-          ))}
-        </ScrollView>
-
-        {loading ? (
-          <ListSkeleton rows={5} />
-        ) : totalResults > 0 ? (
-          <>
-            {showLoopList && results.length > 0 ? (
-              <>
-                {filter === 'all' && (scopeResults.length > 0 || feedbackResults.length > 0) ? (
-                  <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Loops</Text>
-                ) : null}
-                {results.map((loop, index) => (
-                  <LoopCard key={loop.id} loop={loop} index={index} />
-                ))}
-              </>
-            ) : null}
-            {scopeResults.length > 0 ? (
-              <>
-                <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Scope changes</Text>
-                {scopeResults.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => router.push('/scope-guard')}
-                    style={({ pressed }) => pressed && { opacity: 0.9 }}
-                  >
-                    <GlassCard style={styles.auxCard} intensity={24}>
-                      <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
-                      <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
-                        {SCOPE_STATUS_LABELS[item.status]} · {item.impact} impact
-                      </Text>
-                    </GlassCard>
-                  </Pressable>
-                ))}
-              </>
-            ) : null}
-            {feedbackResults.length > 0 ? (
-              <>
-                <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Feedback</Text>
-                {feedbackResults.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    onPress={() => router.push('/feedback')}
-                    style={({ pressed }) => pressed && { opacity: 0.9 }}
-                  >
-                    <GlassCard style={styles.auxCard} intensity={24}>
-                      <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
-                      <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
-                        {FEEDBACK_SOURCE_LABELS[item.source]} · {item.urgency} urgency
-                      </Text>
-                    </GlassCard>
-                  </Pressable>
-                ))}
-              </>
-            ) : null}
-          </>
-        ) : (
-          <EmptyState title={empty.title} message={empty.message} illustration />
-        )}
-
+      <View style={styles.toolbar}>
         <Pressable
-          onPress={() => router.push('/loops/new')}
+          onPress={() => {
+            void hapticLight();
+            setSortOpen(true);
+          }}
           style={({ pressed }) => [
-            styles.newBtn,
-            { backgroundColor: theme.colors.primary },
+            styles.sortBtn,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
             pressed && { opacity: 0.9 },
           ]}
         >
-          <Text style={styles.newBtnText}>+ New loop</Text>
+          <Text style={[styles.sortBtnText, { color: theme.colors.text }]}>{sortLabel}</Text>
         </Pressable>
-      </ScreenScroll>
+        {hasActiveFilters ? (
+          <Pressable onPress={clearAll} hitSlop={8}>
+            <Text style={[styles.clearText, { color: theme.colors.primary }]}>Clear filters</Text>
+          </Pressable>
+        ) : null}
+      </View>
+
+      <Text style={[styles.count, { color: theme.colors.textMuted }]}>
+        {totalResults} result{totalResults === 1 ? '' : 's'}
+      </Text>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow} style={styles.chipScroll}>
+        {COMMAND_CENTER_FILTERS.map((item) => (
+          <FilterChip
+            key={item.key}
+            label={item.label}
+            selected={filter === item.key}
+            onPress={() => {
+              void hapticLight();
+              setFilter(item.key);
+            }}
+            tone={
+              item.key === 'blocked' || item.key === 'overdue'
+                ? 'danger'
+                : item.key === 'due'
+                  ? 'warning'
+                  : 'default'
+            }
+          />
+        ))}
+      </ScrollView>
+
+      <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Reminders</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow} style={styles.chipScroll}>
+        {REMINDER_FILTERS.map((item) => (
+          <FilterChip
+            key={item.label}
+            label={item.label}
+            selected={reminderFilter === item.key}
+            onPress={() => {
+              void hapticLight();
+              setReminderFilter(item.key);
+            }}
+          />
+        ))}
+      </ScrollView>
+
+      {showLoopList && results.length > 0 && filter === 'all' && (scopeResults.length > 0 || feedbackResults.length > 0) ? (
+        <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Loops</Text>
+      ) : null}
+    </View>
+  );
+
+  const footer = (
+    <View style={{ paddingHorizontal: spacing.lg }}>
+      {scopeResults.length > 0 ? (
+        <>
+          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Scope changes</Text>
+          {scopeResults.map((item) => (
+            <Pressable
+              key={item.id}
+              onPress={() => router.push('/scope-guard')}
+              style={({ pressed }) => pressed && { opacity: 0.9 }}
+            >
+              <GlassCard style={styles.auxCard} intensity={24}>
+                <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
+                <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
+                  {SCOPE_STATUS_LABELS[item.status]} · {item.impact} impact
+                </Text>
+              </GlassCard>
+            </Pressable>
+          ))}
+        </>
+      ) : null}
+      {feedbackResults.length > 0 ? (
+        <>
+          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Feedback</Text>
+          {feedbackResults.map((item) => (
+            <Pressable
+              key={item.id}
+              onPress={() => router.push('/feedback')}
+              style={({ pressed }) => pressed && { opacity: 0.9 }}
+            >
+              <GlassCard style={styles.auxCard} intensity={24}>
+                <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
+                <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
+                  {FEEDBACK_SOURCE_LABELS[item.source]} · {item.urgency} urgency
+                </Text>
+              </GlassCard>
+            </Pressable>
+          ))}
+        </>
+      ) : null}
+      <Pressable
+        onPress={() => router.push('/loops/new')}
+        style={({ pressed }) => [
+          styles.newBtn,
+          { backgroundColor: theme.colors.primary },
+          pressed && { opacity: 0.9 },
+        ]}
+      >
+        <Text style={styles.newBtnText}>+ New loop</Text>
+      </Pressable>
+    </View>
+  );
+
+  return (
+    <>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        {loading ? (
+          <View style={{ paddingHorizontal: spacing.lg }}>
+            {header}
+            <ListSkeleton rows={5} />
+          </View>
+        ) : (
+          <Animated.FlatList
+            data={showLoopList ? results : []}
+            keyExtractor={(item) => item.id}
+            ListHeaderComponent={header}
+            ListFooterComponent={footer}
+            contentContainerStyle={{ paddingBottom: listBottomPadding }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item, index }) => (
+              <View style={{ paddingHorizontal: spacing.lg }}>
+                <LoopCard loop={item} index={index} />
+              </View>
+            )}
+            itemLayoutAnimation={LinearTransition.springify()}
+            ListEmptyComponent={
+              totalResults === 0 ? (
+                <View style={{ paddingHorizontal: spacing.lg }}>
+                  <EmptyState title={empty.title} message={empty.message} illustration />
+                </View>
+              ) : null
+            }
+          />
+        )}
+      </View>
 
       <SortSheet
         visible={sortOpen}

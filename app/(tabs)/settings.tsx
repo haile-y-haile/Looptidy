@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, Easing, Linking } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 import type { AppearanceMode } from '../../lib/preferences';
 import { getBiometricLockEnabled, setBiometricLockEnabled } from '../../lib/preferences';
 import { radius, spacing, typography } from '../../lib/theme';
+import { links } from '../../lib/links';
 import { settingsIcons } from '../../lib/icons';
 
 function AppearancePill({
@@ -108,8 +109,7 @@ export default function SettingsScreen() {
         >
           <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Settings</Text>
           <Text style={[styles.heroSubtitle, { color: theme.colors.textSecondary }]}>
-            LoopTidy stores everything on your iPhone. Appearance works today; account features
-            are on the way.
+            Customize appearance and manage your local LoopTidy data.
           </Text>
 
           <View style={styles.pillsRow}>
@@ -135,22 +135,14 @@ export default function SettingsScreen() {
         </View>
       </Animated.View>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Account</Text>
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Your data</Text>
       <View style={[styles.accountCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-        <Text style={[styles.accountCardTitle, { color: theme.colors.text }]}>Sign in</Text>
+        <Text style={[styles.accountCardTitle, { color: theme.colors.text }]}>Local-first storage</Text>
         <Text style={[styles.accountCardSubtitle, { color: theme.colors.textSecondary }]}>
-          Sync your loops across devices.
+          LoopTidy stores your loops on this device. No account required.
         </Text>
-        <View style={styles.accountCardActions}>
-          <Pressable style={[styles.accountBtnPrimary, { backgroundColor: theme.colors.primary }]}>
-            <Text style={styles.accountBtnPrimaryText}>Sign in</Text>
-          </Pressable>
-          <Pressable style={[styles.accountBtnSecondary, { borderColor: theme.colors.border }]}>
-            <Text style={[styles.accountBtnSecondaryText, { color: theme.colors.text }]}>Create account</Text>
-          </Pressable>
-        </View>
         <Text style={[styles.accountCardFooter, { color: theme.colors.textMuted }]}>
-          All data is securely stored locally on this device. Cloud syncing is disabled by default for privacy.
+          Cloud sync and accounts are not included in this version.
         </Text>
       </View>
 
@@ -181,6 +173,20 @@ export default function SettingsScreen() {
         title="Backup & Restore"
         subtitle="Export JSON/CSV and restore on this device"
         onPress={() => router.push('/backup-restore')}
+      />
+
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Legal & support</Text>
+      <SettingsRow
+        icon={settingsIcons.privacy}
+        title="Privacy Policy"
+        subtitle="How LoopTidy handles your data"
+        onPress={() => void Linking.openURL(links.privacyPolicy)}
+      />
+      <SettingsRow
+        icon={settingsIcons.support}
+        title="Support"
+        subtitle="hello.hailelabs@gmail.com"
+        onPress={() => void Linking.openURL(links.supportEmail)}
       />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>About</Text>
@@ -256,40 +262,9 @@ const styles = StyleSheet.create({
   accountCardSubtitle: {
     ...typography.body,
     marginTop: 2,
-    marginBottom: spacing.md,
-  },
-  accountCardActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  accountBtnPrimary: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    alignItems: 'center',
-  },
-  accountBtnPrimaryText: {
-    ...typography.callout,
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  accountBtnSecondary: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  accountBtnSecondaryText: {
-    ...typography.callout,
-    fontWeight: '700',
+    marginBottom: spacing.sm,
   },
   accountCardFooter: {
     ...typography.caption,
-  },
-  footerText: {
-    ...typography.caption,
-    paddingHorizontal: spacing.sm,
   },
 });

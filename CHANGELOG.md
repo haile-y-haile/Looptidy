@@ -2,37 +2,37 @@
 
 All notable changes to LoopTidy are documented in this file.
 
-## [1.0.0] — 2026-06
+## [1.0.0] — 2026-06 (Build 26 — App Store candidate)
 
-Initial **TestFlight** release. Local-first open-loop tracker for follow-ups, blockers, commitments, and unresolved decisions.
+App Store review candidate. Local-first open-loop tracker with SQLite storage and local reminders.
 
 ### Added
 
-- **Today dashboard** — open-loop overview, focus, due / waiting / promised views, risk-aware highlights
-- **Open loop creation** — title, description, type, priority, risk, category, person, due date
-- **Open loop list** — browse, filter, and close loops
-- **Loop detail** — full context, timeline, notes, decision outcomes, closure
-- **Waiting on others** — loops blocked on someone else’s action
-- **Promised by me** — commitments with due dates
-- **Decision log** — pending and recorded decisions
-- **Weekly review placeholder** — weekly stats and checklist / stepper
-- **Local persistence** — AsyncStorage on device
-- **Dark mode** — system, light, or dark
-- **Settings** — appearance and about
-- **Local link attachments** — attach and open URLs on a loop
-- **Onboarding** — mock auth UI (Get started only; no real sign-in)
-- **iOS TestFlight** distribution via EAS Build
+- **Edit loop** — update title, fields, attachments, and reminders
+- **Loop lifecycle** — archive, reopen, delete (with confirmation)
+- **Remove attachments** — in edit flow and loop detail
+- **Local reminders** — schedule, change, snooze, clear; permission on set only
+- **Optional app lock** — Face ID / passcode in Settings
+- **Backup & restore** — full JSON + CSV exports
+- **Command Center FlatList** — virtualized results for large libraries
+- **Privacy & support links** — in Settings and About
+
+### Changed
+
+- **Storage** — loops in SQLite (migrated from legacy AsyncStorage)
+- **Fresh installs** — start empty; sample loops via explicit “Load sample loops” only
+- **About screen** — App Store–ready copy (no TestFlight beta CTAs)
+- **Settings** — informational local-first copy; no dead sign-in buttons
 
 ### Not in this release
 
-- Backend or cloud sync
-- Real account system (Apple / Google / email sign-in)
-- Analytics or ads
-- Push notifications or local reminders
-- Payments
+- Backend, cloud sync, or real accounts
+- Remote push notifications
+- Analytics, ads, or in-app purchases
+- AI assistance
 
 ### Technical
 
-- Expo, React Native, TypeScript, Expo Router, AsyncStorage, EAS Build
+- Expo 54 · React Native · TypeScript · expo-sqlite · expo-notifications · EAS Build
 
 [1.0.0]: https://github.com/haile-y-haile/Looptidy/releases/tag/v1.0.0

@@ -9,11 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useLoops } from '../../../context/LoopContext';
+import { statusForType, useLoops } from '../../../context/LoopContext';
 import { useTheme } from '../../../context/ThemeContext';
-import type { LoopAttachment, LoopType, Priority, RiskLevel, Category, LoopStatus } from '../../../types';
+import type { LoopAttachment, LoopType, Priority, RiskLevel, Category } from '../../../types';
 import { CaptureTemplatePicker } from '../../../components/CaptureTemplatePicker';
 import { DatePickerField } from '../../../components/DatePickerField';
 import { ChipSelector } from '../../../components/ChipSelector';
@@ -28,6 +28,7 @@ import { requestReminderPermission, scheduleLoopReminder } from '../../../lib/re
 import { radius, spacing, typography } from '../../../lib/theme';
 import { analyzeLoopText } from '../../../lib/heuristics';
 import { generateId, loopTypeLabels, categoryLabels, getPriorityColor, getRiskColor, priorityLabels, riskLevelLabels } from '../../../lib/utils';
+import { cancelLoopReminder } from '../../../lib/reminders';
 
 const loopTypes: LoopType[] = [
   'waiting_on_others',
@@ -42,24 +43,26 @@ const priorities: Priority[] = ['low', 'medium', 'high', 'urgent'];
 const riskLevels: RiskLevel[] = ['none', 'low', 'medium', 'high'];
 const categories: Category[] = ['work', 'personal', 'finance', 'health', 'home', 'other'];
 
-function statusForType(type: LoopType): LoopStatus {
-  if (type === 'blocked') return 'blocked';
-  if (type === 'waiting_on_others') return 'waiting';
-  return 'open';
-}
-
 export default function NewLoopScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const params = useLocalSearchParams<{
+    id?: string;
     template?: string;
     type?: string;
     priority?: string;
     riskLevel?: string;
     category?: string;
   }>();
-  const { addLoop, updateLoop } = useLoops();
+  const { loops, addLoop, updateLoop } = useLoops();
+
+  const editId = typeof params.id === 'string' ? params.id : undefined;
+  const editingLoop = useMemo(
+    () => (editId ? loops.find((l) => l.id === editId) : undefined),
+    [editId, loops]
+  );
+  const isEditing = Boolean(editingLoop);
 
   const initialTemplate = getCaptureTemplate(
     typeof params.template === 'string' ? params.template : undefined
@@ -84,14 +87,32 @@ export default function NewLoopScreen() {
   const [userModifiedOptions, setUserModifiedOptions] = useState(false);
 
   useEffect(() => {
-    if (userModifiedOptions) return;
+    if (!editingLoop) return;
+    setTitle(editingLoop.title);
+    setDescription(editingLoop.description ?? '');
+    setType(editingLoop.type);
+    setPriority(editingLoop.priority);
+    setRiskLevel(editingLoop.riskLevel);
+    setCategory(editingLoop.category);
+    setPersonName(
+      editingLoop.waitingOn?.name ?? editingLoop.promisedTo?.name ?? ''
+    );
+    setDueDate(editingLoop.dueDate ?? '');
+    setReminderWhen(editingLoop.reminderAt ?? '');
+    setAttachments(editingLoop.attachments ?? []);
+    setUserModifiedOptions(true);
+  }, [editingLoop?.id]);
+
+  useEffect(() => {
+    if (userModifiedOptions || isEditing) return;
     const heuristics = analyzeLoopText(`${title} ${description}`);
-    
+
     if (heuristics.type) setType(heuristics.type);
     if (heuristics.priority) setPriority(heuristics.priority);
     if (heuristics.riskLevel) setRiskLevel(heuristics.riskLevel);
     if (heuristics.waitingOnName && !personName) setPersonName(heuristics.waitingOnName);
-  }, [title, description, userModifiedOptions, personName]);
+  }, [title, description, userModifiedOptions, personName, isEditing]);
+
   const activeTemplate = useMemo(
     () => (templateId ? getCaptureTemplate(templateId) : undefined),
     [templateId]
@@ -165,7 +186,7 @@ export default function NewLoopScreen() {
         reminderEnabled = true;
       }
 
-      const loopInput = {
+      const loopFields = {
         title: title.trim(),
         description: description.trim(),
         type,
@@ -173,18 +194,52 @@ export default function NewLoopScreen() {
         priority,
         riskLevel,
         category,
-        owner: { id: 'me', name: 'You' },
+        owner: editingLoop?.owner ?? { id: 'me', name: 'You' },
         waitingOn: type === 'waiting_on_others' || type === 'blocked' ? person : undefined,
         promisedTo: type === 'promised_by_me' ? person : undefined,
         dueDate: dueDate.trim() || undefined,
         reminderEnabled,
         reminderAt: reminderEnabled ? reminderAt : undefined,
         reminderLabel: reminderEnabled ? `Follow up: ${title.trim()}` : undefined,
-        decisions: [],
         attachments,
       };
 
-      const created = await addLoop(loopInput);
+      if (isEditing && editingLoop) {
+        if (!reminderEnabled && editingLoop.localNotificationId) {
+          await cancelLoopReminder(editingLoop);
+        }
+
+        await updateLoop(editingLoop.id, {
+          ...loopFields,
+          ...(reminderEnabled
+            ? {}
+            : {
+                snoozedUntil: undefined,
+                localNotificationId: undefined,
+              }),
+        });
+
+        if (reminderEnabled && reminderAt) {
+          const merged = {
+            ...editingLoop,
+            ...loopFields,
+            reminderEnabled: true,
+            reminderAt,
+          };
+          const notificationId = await scheduleLoopReminder(merged);
+          await updateLoop(editingLoop.id, {
+            localNotificationId: notificationId ?? undefined,
+          });
+        }
+
+        await hapticSuccess();
+        Alert.alert('Loop updated', 'Your changes were saved on this device.', [
+          { text: 'Done', onPress: () => router.back() },
+        ]);
+        return;
+      }
+
+      const created = await addLoop({ ...loopFields, decisions: [] });
 
       if (reminderEnabled && reminderAt) {
         const notificationId = await scheduleLoopReminder({
@@ -225,7 +280,11 @@ export default function NewLoopScreen() {
     setLinkUrl('');
   };
 
-  const canSave = title.trim().length > 0 && !saving;
+  const removeAttachment = (attachmentId: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+  };
+
+  const canSave = title.trim().length > 0 && !saving && (!editId || editingLoop);
   const canAddLink = linkUrl.trim().length > 0;
 
   return (
@@ -234,14 +293,17 @@ export default function NewLoopScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 60 : 0}
     >
+      <Stack.Screen options={{ title: isEditing ? 'Edit Loop' : 'New Loop' }} />
       <ScreenScroll contentContainerStyle={{ paddingBottom: spacing.xxxl + insets.bottom }}>
-        <CaptureTemplatePicker
+        {!isEditing ? (
+          <CaptureTemplatePicker
           selectedId={templateId}
           onSelect={(id) => {
             void hapticLight();
             applyTemplate(id);
           }}
         />
+        ) : null}
 
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>What is this loop?</Text>
 
@@ -421,6 +483,27 @@ export default function NewLoopScreen() {
           </Pressable>
         </View>
 
+        {attachments.length > 0 ? (
+          <View style={{ gap: spacing.sm, marginBottom: spacing.md }}>
+            {attachments.map((a) => (
+              <View
+                key={a.id}
+                style={[
+                  styles.attachmentRow,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                ]}
+              >
+                <Text style={[styles.attachmentTitle, { color: theme.colors.text, flex: 1 }]} numberOfLines={1}>
+                  {a.title}
+                </Text>
+                <Pressable onPress={() => removeAttachment(a.id)}>
+                  <Text style={{ color: theme.colors.danger, fontWeight: '700' }}>Remove</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         <Pressable
           style={({ pressed }) => [
             styles.saveButton,
@@ -431,7 +514,9 @@ export default function NewLoopScreen() {
           onPress={() => void handleSave()}
           disabled={!canSave}
         >
-          <Text style={styles.saveButtonText}>{saving ? 'Saving…' : 'Create loop'}</Text>
+          <Text style={styles.saveButtonText}>
+            {saving ? 'Saving…' : isEditing ? 'Save changes' : 'Create loop'}
+          </Text>
         </Pressable>
       </ScreenScroll>
     </KeyboardAvoidingView>
@@ -490,6 +575,17 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   linkInput: { flex: 1 },
+  attachmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  attachmentTitle: {
+    ...typography.callout,
+  },
   addLinkButton: {
     borderRadius: radius.full,
     paddingVertical: spacing.md,

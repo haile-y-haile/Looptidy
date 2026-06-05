@@ -205,7 +205,7 @@ export default function BackupRestoreScreen() {
   };
 
   const confirmResetDemo = () => {
-    Alert.alert('Reset demo data?', 'Loads the sample loops and replaces current loops.', [
+    Alert.alert('Load sample loops?', 'This replaces your current loops with demo sample data.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Reset',
@@ -299,7 +299,7 @@ export default function BackupRestoreScreen() {
             { backgroundColor: theme.colors.dangerLight, borderColor: theme.colors.danger },
           ]}
         >
-          <DangerRow label="Reset demo data" onPress={confirmResetDemo} />
+          <DangerRow label="Load sample loops" onPress={confirmResetDemo} />
           <DangerRow label="Reset scope changes" onPress={confirmResetScope} />
           <DangerRow label="Reset feedback" onPress={confirmResetFeedback} />
           <DangerRow label="Delete all local data" onPress={confirmDeleteAll} isLast />

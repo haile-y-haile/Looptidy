@@ -1,16 +1,11 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import type { OpenLoop } from '../types';
 import { isOpenLoop, isOverdue } from './utils';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+export const LOOP_CATEGORY = 'LOOP_REMINDER';
+
+let configured = false;
 
 export type SnoozePreset = 'later_today' | 'tomorrow' | 'next_week';
 
@@ -19,6 +14,36 @@ export const SNOOZE_PRESETS: { key: SnoozePreset; label: string }[] = [
   { key: 'tomorrow', label: 'Tomorrow' },
   { key: 'next_week', label: 'Next week' },
 ];
+
+/** Register handler and actionable categories — does NOT request permission. */
+export async function configureNotifications() {
+  if (Platform.OS === 'web' || configured) return;
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+
+  await Notifications.setNotificationCategoryAsync(LOOP_CATEGORY, [
+    {
+      identifier: 'SNOOZE_1_DAY',
+      buttonTitle: 'Snooze 1 Day',
+      options: { opensAppToForeground: false },
+    },
+    {
+      identifier: 'CLOSE_LOOP',
+      buttonTitle: 'Close Loop',
+      options: { opensAppToForeground: false, isDestructive: true },
+    },
+  ]);
+
+  configured = true;
+}
 
 export function getEffectiveReminderTime(loop: OpenLoop): string | undefined {
   if (!loop.reminderEnabled) return undefined;
@@ -95,16 +120,15 @@ export function defaultReminderLabel(loop: OpenLoop): string {
 }
 
 export async function requestReminderPermission(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
   const existing = await Notifications.getPermissionsAsync();
   if (existing.status === 'granted') return true;
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
 }
 
-/**
- * Schedules a local notification for an open loop. Returns notification id or null.
- */
 export async function scheduleLoopReminder(loop: OpenLoop): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
   if (!loop.reminderEnabled || !isOpenLoop(loop)) return null;
 
   const triggerAt = getEffectiveReminderTime(loop);
@@ -112,9 +136,6 @@ export async function scheduleLoopReminder(loop: OpenLoop): Promise<string | nul
 
   const when = new Date(triggerAt);
   if (Number.isNaN(when.getTime()) || when.getTime() <= Date.now()) return null;
-
-  const granted = await requestReminderPermission();
-  if (!granted) return null;
 
   if (loop.localNotificationId) {
     await Notifications.cancelScheduledNotificationAsync(loop.localNotificationId).catch(
@@ -127,6 +148,8 @@ export async function scheduleLoopReminder(loop: OpenLoop): Promise<string | nul
       title: 'LoopTidy reminder',
       body: defaultReminderLabel(loop),
       data: { loopId: loop.id },
+      categoryIdentifier: LOOP_CATEGORY,
+      sound: true,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -138,7 +161,7 @@ export async function scheduleLoopReminder(loop: OpenLoop): Promise<string | nul
 }
 
 export async function cancelLoopReminder(loop: OpenLoop): Promise<void> {
-  if (!loop.localNotificationId) return;
+  if (Platform.OS === 'web' || !loop.localNotificationId) return;
   await Notifications.cancelScheduledNotificationAsync(loop.localNotificationId).catch(
     () => undefined
   );

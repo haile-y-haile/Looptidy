@@ -6,12 +6,11 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import type { Decision, OpenLoop, TimelineEvent } from '../types';
+import type { Decision, LoopStatus, LoopType, OpenLoop, TimelineEvent } from '../types';
 import { normalizeDecision } from '../lib/decisions';
 import { clearAllLoops, getLoops, saveLoops, undoLastAction } from '../lib/storage';
 import { generateId } from '../lib/utils';
-import { scheduleLoopReminder, cancelLoopReminder } from '../lib/notifications';
-import { getEffectiveReminderTime } from '../lib/reminders';
+import { cancelLoopReminder, scheduleLoopReminder } from '../lib/reminders';
 
 export type CreateDecisionInput = Omit<
   Decision,
@@ -20,20 +19,39 @@ export type CreateDecisionInput = Omit<
   Partial<Pick<Decision, 'options' | 'loopId' | 'riskLevel' | 'title' | 'status'>> & {
     title?: string;
     status?: Decision['status'];
-    /** @deprecated Legacy quick-record fields */
     question?: string;
     outcome?: string;
     decidedBy?: string;
   };
 
+function statusForType(type: LoopType): LoopStatus {
+  if (type === 'blocked') return 'blocked';
+  if (type === 'waiting_on_others') return 'waiting';
+  return 'open';
+}
+
+function clearedReminderFields() {
+  return {
+    reminderEnabled: false,
+    reminderAt: undefined,
+    snoozedUntil: undefined,
+    reminderLabel: undefined,
+    localNotificationId: undefined,
+  } as const;
+}
+
 interface LoopContextValue {
   loops: OpenLoop[];
   loading: boolean;
+  loadError: string | null;
   addLoop: (
     loop: Omit<OpenLoop, 'id' | 'createdAt' | 'updatedAt' | 'timeline'>
   ) => Promise<OpenLoop>;
   updateLoop: (id: string, updates: Partial<OpenLoop>) => Promise<void>;
   closeLoop: (id: string) => Promise<void>;
+  archiveLoop: (id: string) => Promise<void>;
+  reopenLoop: (id: string) => Promise<void>;
+  deleteLoop: (id: string) => Promise<void>;
   addDecision: (loopId: string, decision: CreateDecisionInput) => Promise<void>;
   updateDecision: (
     loopId: string,
@@ -80,6 +98,7 @@ function toCreateDecision(input: CreateDecisionInput, loopId: string): Decision 
 export function LoopProvider({ children }: { children: React.ReactNode }) {
   const [loops, setLoops] = useState<OpenLoop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const persistLoops = useCallback(async (getNext: (prev: OpenLoop[]) => OpenLoop[]) => {
     let next: OpenLoop[] = [];
@@ -95,8 +114,11 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await getLoops();
       setLoops(data);
+      setLoadError(null);
     } catch (error) {
       console.error('Failed to refresh loops:', error);
+      setLoops([]);
+      setLoadError('Could not load your loops. Try again.');
     } finally {
       setLoading(false);
     }
@@ -152,6 +174,9 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
   const closeLoop = useCallback(
     async (id: string) => {
       const now = new Date().toISOString();
+      const target = loops.find((l) => l.id === id);
+      if (target) await cancelLoopReminder(target);
+
       await persistLoops((prev) =>
         prev.map((loop) =>
           loop.id === id
@@ -160,6 +185,7 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
                 status: 'closed' as const,
                 closedAt: now,
                 updatedAt: now,
+                ...clearedReminderFields(),
                 timeline: [
                   ...loop.timeline,
                   {
@@ -174,7 +200,75 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
         )
       );
     },
+    [loops, persistLoops]
+  );
+
+  const archiveLoop = useCallback(
+    async (id: string) => {
+      const now = new Date().toISOString();
+      const target = loops.find((l) => l.id === id);
+      if (target) await cancelLoopReminder(target);
+
+      await persistLoops((prev) =>
+        prev.map((loop) =>
+          loop.id === id
+            ? {
+                ...loop,
+                status: 'archived' as const,
+                closedAt: loop.closedAt ?? now,
+                updatedAt: now,
+                ...clearedReminderFields(),
+                timeline: [
+                  ...loop.timeline,
+                  {
+                    id: generateId(),
+                    type: 'note' as const,
+                    title: 'Loop archived',
+                    timestamp: now,
+                  },
+                ],
+              }
+            : loop
+        )
+      );
+    },
+    [loops, persistLoops]
+  );
+
+  const reopenLoop = useCallback(
+    async (id: string) => {
+      const now = new Date().toISOString();
+      await persistLoops((prev) =>
+        prev.map((loop) => {
+          if (loop.id !== id) return loop;
+          return {
+            ...loop,
+            status: statusForType(loop.type),
+            closedAt: undefined,
+            updatedAt: now,
+            timeline: [
+              ...loop.timeline,
+              {
+                id: generateId(),
+                type: 'note' as const,
+                title: 'Loop reopened',
+                timestamp: now,
+              },
+            ],
+          };
+        })
+      );
+    },
     [persistLoops]
+  );
+
+  const deleteLoop = useCallback(
+    async (id: string) => {
+      const target = loops.find((l) => l.id === id);
+      if (target) await cancelLoopReminder(target);
+      await persistLoops((prev) => prev.filter((loop) => loop.id !== id));
+    },
+    [loops, persistLoops]
   );
 
   const addDecision = useCallback(
@@ -260,23 +354,27 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
     }));
     await saveLoops(normalized);
     setLoops(normalized);
+    setLoadError(null);
   }, []);
 
   const resetToDemoData = useCallback(async () => {
     const { resetLoops } = await import('../lib/storage');
     const seeded = await resetLoops();
     setLoops(seeded);
+    setLoadError(null);
   }, []);
 
   const deleteAllLocalData = useCallback(async () => {
     await clearAllLoops();
     setLoops([]);
+    setLoadError(null);
   }, []);
 
   const undo = useCallback(async () => {
     const previousState = await undoLastAction();
     if (previousState) {
       setLoops(previousState);
+      setLoadError(null);
     }
   }, []);
 
@@ -284,9 +382,13 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
     () => ({
       loops,
       loading,
+      loadError,
       addLoop,
       updateLoop,
       closeLoop,
+      archiveLoop,
+      reopenLoop,
+      deleteLoop,
       addDecision,
       updateDecision,
       addTimelineEvent,
@@ -299,9 +401,13 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
     [
       loops,
       loading,
+      loadError,
       addLoop,
       updateLoop,
       closeLoop,
+      archiveLoop,
+      reopenLoop,
+      deleteLoop,
       addDecision,
       updateDecision,
       addTimelineEvent,
@@ -323,3 +429,5 @@ export function useLoops(): LoopContextValue {
   }
   return context;
 }
+
+export { statusForType };

@@ -6,7 +6,7 @@ import { BrandLockup } from '../components/BrandLockup';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
 import { TAGLINE } from '../lib/fonts';
-import { links } from '../lib/links';
+import { CONTACT_EMAIL, links } from '../lib/links';
 import { radius, spacing, typography } from '../lib/theme';
 
 function openUrl(url: string) {
@@ -28,7 +28,7 @@ const FEATURES = [
   },
   {
     title: 'Private by default',
-    body: 'Your loops stay on your device. No account required for the MVP.',
+    body: 'Your loops stay on your device. No account required.',
   },
 ];
 
@@ -73,13 +73,7 @@ export default function MarketingScreen() {
 
           <View style={styles.ctaRow}>
             <PrimaryButton
-              label="Join the TestFlight beta"
-              onPress={() => openUrl(links.githubBetaRequest)}
-              style={styles.cta}
-            />
-            <PrimaryButton
-              label="Open the app"
-              tone="secondary"
+              label="Open LoopTidy"
               onPress={() => router.replace('/')}
               style={styles.cta}
             />
@@ -93,37 +87,33 @@ export default function MarketingScreen() {
           </View>
 
           <View style={styles.linkRow}>
-            <Pressable onPress={() => openUrl(links.testflightInstall)}>
-              <Text style={[styles.linkText, { color: theme.colors.primary }]}>
-                Install TestFlight
-              </Text>
+            <Pressable onPress={() => openUrl(links.privacyPolicy)}>
+              <Text style={[styles.linkText, { color: theme.colors.primary }]}>Privacy Policy</Text>
+            </Pressable>
+            <Text style={[styles.linkDot, { color: theme.colors.textMuted }]}>·</Text>
+            <Pressable onPress={() => openUrl(links.supportEmail)}>
+              <Text style={[styles.linkText, { color: theme.colors.primary }]}>Support</Text>
             </Pressable>
             <Text style={[styles.linkDot, { color: theme.colors.textMuted }]}>·</Text>
             <Pressable onPress={() => openUrl(links.githubRepo)}>
               <Text style={[styles.linkText, { color: theme.colors.primary }]}>GitHub</Text>
             </Pressable>
-            <Text style={[styles.linkDot, { color: theme.colors.textMuted }]}>·</Text>
-            <Pressable onPress={() => openUrl(links.githubSupport)}>
-              <Text style={[styles.linkText, { color: theme.colors.primary }]}>Support</Text>
-            </Pressable>
           </View>
 
-          <Pressable
-            onPress={() => openUrl(links.githubBetaRequest)}
-            style={({ pressed }) => [
+          <View
+            style={[
               styles.storeBadge,
               { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-              pressed && { opacity: 0.92 },
             ]}
           >
             <Image source={require('../assets/icon.png')} style={styles.storeIcon} />
             <View style={styles.storeCopy}>
               <Text style={[styles.storeTitle, { color: theme.colors.text }]}>LoopTidy for iOS</Text>
               <Text style={[styles.storeSub, { color: theme.colors.textMuted }]}>
-                TestFlight beta — request an invite on GitHub
+                Local-first open-loop tracking. Your data stays on this device.
               </Text>
             </View>
-          </Pressable>
+          </View>
         </View>
 
         <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Why LoopTidy</Text>
@@ -150,21 +140,11 @@ export default function MarketingScreen() {
             { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
           ]}
         >
-          <Text style={[styles.footerTitle, { color: theme.colors.text }]}>
-            Ready to close what matters?
-          </Text>
+          <Text style={[styles.footerTitle, { color: theme.colors.text }]}>Questions or feedback?</Text>
           <Text style={[styles.footerBody, { color: theme.colors.textSecondary }]}>
-            Start with Today — your focus loop, due items, and a weekly review ritual.
+            Contact us at {CONTACT_EMAIL} for support or privacy questions.
           </Text>
-          <PrimaryButton
-            label="Request beta access"
-            onPress={() => openUrl(links.githubBetaRequest)}
-          />
-          <Pressable onPress={() => router.replace('/')} style={styles.secondaryCta}>
-            <Text style={[styles.secondaryCtaText, { color: theme.colors.textSecondary }]}>
-              Already have the app? Open LoopTidy
-            </Text>
-          </Pressable>
+          <PrimaryButton label="Email support" onPress={() => openUrl(links.supportEmail)} />
         </View>
       </ScrollView>
     </>

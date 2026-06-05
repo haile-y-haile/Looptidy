@@ -43,7 +43,7 @@ export default function LoopDetailScreen() {
   const loopId = Array.isArray(idParam) ? idParam[0] : idParam;
   const router = useRouter();
   const { theme } = useTheme();
-  const { loops, loading, closeLoop, addDecision, addTimelineEvent } = useLoops();
+  const { loops, loading, closeLoop, archiveLoop, reopenLoop, deleteLoop, addDecision, addTimelineEvent, updateLoop } = useLoops();
   const [note, setNote] = useState('');
   const [decisionOutcome, setDecisionOutcome] = useState('');
   const [showDecisionInput, setShowDecisionInput] = useState(false);
@@ -77,6 +77,64 @@ export default function LoopDetailScreen() {
 
   const typeColor = getLoopTypeColor(loop.type);
   const isClosed = loop.status === 'closed' || loop.status === 'archived';
+
+  const handleArchive = () => {
+    Alert.alert('Archive this loop?', 'It will be hidden from open views but kept in Closed history.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Archive',
+        style: 'destructive',
+        onPress: async () => {
+          await archiveLoop(loop.id);
+          void hapticSuccess();
+          router.back();
+        },
+      },
+    ]);
+  };
+
+  const handleReopen = () => {
+    Alert.alert('Reopen this loop?', 'It will return to your active open loops.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Reopen',
+        onPress: async () => {
+          await reopenLoop(loop.id);
+          void hapticSuccess();
+        },
+      },
+    ]);
+  };
+
+  const handleDelete = () => {
+    Alert.alert('Delete this loop permanently?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteLoop(loop.id);
+          void hapticSuccess();
+          router.back();
+        },
+      },
+    ]);
+  };
+
+  const handleRemoveAttachment = (attachmentId: string) => {
+    Alert.alert('Remove attachment?', undefined, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => {
+          void updateLoop(loop.id, {
+            attachments: loop.attachments.filter((a) => a.id !== attachmentId),
+          });
+        },
+      },
+    ]);
+  };
 
   const handleClose = () => {
     Alert.alert('Close this loop?', 'You can still find it in your history later.', [
@@ -149,6 +207,56 @@ export default function LoopDetailScreen() {
         </View>
 
         <Text style={[styles.title, { color: theme.colors.text }]}>{loop.title}</Text>
+
+        <View style={styles.actionRow}>
+          {!isClosed ? (
+            <Pressable
+              onPress={() => router.push(`/loops/new?id=${loop.id}`)}
+              style={({ pressed }) => [
+                styles.actionChip,
+                { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={[styles.actionChipText, { color: theme.colors.text }]}>Edit</Text>
+            </Pressable>
+          ) : null}
+          {!isClosed ? (
+            <Pressable
+              onPress={handleArchive}
+              style={({ pressed }) => [
+                styles.actionChip,
+                { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={[styles.actionChipText, { color: theme.colors.text }]}>Archive</Text>
+            </Pressable>
+          ) : null}
+          {isClosed ? (
+            <Pressable
+              onPress={handleReopen}
+              style={({ pressed }) => [
+                styles.actionChip,
+                { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={[styles.actionChipText, { color: theme.colors.primary }]}>Reopen</Text>
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={handleDelete}
+            style={({ pressed }) => [
+              styles.actionChip,
+              { borderColor: theme.colors.danger, backgroundColor: theme.colors.dangerLight },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={[styles.actionChipText, { color: theme.colors.danger }]}>Delete</Text>
+          </Pressable>
+        </View>
+
         {personLine ? (
           <Text style={[styles.personLine, { color: theme.colors.textSecondary }]}>{personLine}</Text>
         ) : null}
@@ -219,6 +327,12 @@ export default function LoopDetailScreen() {
                       titleStyle={[styles.attachmentTitle, { color: theme.colors.text, marginTop: spacing.xs, marginHorizontal: spacing.sm }]}
                       descriptionStyle={[styles.attachmentMeta, { color: theme.colors.textSecondary, marginHorizontal: spacing.sm, marginBottom: spacing.sm }]}
                     />
+                    <Pressable
+                      onPress={() => handleRemoveAttachment(a.id)}
+                      style={{ position: 'absolute', top: spacing.sm, right: spacing.sm, padding: spacing.xs }}
+                    >
+                      <Text style={{ color: theme.colors.danger, fontWeight: '700' }}>Remove</Text>
+                    </Pressable>
                   </View>
                 );
               }
@@ -447,6 +561,22 @@ const styles = StyleSheet.create({
   title: {
     ...typography.title,
     marginBottom: spacing.sm,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  actionChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  actionChipText: {
+    ...typography.caption,
+    fontWeight: '800',
   },
   description: {
     ...typography.body,

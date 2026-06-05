@@ -1,49 +1,32 @@
 # Roadmap — LoopTidy
 
-LoopTidy manages **open loops**: follow-ups, **blockers**, **commitments** (promised), **due** dates, **decisions**, and **closure** when something is done. It is not a general task list or workspace for unrelated work.
+LoopTidy manages **open loops**: follow-ups, blockers, commitments, due dates, decisions, and closure.
 
-Plans may change based on TestFlight feedback.
+## Shipped in 1.0.0
 
-## MVP complete (1.0.0 TestFlight)
+- Today dashboard, Loops list, Decisions, Settings tabs
+- Open loop create, edit, close, archive, reopen, delete
+- Loop detail with timeline, notes, decisions, attachments
+- Command Center search, filters, sorting
+- Local SQLite persistence with backup/restore
+- Local on-device reminders (not remote push)
+- Optional Face ID app lock
+- Dark mode · Insights · People · Weekly review · PM tools screens
+- iOS build via EAS
 
-- Today dashboard
-- Open loop creation
-- Open loop list
-- Loop detail with notes, timeline, and closure
-- Waiting on others
-- Promised by me
-- Decision log
-- Weekly review placeholder (stats + checklist)
-- Local persistence (AsyncStorage)
-- Dark mode
-- Settings
-- Local link attachments
-- iOS TestFlight build via EAS
+## Next (post–App Store)
 
-Also shipped in 1.0.0: tab navigation (Today, Loops, Decisions, Settings), loop search and filters, swipe to close, brand splash, and link-based attachments.
-
-## Next
-
-- **Bottom tab navigation** — refinements to structure and wayfinding across Today, Loops, Decisions, and Settings
-- **Improved weekly review flow** — guided closure and escalation prompts beyond the placeholder checklist
-- **Search and filters** — deeper filtering (person, category, date range, stale loops)
-- **Local reminders** — on-device notifications for due and overdue loops (no server required)
-- **Export and backup** — JSON export to Files or share sheet for backup and portability
-
-## Future
-
-- **Real account system**
-- **Apple / Google / email sign-in**
-- **Cloud sync** across devices
-- **Shared loops** with controlled visibility
-- **Collaboration workflows** — assign, comment, or hand off loops with others
+- Improved weekly review guided flow
+- Real account system and cloud sync
+- Shared loops and collaboration
+- AI-assisted capture and triage (Pro)
 
 ## Out of scope for now
 
-- Analytics, ads, or behavioral tracking
-- In-app payments or subscriptions
-- Replacing dedicated project-management or issue-tracking tools
+- Analytics, ads, behavioral tracking
+- In-app subscriptions (until account/sync exists)
+- Replacing dedicated project-management tools
 
 ## Feedback
 
-[Open a GitHub issue](https://github.com/haile-y-haile/Looptidy/issues) with `Bug:` or `Feature:` in the title to influence priority.
+Contact **hello.hailelabs@gmail.com** or [open a GitHub issue](https://github.com/haile-y-haile/Looptidy/issues).

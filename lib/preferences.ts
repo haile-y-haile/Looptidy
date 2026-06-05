@@ -9,6 +9,7 @@ const KEYS = {
   appearance: '@looptidy/appearance', // 'system' | 'light' | 'dark'
   weeklyReviewBannerDismissed: '@looptidy/weeklyReviewBannerDismissed',
   biometricLockEnabled: '@looptidy/biometricLockEnabled',
+  asyncStorageMigrated: '@looptidy/asyncStorageMigrated',
 } as const;
 
 export type AppearanceMode = 'system' | 'light' | 'dark';
@@ -60,4 +61,13 @@ export async function getBiometricLockEnabled(): Promise<boolean> {
 
 export async function setBiometricLockEnabled(value: boolean): Promise<void> {
   await AsyncStorage.setItem(KEYS.biometricLockEnabled, value ? 'true' : 'false');
+}
+
+export async function getAsyncStorageMigrated(): Promise<boolean> {
+  const raw = await AsyncStorage.getItem(KEYS.asyncStorageMigrated);
+  return raw === 'true';
+}
+
+export async function setAsyncStorageMigrated(value: boolean): Promise<void> {
+  await AsyncStorage.setItem(KEYS.asyncStorageMigrated, value ? 'true' : 'false');
 }
