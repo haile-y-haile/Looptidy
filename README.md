@@ -1,6 +1,6 @@
 # LoopTidy
 
-**Close the loops that matter.**
+**Close loops. Track decisions.**
 
 An open-loop tracker for follow-ups, blockers, commitments, and decisions.
 
