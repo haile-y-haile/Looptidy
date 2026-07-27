@@ -2,12 +2,10 @@ import {
   View,
   Text,
   StyleSheet,
-  Animated,
-  Easing,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,9 +26,6 @@ export default function OnboardingScreen() {
   const { theme } = useTheme();
   const [hydrated, setHydrated] = useState(false);
 
-  const heroEnter = useRef(new Animated.Value(0)).current;
-  const cardEnter = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -43,24 +38,6 @@ export default function OnboardingScreen() {
       cancelled = true;
     };
   }, [router]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    Animated.stagger(100, [
-      Animated.timing(heroEnter, {
-        toValue: 1,
-        duration: 520,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardEnter, {
-        toValue: 1,
-        duration: 520,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [cardEnter, heroEnter, hydrated]);
 
   const continueToApp = async () => {
     await setOnboardingComplete(true);
@@ -95,32 +72,15 @@ export default function OnboardingScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View
-          style={[
-            styles.hero,
-            {
-              opacity: heroEnter,
-              transform: [
-                { translateY: heroEnter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
-              ],
-            },
-          ]}
-        >
+        <View style={styles.hero}>
           <Text style={styles.wordmark} accessibilityRole="header">
             <Text style={[styles.wordmarkLoop, { color: LOGO_GRADIENT.start }]}>Loop</Text>
             <Text style={[styles.wordmarkTidy, { color: LOGO_GRADIENT.end }]}>Tidy</Text>
           </Text>
           <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>{TAGLINE}</Text>
-        </Animated.View>
+        </View>
 
-        <Animated.View
-          style={{
-            opacity: cardEnter,
-            transform: [
-              { translateY: cardEnter.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
-            ],
-          }}
-        >
+        <View>
           <View
             style={[
               styles.card,
@@ -134,7 +94,7 @@ export default function OnboardingScreen() {
 
             <PrimaryButton label="Get started" onPress={continueToApp} />
           </View>
-        </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

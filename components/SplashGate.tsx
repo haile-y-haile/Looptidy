@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useLoops } from '../context/LoopContext';
@@ -9,26 +9,27 @@ import { getOnboardingComplete } from '../lib/preferences';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+const FONT_LOAD_TIMEOUT_MS = 5000;
+
 export function SplashGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { loading } = useLoops();
-  const { hydrationDone } = useTheme();
+  const { hydrationDone, theme } = useTheme();
   const fontsLoaded = useFontsLoaded();
   const [nativeHidden, setNativeHidden] = useState(false);
-  const [onboardingChecked, setOnboardingChecked] = useState(false);
-
-  const appReady = !loading && hydrationDone && fontsLoaded;
+  const [routeReady, setRouteReady] = useState(false);
+  const [fontTimedOut, setFontTimedOut] = useState(false);
 
   useEffect(() => {
-    if (!appReady || nativeHidden) return;
-    SplashScreen.hideAsync()
-      .then(() => setNativeHidden(true))
-      .catch(() => setNativeHidden(true));
-  }, [appReady, nativeHidden]);
+    const timer = setTimeout(() => setFontTimedOut(true), FONT_LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
-  /** Route to onboarding early without blocking app rendering. */
+  const dataReady = !loading && hydrationDone && (fontsLoaded || fontTimedOut);
+
+  /** Resolve first-launch route while the stack stays mounted under an overlay. */
   useEffect(() => {
-    if (!appReady || onboardingChecked) return;
+    if (!dataReady || routeReady) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -38,21 +39,35 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
           router.replace('/onboarding');
         }
       } catch {
-        // Never block app rendering if onboarding preference read fails.
+        // Never block launch if preference read fails.
       } finally {
-        if (!cancelled) setOnboardingChecked(true);
+        if (!cancelled) setRouteReady(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [appReady, onboardingChecked, router]);
+  }, [dataReady, routeReady, router]);
+
+  const appReady = dataReady && routeReady;
+
+  useEffect(() => {
+    if (!appReady || nativeHidden) return;
+    SplashScreen.hideAsync()
+      .then(() => setNativeHidden(true))
+      .catch(() => setNativeHidden(true));
+  }, [appReady, nativeHidden]);
 
   const showApp = appReady && nativeHidden;
 
   return (
-    <View style={styles.root}>
-      {showApp ? children : null}
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
+      {dataReady ? children : null}
+      {!showApp ? (
+        <View style={[styles.overlay, { backgroundColor: theme.colors.background }]}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -60,5 +75,10 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
