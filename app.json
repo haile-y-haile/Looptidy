@@ -11,12 +11,12 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F6F8FB"
+      "backgroundColor": "#0A4F4A"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hailehaile.looptidy",
-      "buildNumber": "28",
+      "buildNumber": "29",
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
           {
@@ -52,7 +52,7 @@
       "package": "com.hailehaile.looptidy",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#F6F8FB",
+        "backgroundColor": "#0A4F4A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -70,9 +70,9 @@
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#F6F8FB",
+          "backgroundColor": "#0A4F4A",
           "dark": {
-            "backgroundColor": "#0B1220"
+            "backgroundColor": "#0A4F4A"
           }
         }
       ],

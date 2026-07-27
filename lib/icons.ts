@@ -2,15 +2,10 @@ import type { AppIconName } from '../components/AppIcon';
 import type { AttachmentType } from '../types';
 
 export const settingsIcons = {
-  profile: 'person-outline',
   security: 'lock-closed-outline',
   privacy: 'shield-outline',
-  appearance: 'color-palette-outline',
-  language: 'language-outline',
-  accessibility: 'accessibility-outline',
   notifications: 'notifications-outline',
-  backup: 'cloud-outline',
-  legal: 'document-text-outline',
+  backup: 'download-outline',
   support: 'chatbubble-ellipses-outline',
   about: 'information-circle-outline',
   danger: 'warning-outline',
@@ -26,8 +21,5 @@ export const attachmentIcons: Record<AttachmentType, AppIconName> = {
 
 export const emptyStateIcons = {
   default: 'albums-outline',
-  waiting: 'hourglass-outline',
-  promised: 'hand-left-outline',
   notFound: 'help-circle-outline',
-  review: 'journal-outline',
 } as const satisfies Record<string, AppIconName>;

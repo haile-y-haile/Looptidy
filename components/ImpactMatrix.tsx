@@ -1,62 +1,72 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../context/ThemeContext';
 import type { OpenLoop } from '../types';
-import { getRiskColor, riskLevelLabels, isOverdue } from '../lib/utils';
+import { getRiskColor, isOverdue } from '../lib/utils';
 import { radius, spacing, typography } from '../lib/theme';
+import { hapticLight } from '../lib/haptics';
+
+function stableJitter(id: string, axis: 0 | 1): number {
+  let hash = axis + 1;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash * 31 + id.charCodeAt(i)) % 1000;
+  }
+  return ((hash % 100) / 1000) - 0.05;
+}
 
 export function ImpactMatrix({ loops }: { loops: OpenLoop[] }) {
   const { theme } = useTheme();
-  
-  // X-axis: Urgency (0-1) - Overdue is 1, High priority is 0.8, etc.
-  // Y-axis: Risk (0-1) - High is 1, Medium is 0.5, Low is 0
-  
-  const points = loops.map(loop => {
-    let x = 0.2; // Low urgency default
+  const router = useRouter();
+
+  const points = loops.map((loop) => {
+    let x = 0.2;
     if (loop.dueDate && isOverdue(loop.dueDate)) x = 1;
+    else if (loop.priority === 'urgent') x = 0.9;
     else if (loop.priority === 'high') x = 0.8;
     else if (loop.priority === 'medium') x = 0.5;
 
-    let y = 0.1; // Low risk default
+    let y = 0.1;
     if (loop.riskLevel === 'high') y = 0.9;
     else if (loop.riskLevel === 'medium') y = 0.5;
+    else if (loop.riskLevel === 'low') y = 0.25;
 
-    // Add slight jitter to avoid exact overlap
-    x += (Math.random() - 0.5) * 0.1;
-    y += (Math.random() - 0.5) * 0.1;
-
-    x = Math.max(0, Math.min(1, x));
-    y = Math.max(0, Math.min(1, y));
+    x = Math.max(0.05, Math.min(0.95, x + stableJitter(loop.id, 0)));
+    y = Math.max(0.05, Math.min(0.95, y + stableJitter(loop.id, 1)));
 
     return { loop, x, y };
   });
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: theme.colors.text }]}>Impact Matrix</Text>
-      <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Risk vs. Urgency</Text>
-      
+      <Text style={[styles.title, { color: theme.colors.text }]}>Impact matrix</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+        Risk vs urgency — tap a point to open that loop
+      </Text>
+
       <View style={[styles.grid, { borderColor: theme.colors.border }]}>
-        {/* Quadrant Lines */}
         <View style={[styles.hLine, { backgroundColor: theme.colors.borderLight }]} />
         <View style={[styles.vLine, { backgroundColor: theme.colors.borderLight }]} />
-        
-        {/* Labels */}
-        <Text style={[styles.label, styles.topLabel, { color: theme.colors.textMuted }]}>High Risk</Text>
-        <Text style={[styles.label, styles.bottomLabel, { color: theme.colors.textMuted }]}>Low Risk</Text>
-        <Text style={[styles.label, styles.leftLabel, { color: theme.colors.textMuted }]}>Low Urgency</Text>
-        <Text style={[styles.label, styles.rightLabel, { color: theme.colors.textMuted }]}>High Urgency</Text>
 
-        {/* Data Points */}
-        {points.map((p, i) => (
-          <View
-            key={p.loop.id || i}
+        <Text style={[styles.label, styles.topLabel, { color: theme.colors.textMuted }]}>High risk</Text>
+        <Text style={[styles.label, styles.bottomLabel, { color: theme.colors.textMuted }]}>Low risk</Text>
+        <Text style={[styles.label, styles.leftLabel, { color: theme.colors.textMuted }]}>Low urgency</Text>
+        <Text style={[styles.label, styles.rightLabel, { color: theme.colors.textMuted }]}>High urgency</Text>
+
+        {points.map((p) => (
+          <Pressable
+            key={p.loop.id}
+            accessibilityLabel={p.loop.title}
+            onPress={() => {
+              void hapticLight();
+              router.push(`/loops/${p.loop.id}`);
+            }}
             style={[
               styles.point,
               {
                 left: `${p.x * 100}%`,
                 bottom: `${p.y * 100}%`,
                 backgroundColor: getRiskColor(p.loop.riskLevel),
-              }
+              },
             ]}
           />
         ))}
@@ -110,9 +120,9 @@ const styles = StyleSheet.create({
   rightLabel: { right: spacing.xs, top: '50%', transform: [{ translateY: -10 }] },
   point: {
     position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    transform: [{ translateX: -4 }, { translateY: 4 }], // center the dot
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    transform: [{ translateX: -7 }, { translateY: 7 }],
   },
 });

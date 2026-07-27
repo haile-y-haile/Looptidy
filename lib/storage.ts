@@ -84,31 +84,6 @@ export async function saveLoops(loops: OpenLoop[]): Promise<void> {
   });
 }
 
-export async function undoLastAction(): Promise<OpenLoop[] | null> {
-  const database = await getDb();
-  const rows = await database.getAllAsync<{ id: number; state: string }>(
-    `SELECT id, state FROM history ORDER BY timestamp DESC LIMIT 2`
-  );
-  if (rows && rows.length === 2) {
-    const previousState = rows[1].state;
-    const loops = JSON.parse(previousState) as OpenLoop[];
-
-    await database.withTransactionAsync(async () => {
-      await database.runAsync(`DELETE FROM documents WHERE type = 'loop'`);
-      for (const loop of loops) {
-        await database.runAsync(
-          `INSERT INTO documents (id, type, data, updated_at) VALUES (?, ?, ?, ?)`,
-          [loop.id, 'loop', JSON.stringify(loop), Date.now()]
-        );
-      }
-      await database.runAsync(`DELETE FROM history WHERE id = ?`, [rows[0].id]);
-    });
-
-    return loops.map(normalizeLoop);
-  }
-  return null;
-}
-
 export async function resetLoops(): Promise<OpenLoop[]> {
   return seedDemoLoops();
 }

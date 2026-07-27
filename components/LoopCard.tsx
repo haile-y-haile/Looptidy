@@ -1,5 +1,6 @@
 import { memo, useCallback, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -10,16 +11,19 @@ import { AppIcon } from './AppIcon';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { hapticLight, hapticSuccess } from '../lib/haptics';
+import { buildLoopNudgeMessage } from '../lib/nudge';
 import { radius, shadows, spacing, typography } from '../lib/theme';
 import {
   getAccountabilityStatus,
   isNextCheckInToday,
 } from '../lib/accountability';
 import {
+  computeSnoozeUntil,
   isReminderDueToday,
   isReminderSnoozed,
   isLoopDueToday,
   isLoopOverdueForDisplay,
+  scheduleLoopReminder,
 } from '../lib/reminders';
 import {
   formatRelativeDate,
@@ -113,7 +117,7 @@ function RightSwipeActions({
 
 export const LoopCard = memo(function LoopCard({ loop, index = 0 }: LoopCardProps) {
   const router = useRouter();
-  const { closeLoop } = useLoops();
+  const { closeLoop, updateLoop, addTimelineEvent } = useLoops();
   const { theme } = useTheme();
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const typeColor = getLoopTypeColor(loop.type);
@@ -138,26 +142,54 @@ export const LoopCard = memo(function LoopCard({ loop, index = 0 }: LoopCardProp
     ]);
   }, [closeLoop, loop.id]);
 
+  const handleSnooze = useCallback(() => {
+    void hapticLight();
+    void (async () => {
+      const until = computeSnoozeUntil('tomorrow');
+      const merged = {
+        ...loop,
+        reminderEnabled: true,
+        snoozedUntil: until,
+      };
+      const notificationId = await scheduleLoopReminder(merged);
+      await updateLoop(loop.id, {
+        reminderEnabled: true,
+        snoozedUntil: until,
+        localNotificationId: notificationId ?? undefined,
+      });
+      await addTimelineEvent(loop.id, {
+        type: 'note',
+        title: 'Reminder snoozed',
+        description: until,
+      });
+      void hapticSuccess();
+      swipeRef.current?.close();
+    })();
+  }, [addTimelineEvent, loop, updateLoop]);
+
+  const handleNudge = useCallback(() => {
+    void hapticLight();
+    void (async () => {
+      const msg = buildLoopNudgeMessage(loop);
+      await Clipboard.setStringAsync(msg);
+      void hapticSuccess();
+      swipeRef.current?.close();
+      Alert.alert('Copied', 'Nudge message copied to clipboard.');
+    })();
+  }, [loop]);
+
   const renderRightActions = useCallback(
     (_progress: SharedValue<number>, drag: SharedValue<number>) => (
-      <RightSwipeActions drag={drag} onSnooze={() => {
-        void hapticLight();
-        swipeRef.current?.close();
-        router.push(`/loops/${loop.id}`);
-      }} onClose={confirmClose} />
+      <RightSwipeActions drag={drag} onSnooze={handleSnooze} onClose={confirmClose} />
     ),
-    [confirmClose, loop.id, router]
+    [confirmClose, handleSnooze]
   );
 
   const renderLeftActions = useCallback(
     (_progress: SharedValue<number>, drag: SharedValue<number>) => (
-      <LeftSwipeActions drag={drag} onNudge={() => {
-        void hapticLight();
-        swipeRef.current?.close();
-        router.push(`/loops/${loop.id}`);
-      }} />
+      <LeftSwipeActions drag={drag} onNudge={handleNudge} />
     ),
-    [loop.id, router]
+    [handleNudge]
   );
 
   const cardBody = (

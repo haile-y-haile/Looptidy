@@ -154,7 +154,7 @@ export function computeInsights(
     byType,
     topCategories,
     agingBuckets,
-    closedThisWeekGoal: Math.max(closedThisWeek, 3),
+    closedThisWeekGoal: Math.max(openedThisWeek, closedThisWeek, 1),
     decisionsPending: decisions.filter((d) => d.status === 'decision_needed').length,
     decisionsMadeThisWeek: getDecisionsMadeThisWeek(loops),
     unclearOwnership: acc.unclear,

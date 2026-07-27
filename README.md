@@ -17,12 +17,12 @@ LoopTidy is a local-first open-loop tracker for managing follow-ups, blockers, c
 | **Repository** | https://github.com/haile-y-haile/Looptidy |
 
 **Support:** hello.hailelabs@gmail.com  
-**Privacy Policy:** https://haile-y-haile.github.io/Looptidy/privacy
+**Privacy Policy:** https://haile-y-haile.github.io/Looptidy/privacy/
 
 ## Core features (1.0.0)
 
-- **Today dashboard** — focus, due items, waiting, promised, and high-risk loops
-- **Open loop creation & editing** — type, priority, risk, category, person, due date, attachments
+- **Today dashboard** — focus loop, up next, PM signals, and weekly-review prompt
+- **Open loop creation & editing** — type, priority, risk, category, person, due date, link attachments
 - **Loop lifecycle** — close, archive, reopen, delete
 - **Loop detail** — context, timeline, notes, decisions, local reminders
 - **Decision log** — unresolved and recorded decisions

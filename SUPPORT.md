@@ -12,13 +12,13 @@ LoopTidy is a local-first open-loop tracker for follow-ups, blockers, commitment
 
 - Device model (e.g. iPhone 15)
 - iOS version (e.g. iOS 18.4)
-- App version and build number (Settings → About)
+- App version and build number (Settings → About LoopTidy — shown at the bottom of the About screen)
 - Steps to reproduce the issue
 - Screenshot if helpful (redact sensitive loop content)
 
 ## Privacy
 
-https://haile-y-haile.github.io/Looptidy/privacy
+https://haile-y-haile.github.io/Looptidy/privacy/
 
 ## Current version behavior
 

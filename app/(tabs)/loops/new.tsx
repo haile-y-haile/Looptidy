@@ -54,6 +54,7 @@ export default function NewLoopScreen() {
     priority?: string;
     riskLevel?: string;
     category?: string;
+    personName?: string;
   }>();
   const { loops, addLoop, updateLoop } = useLoops();
 
@@ -141,6 +142,9 @@ export default function NewLoopScreen() {
     }
     if (params.category && categories.includes(params.category as Category)) {
       setCategory(params.category as Category);
+    }
+    if (typeof params.personName === 'string' && params.personName.trim()) {
+      setPersonName(params.personName.trim());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

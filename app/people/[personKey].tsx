@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { OpenLoop } from '../../types';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useLoops } from '../../context/LoopContext';
@@ -49,7 +49,12 @@ export default function PersonDetailScreen() {
           <Text style={[styles.role, { color: theme.colors.textSecondary }]}>{person.role}</Text>
         ) : null}
         {person.email ? (
-          <Text style={[styles.email, { color: theme.colors.textMuted }]}>{person.email}</Text>
+          <Pressable
+            onPress={() => void Linking.openURL(`mailto:${person.email}`)}
+            style={({ pressed }) => pressed && { opacity: 0.85 }}
+          >
+            <Text style={[styles.email, { color: theme.colors.primary }]}>{person.email}</Text>
+          </Pressable>
         ) : null}
 
         <View style={styles.actions}>
@@ -58,7 +63,10 @@ export default function PersonDetailScreen() {
               void hapticLight();
               router.push({
                 pathname: '/loops/new',
-                params: { type: 'waiting_on_others' },
+                params: {
+                  type: 'waiting_on_others',
+                  personName: person.name,
+                },
               });
             }}
             style={({ pressed }) => [
@@ -69,25 +77,26 @@ export default function PersonDetailScreen() {
           >
             <Text style={styles.actionBtnText}>Create loop</Text>
           </Pressable>
-          <Pressable
-            onPress={() => {
-              if (!nudge) return;
-              void (async () => {
-                await Clipboard.setStringAsync(nudge);
-                void hapticSuccess();
-                Alert.alert('Copied', 'Nudge message copied to clipboard.');
-              })();
-            }}
-            style={({ pressed }) => [
-              styles.actionBtnOutline,
-              { borderColor: theme.colors.border },
-              pressed && { opacity: 0.9 },
-            ]}
-          >
-            <Text style={[styles.actionBtnOutlineText, { color: theme.colors.text }]}>
-              Copy nudge
-            </Text>
-          </Pressable>
+          {nudge ? (
+            <Pressable
+              onPress={() => {
+                void (async () => {
+                  await Clipboard.setStringAsync(nudge);
+                  void hapticSuccess();
+                  Alert.alert('Copied', 'Nudge message copied to clipboard.');
+                })();
+              }}
+              style={({ pressed }) => [
+                styles.actionBtnOutline,
+                { borderColor: theme.colors.border },
+                pressed && { opacity: 0.9 },
+              ]}
+            >
+              <Text style={[styles.actionBtnOutlineText, { color: theme.colors.text }]}>
+                Copy nudge
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {nudge ? (

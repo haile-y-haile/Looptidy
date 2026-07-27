@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import type { Decision, LoopStatus, LoopType, OpenLoop, TimelineEvent } from '../types';
 import { normalizeDecision } from '../lib/decisions';
-import { clearAllLoops, getLoops, saveLoops, undoLastAction } from '../lib/storage';
+import { clearAllLoops, getLoops, saveLoops } from '../lib/storage';
 import { generateId } from '../lib/utils';
 import { cancelLoopReminder, scheduleLoopReminder } from '../lib/reminders';
 
@@ -66,7 +66,6 @@ interface LoopContextValue {
   resetToDemoData: () => Promise<void>;
   deleteAllLocalData: () => Promise<void>;
   refreshLoops: () => Promise<void>;
-  undo: () => Promise<void>;
 }
 
 const LoopContext = createContext<LoopContextValue | null>(null);
@@ -370,14 +369,6 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
     setLoadError(null);
   }, []);
 
-  const undo = useCallback(async () => {
-    const previousState = await undoLastAction();
-    if (previousState) {
-      setLoops(previousState);
-      setLoadError(null);
-    }
-  }, []);
-
   const value = useMemo(
     () => ({
       loops,
@@ -396,7 +387,6 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
       resetToDemoData,
       deleteAllLocalData,
       refreshLoops,
-      undo,
     }),
     [
       loops,
@@ -415,7 +405,6 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
       resetToDemoData,
       deleteAllLocalData,
       refreshLoops,
-      undo,
     ]
   );
 

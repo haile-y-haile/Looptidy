@@ -71,11 +71,14 @@ export default function InsightsScreen() {
 
         <GlassCard style={styles.card} intensity={32}>
           <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-            Closure velocity (Last 7 Days)
+            This week: opened vs closed
           </Text>
           <View style={{ marginTop: spacing.md, alignItems: 'center' }}>
             <LineChart
-              data={[{ value: insights.openedThisWeek }, { value: insights.closedThisWeek }]}
+              data={[
+                { value: insights.openedThisWeek, label: 'Opened' },
+                { value: insights.closedThisWeek, label: 'Closed' },
+              ]}
               color={theme.colors.primary}
               thickness={3}
               dataPointsColor={theme.colors.primary}
@@ -89,10 +92,16 @@ export default function InsightsScreen() {
           </View>
           <View style={{ marginTop: spacing.lg }}>
             <ProgressBar
-              label="Loops closed"
+              label="Closed this week"
               value={insights.closedThisWeek}
-              max={insights.closedThisWeekGoal}
+              max={Math.max(insights.openedThisWeek, insights.closedThisWeek, 1)}
               color={theme.colors.success}
+            />
+            <ProgressBar
+              label="Opened this week"
+              value={insights.openedThisWeek}
+              max={Math.max(insights.openedThisWeek, insights.closedThisWeek, 1)}
+              color={theme.colors.primary}
             />
           </View>
           {insights.closureRatePercent !== null ? (

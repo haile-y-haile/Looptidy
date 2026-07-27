@@ -114,7 +114,7 @@ export default function SettingsScreen() {
           LoopTidy stores your loops on this device. No account required.
         </Text>
         <Text style={[styles.accountCardFooter, { color: theme.colors.textMuted }]}>
-          Cloud sync and accounts are not included in this version.
+          LoopTidy does not use accounts or cloud sync.
         </Text>
       </View>
 
@@ -172,8 +172,8 @@ export default function SettingsScreen() {
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Danger zone</Text>
       <SettingsRow
         icon={settingsIcons.danger}
-        title="Delete all local data"
-        subtitle="Manage in Backup & Restore danger zone"
+        title="Backup & danger zone"
+        subtitle="Export, restore, or delete all local data"
         tone="danger"
         onPress={() => router.push('/backup-restore')}
       />

@@ -1,5 +1,6 @@
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandLockup } from '../components/BrandLockup';
@@ -11,6 +12,11 @@ import { radius, spacing, typography } from '../lib/theme';
 function openUrl(url: string) {
   void Linking.openURL(url);
 }
+
+const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
+const BUILD_NUMBER =
+  Constants.expoConfig?.ios?.buildNumber ??
+  String(Constants.expoConfig?.android?.versionCode ?? '');
 
 const FEATURES = [
   {
@@ -123,6 +129,10 @@ export default function MarketingScreen() {
               <Text style={[styles.linkText, { color: theme.colors.primary }]}>GitHub</Text>
             </Pressable>
           </View>
+          <Text style={[styles.versionText, { color: theme.colors.textMuted }]}>
+            Version {APP_VERSION}
+            {BUILD_NUMBER ? ` · Build ${BUILD_NUMBER}` : ''}
+          </Text>
         </View>
       </ScrollView>
     </>
@@ -230,5 +240,10 @@ const styles = StyleSheet.create({
     ...typography.body,
     textAlign: 'center',
     marginBottom: spacing.sm,
+  },
+  versionText: {
+    ...typography.caption,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
 });

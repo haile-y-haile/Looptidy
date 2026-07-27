@@ -14,7 +14,7 @@ export function PMSignalsCard({ signals }: { signals: PMSignals }) {
     {
       label: 'Decisions needing owner',
       value: signals.decisionsNeedingOwner,
-      route: '/decision-speed' as const,
+      route: '/decisions' as const,
     },
     {
       label: 'Unclear ownership',

@@ -120,7 +120,7 @@ export default function CommandCenterScreen() {
         Search loops, decisions, accountability notes, scope changes, and feedback.
       </Text>
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Smart Folders</Text>
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted, marginTop: spacing.md }]}>Quick filters</Text>
       <View style={styles.toolsGrid}>
         {smartFolders.map((folder) => (
           <Pressable
@@ -237,38 +237,50 @@ export default function CommandCenterScreen() {
         <>
           <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Scope changes</Text>
           {scopeResults.map((item) => (
-            <Pressable
-              key={item.id}
-              onPress={() => router.push('/scope-guard')}
-              style={({ pressed }) => pressed && { opacity: 0.9 }}
-            >
+            <View key={item.id}>
               <GlassCard style={styles.auxCard} intensity={24}>
                 <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
                 <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
                   {SCOPE_STATUS_LABELS[item.status]} · {item.impact} impact
                 </Text>
               </GlassCard>
-            </Pressable>
+            </View>
           ))}
+          <Pressable
+            onPress={() => router.push('/scope-guard')}
+            style={({ pressed }) => [
+              styles.toolBtn,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, marginBottom: spacing.md },
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <Text style={[styles.toolBtnText, { color: theme.colors.primary }]}>Open Scope Guard</Text>
+          </Pressable>
         </>
       ) : null}
       {feedbackResults.length > 0 ? (
         <>
           <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Feedback</Text>
           {feedbackResults.map((item) => (
-            <Pressable
-              key={item.id}
-              onPress={() => router.push('/feedback')}
-              style={({ pressed }) => pressed && { opacity: 0.9 }}
-            >
+            <View key={item.id}>
               <GlassCard style={styles.auxCard} intensity={24}>
                 <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
                 <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
                   {FEEDBACK_SOURCE_LABELS[item.source]} · {item.urgency} urgency
                 </Text>
               </GlassCard>
-            </Pressable>
+            </View>
           ))}
+          <Pressable
+            onPress={() => router.push('/feedback')}
+            style={({ pressed }) => [
+              styles.toolBtn,
+              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, marginBottom: spacing.md },
+              pressed && { opacity: 0.9 },
+            ]}
+          >
+            <Text style={[styles.toolBtnText, { color: theme.colors.primary }]}>Open Feedback</Text>
+          </Pressable>
         </>
       ) : null}
       <Pressable
