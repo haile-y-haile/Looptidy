@@ -45,7 +45,7 @@ export default function DecisionsScreen() {
 
   return (
     <ScreenScroll contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}>
-      <Text style={[styles.title, { color: theme.colors.text }]}>Decision Center</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Decisions</Text>
       <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
         Track choices, rationale, impact, and revisits — tied to your open loops.
       </Text>
@@ -62,7 +62,7 @@ export default function DecisionsScreen() {
             pressed && { opacity: 0.9 },
           ]}
         >
-          <Text style={styles.addBtnText}>Start decision (Decision Speed)</Text>
+          <Text style={styles.addBtnText}>Start decision</Text>
         </Pressable>
       </View>
 
@@ -102,8 +102,8 @@ export default function DecisionsScreen() {
       ) : (
         <EmptyState
           compact
-          title="No decisions pending"
-          message="You're all caught up."
+          title="Nothing here"
+          message="No decisions need attention right now."
         />
       )}
 
@@ -111,21 +111,21 @@ export default function DecisionsScreen() {
       {revisit.length > 0 ? (
         revisit.map((dec) => <DecisionRecordCard key={dec.id} decision={dec} />)
       ) : (
-        <EmptyState compact title="Clear calendar" message="No decisions scheduled for revisit." />
+        <EmptyState compact title="Nothing scheduled" message="No decisions scheduled for revisit." />
       )}
 
       <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>High risk choices</Text>
       {highRisk.length > 0 ? (
         highRisk.map((dec) => <DecisionRecordCard key={dec.id} decision={dec} />)
       ) : (
-        <EmptyState compact title="Low risk" message="No recent high-risk decisions." />
+        <EmptyState compact title="Nothing here" message="No recent high-risk decisions." />
       )}
 
       <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recently decided</Text>
       {recent.length > 0 ? (
         recent.map((dec) => <DecisionRecordCard key={dec.id} decision={dec} />)
       ) : (
-        <EmptyState compact title="Quiet week" message="No decisions made recently." />
+        <EmptyState compact title="Nothing here" message="No decisions made recently." />
       )}
 
       <View style={{ height: spacing.xxl }} />

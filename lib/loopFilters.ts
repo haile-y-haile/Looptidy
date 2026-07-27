@@ -22,7 +22,7 @@ export const LOOP_LIST_FILTERS: { key: LoopListFilter; label: string }[] = [
   { key: 'promised', label: 'Promised' },
   { key: 'blocked', label: 'Blocked' },
   { key: 'due', label: 'Due' },
-  { key: 'closed', label: 'Closed' },
+  { key: 'closed', label: 'Closed & archived' },
 ];
 
 export function isLoopListFilter(value: string | undefined): value is LoopListFilter {
@@ -47,8 +47,12 @@ export function getLoopsForCommandFilter(
         (l) => isOpenLoop(l) && (l.type === 'blocked' || l.status === 'blocked')
       );
     case 'decisions':
+    case 'decision_needed':
       return loops.filter(
-        (l) => isOpenLoop(l) && l.type === 'decision_needed' && l.status !== 'decided'
+        (l) =>
+          isOpenLoop(l) &&
+          (l.type === 'decision_needed' ||
+            l.decisions.some((d) => d.status === 'decision_needed'))
       );
     case 'due':
       return loops.filter(
@@ -75,10 +79,6 @@ export function getLoopsForCommandFilter(
           (getAccountabilityStatus(l) === 'escalated' ||
             l.escalationLevel === 'escalated' ||
             l.escalationLevel === 'escalation_needed')
-      );
-    case 'decision_needed':
-      return loops.filter(
-        (l) => isOpenLoop(l) && (l.type === 'decision_needed' || l.decisions.some((d) => d.status === 'decision_needed'))
       );
     case 'scope_change':
     case 'feedback':
@@ -117,14 +117,14 @@ export function getEmptyStateForFilter(filter: LoopListFilter): { title: string;
       };
     case 'closed':
       return {
-        title: 'No closed loops',
-        message: 'Loops you close will be listed here for reference.',
+        title: 'No closed or archived loops',
+        message: 'Loops you close or archive will be listed here for reference.',
       };
     case 'all':
     default:
       return {
         title: 'No open loops',
-        message: 'Create a new loop to start tracking follow-ups and promises.',
+        message: 'Create a new loop to start tracking follow-ups and commitments.',
       };
   }
 }

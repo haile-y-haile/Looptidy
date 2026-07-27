@@ -73,7 +73,7 @@ export default function OwnershipScreen() {
               {sec.data.length > 0 ? (
                 sec.data.map((loop, i) => <LoopCard key={loop.id} loop={loop} index={i} />)
               ) : (
-                <EmptyState compact title="Clear" message="Nothing in this bucket." />
+                <EmptyState compact title="Nothing here" message="No loops in this group." />
               )}
             </CollapsibleSection>
           );

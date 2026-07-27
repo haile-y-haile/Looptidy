@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { BrandFlash } from './BrandFlash';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { useFontsLoaded } from '../context/FontContext';
@@ -19,6 +20,7 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
   const [nativeHidden, setNativeHidden] = useState(false);
   const [routeReady, setRouteReady] = useState(false);
   const [fontTimedOut, setFontTimedOut] = useState(false);
+  const [brandDone, setBrandDone] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setFontTimedOut(true), FONT_LOAD_TIMEOUT_MS);
@@ -27,7 +29,7 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
 
   const dataReady = !loading && hydrationDone && (fontsLoaded || fontTimedOut);
 
-  /** Resolve first-launch route while the stack stays mounted under an overlay. */
+  /** Resolve first-launch route while the stack stays mounted under the brand flash. */
   useEffect(() => {
     if (!dataReady || routeReady) return;
     let cancelled = false;
@@ -58,16 +60,15 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
       .catch(() => setNativeHidden(true));
   }, [appReady, nativeHidden]);
 
-  const showApp = appReady && nativeHidden;
+  const onBrandDone = useCallback(() => setBrandDone(true), []);
+
+  const showBrandFlash = !brandDone;
+  const brandReady = appReady && nativeHidden;
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
       {dataReady ? children : null}
-      {!showApp ? (
-        <View style={[styles.overlay, { backgroundColor: theme.colors.background }]}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      ) : null}
+      {showBrandFlash ? <BrandFlash ready={brandReady} onDone={onBrandDone} /> : null}
     </View>
   );
 }
@@ -75,10 +76,5 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

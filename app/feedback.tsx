@@ -153,7 +153,14 @@ function Section({
   onCopy: (item: FeedbackItem) => void;
 }) {
   const { theme } = useTheme();
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return (
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{title}</Text>
+        <EmptyState compact title="Nothing here" message="No feedback in this group yet." />
+      </View>
+    );
+  }
   return (
     <View style={styles.section}>
       <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{title}</Text>

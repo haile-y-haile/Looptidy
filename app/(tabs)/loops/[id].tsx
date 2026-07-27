@@ -79,7 +79,7 @@ export default function LoopDetailScreen() {
   const isClosed = loop.status === 'closed' || loop.status === 'archived';
 
   const handleArchive = () => {
-    Alert.alert('Archive this loop?', 'It will be hidden from open views but kept in Closed history.', [
+    Alert.alert('Archive this loop?', 'It will be hidden from open views and listed under the Closed filter.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Archive',
@@ -451,7 +451,7 @@ export default function LoopDetailScreen() {
                 ]}
                 value={note}
                 onChangeText={setNote}
-                placeholder="Capture an update or reminder..."
+                placeholder="Capture an update or reminder…"
                 placeholderTextColor={theme.colors.textMuted}
                 multiline
               />

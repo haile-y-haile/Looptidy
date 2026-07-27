@@ -109,8 +109,8 @@ export default function CommandCenterScreen() {
   const listBottomPadding = (Platform.OS === 'ios' ? 100 : 72) + insets.bottom;
 
   const [smartFolders] = useState([
-    { id: '1', name: 'Critical My Bugs', filter: 'high_risk' as CommandCenterFilter, sort: 'urgent' as CommandCenterSort },
-    { id: '2', name: 'Client Feedback', filter: 'feedback' as CommandCenterFilter, sort: 'recent' as CommandCenterSort },
+    { id: '1', name: 'High risk', filter: 'high_risk' as CommandCenterFilter, sort: 'urgent' as CommandCenterSort },
+    { id: '2', name: 'Feedback', filter: 'feedback' as CommandCenterFilter, sort: 'recent' as CommandCenterSort },
   ]);
 
   const header = (

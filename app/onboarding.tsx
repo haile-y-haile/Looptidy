@@ -9,17 +9,11 @@ import { useEffect, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BrandLockup } from '../components/BrandLockup';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
-import { TAGLINE } from '../lib/fonts';
 import { getOnboardingComplete, setOnboardingComplete } from '../lib/preferences';
 import { radius, spacing, typography } from '../lib/theme';
-
-const LOGO_GRADIENT = {
-  start: '#1DD4FE',
-  mid: '#2FBFFB',
-  end: '#6782F7',
-} as const;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -59,8 +53,8 @@ export default function OnboardingScreen() {
       <LinearGradient
         colors={
           theme.isDark
-            ? ['rgba(13,148,136,0.32)', 'rgba(99,102,241,0.08)', 'rgba(11,18,32,0)']
-            : ['rgba(13,148,136,0.2)', 'rgba(99,102,241,0.06)', 'rgba(246,248,251,0)']
+            ? ['rgba(13,148,136,0.32)', 'rgba(13,148,136,0.06)', 'rgba(11,18,32,0)']
+            : ['rgba(13,148,136,0.2)', 'rgba(13,148,136,0.05)', 'rgba(246,248,251,0)']
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -73,27 +67,21 @@ export default function OnboardingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.hero}>
-          <Text style={styles.wordmark} accessibilityRole="header">
-            <Text style={[styles.wordmarkLoop, { color: LOGO_GRADIENT.start }]}>Loop</Text>
-            <Text style={[styles.wordmarkTidy, { color: LOGO_GRADIENT.end }]}>Tidy</Text>
-          </Text>
-          <Text style={[styles.tagline, { color: theme.colors.textSecondary }]}>{TAGLINE}</Text>
+          <BrandLockup variant="full" logoSize={96} />
         </View>
 
-        <View>
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Welcome</Text>
-            <Text style={[styles.cardSubtitle, { color: theme.colors.textSecondary }]}>
-              Track follow-ups, blockers, commitments, and decisions — all on this device.
-            </Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+          ]}
+        >
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Welcome</Text>
+          <Text style={[styles.cardSubtitle, { color: theme.colors.textSecondary }]}>
+            Track follow-ups, blockers, commitments, and decisions — all on this device.
+          </Text>
 
-            <PrimaryButton label="Get started" onPress={continueToApp} />
-          </View>
+          <PrimaryButton label="Get started" onPress={continueToApp} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -117,20 +105,6 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     marginBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
-  wordmark: {
-    ...typography.largeTitle,
-    fontSize: 52,
-    lineHeight: 58,
-    letterSpacing: -1.1,
-  },
-  wordmarkLoop: {},
-  wordmarkTidy: {},
-  tagline: {
-    ...typography.tagline,
-    textAlign: 'center',
-    maxWidth: 280,
   },
   card: {
     borderRadius: radius.lg,

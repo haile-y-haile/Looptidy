@@ -1,14 +1,32 @@
 import { StyleSheet, Pressable } from 'react-native';
+import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppIcon } from './AppIcon';
 import { useSpotlight } from '../context/SpotlightContext';
 import { useTheme } from '../context/ThemeContext';
 import { hapticLight } from '../lib/haptics';
 
+/** Hide search FAB on screens that already have bottom actions or dense chrome. */
+function shouldHideFab(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return (
+    pathname.includes('/loops/') ||
+    pathname.includes('/new') ||
+    pathname.includes('/decision-') ||
+    pathname.includes('/backup-restore') ||
+    pathname.includes('/weekly-review')
+  );
+}
+
 export function GlobalFAB() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const { openSpotlight } = useSpotlight();
+
+  if (shouldHideFab(pathname)) {
+    return null;
+  }
 
   return (
     <Pressable
@@ -18,6 +36,7 @@ export function GlobalFAB() {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
           bottom: 100 + insets.bottom,
+          shadowOpacity: theme.isDark ? 0.28 : 0.14,
         },
         pressed && { opacity: 0.8 },
       ]}
@@ -25,6 +44,7 @@ export function GlobalFAB() {
         void hapticLight();
         openSpotlight();
       }}
+      accessibilityLabel="Search"
     >
       <AppIcon name="search" size={24} color={theme.colors.primary} />
     </Pressable>
@@ -43,7 +63,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
   },

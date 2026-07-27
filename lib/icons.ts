@@ -25,7 +25,7 @@ export const attachmentIcons: Record<AttachmentType, AppIconName> = {
 };
 
 export const emptyStateIcons = {
-  default: 'ellipse-outline',
+  default: 'albums-outline',
   waiting: 'hourglass-outline',
   promised: 'hand-left-outline',
   notFound: 'help-circle-outline',

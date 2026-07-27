@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   staticRow: {
-    opacity: 1,
+    opacity: 0.92,
   },
   pressed: {
     opacity: 0.92,

@@ -1,6 +1,6 @@
 import { memo, useCallback, useRef } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown, SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useRouter } from 'expo-router';
@@ -10,7 +10,6 @@ import { AppIcon } from './AppIcon';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { hapticLight, hapticSuccess } from '../lib/haptics';
-import { motion } from '../lib/motion';
 import { radius, shadows, spacing, typography } from '../lib/theme';
 import {
   getAccountabilityStatus,
@@ -119,7 +118,6 @@ export const LoopCard = memo(function LoopCard({ loop, index = 0 }: LoopCardProp
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const typeColor = getLoopTypeColor(loop.type);
   const overdue = loop.dueDate ? isOverdue(loop.dueDate) : false;
-  const delay = Math.min(index, 5) * motion.stagger;
   const canSwipe = isOpenLoop(loop);
 
   const confirmClose = useCallback(() => {
@@ -276,7 +274,7 @@ export const LoopCard = memo(function LoopCard({ loop, index = 0 }: LoopCardProp
   );
 
   return (
-    <Animated.View entering={FadeInDown.delay(delay).duration(motion.normal).springify().damping(18)}>
+    <View>
       {canSwipe ? (
         <ReanimatedSwipeable
           ref={swipeRef}
@@ -294,7 +292,7 @@ export const LoopCard = memo(function LoopCard({ loop, index = 0 }: LoopCardProp
       ) : (
         cardBody
       )}
-    </Animated.View>
+    </View>
   );
 }, (prev, next) =>
   prev.loop.id === next.loop.id &&

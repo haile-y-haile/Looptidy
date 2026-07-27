@@ -5,27 +5,42 @@ type LoopIllustrationProps = {
   size?: number;
 };
 
+/** Polished open-loop mark: soft ring + primary arc + tidy check. */
 export function LoopIllustration({ size = 120 }: LoopIllustrationProps) {
   const { theme } = useTheme();
-  const stroke = theme.colors.primary;
-  const muted = theme.colors.border;
-  const c = size / 2;
-  const r = size * 0.32;
+  const primary = theme.colors.primary;
+  const muted = theme.isDark ? theme.colors.border : theme.colors.borderLight;
+  const vb = 108;
+  const c = 54;
+  const r = 34;
 
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Circle cx={c} cy={c} r={r} stroke={muted} strokeWidth={2} fill="none" />
+    <Svg width={size} height={size} viewBox={`0 0 ${vb} ${vb}`}>
+      {/* Soft full ring */}
+      <Circle
+        cx={c}
+        cy={c}
+        r={r}
+        stroke={muted}
+        strokeWidth={3}
+        fill="none"
+      />
+      {/* Primary open-loop arc (~270°) ending near the check */}
       <Path
-        d={`M ${c} ${c - r} A ${r} ${r} 0 1 1 ${c - r * 0.1} ${c + r * 0.88}`}
-        stroke={stroke}
-        strokeWidth={2.5}
+        d={`M ${c} ${c - r}
+            A ${r} ${r} 0 1 1 ${c - r * 0.72} ${c + r * 0.7}`}
+        stroke={primary}
+        strokeWidth={3.5}
         strokeLinecap="round"
         fill="none"
       />
+      {/* Checkmark sitting in the open gap */}
       <Path
-        d={`M ${c - r * 0.2} ${c + r * 0.75} L ${c} ${c + r * 0.95} L ${c + r * 0.35} ${c + r * 0.45}`}
-        stroke={stroke}
-        strokeWidth={2}
+        d={`M ${c - 12} ${c + 4}
+            L ${c - 3} ${c + 14}
+            L ${c + 16} ${c - 10}`}
+        stroke={primary}
+        strokeWidth={3.5}
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"

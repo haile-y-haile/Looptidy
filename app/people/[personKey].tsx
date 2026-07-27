@@ -134,7 +134,7 @@ function PersonSection({
       {loops.length > 0 ? (
         loops.map((loop, i) => <LoopCard key={loop.id} loop={loop} index={i} />)
       ) : (
-        <EmptyState compact title="None" message="No loops in this group." />
+        <EmptyState compact title="No loops" message="No loops in this group." />
       )}
     </CollapsibleSection>
   );

@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, Pressable, Animated, Easing, Linking } from 'react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenScroll } from '../../components/ScreenScroll';
@@ -67,73 +67,45 @@ export default function SettingsScreen() {
     };
   }, []);
 
-  const headerEnter = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(headerEnter, {
-      toValue: 1,
-      duration: 420,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [headerEnter]);
-
   const onSetMode = async (next: AppearanceMode) => {
     setModeLocal(next);
     await setMode(next);
   };
 
-  const appearanceLabel = useMemo(() => {
-    if (theme.mode === 'system') return 'System';
-    if (theme.mode === 'dark') return 'Dark';
-    return 'Light';
-  }, [theme.mode]);
-
   return (
     <ScreenScroll contentContainerStyle={{ paddingTop: spacing.lg + insets.top }}>
-      <Animated.View
-        style={{
-          opacity: headerEnter,
-          transform: [
-            { translateY: headerEnter.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) },
-          ],
-        }}
+      <View
+        style={[
+          styles.hero,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}
       >
-        <View
-          style={[
-            styles.hero,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Settings</Text>
-          <Text style={[styles.heroSubtitle, { color: theme.colors.textSecondary }]}>
-            Customize appearance and manage your local LoopTidy data.
-          </Text>
+        <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Settings</Text>
+        <Text style={[styles.heroSubtitle, { color: theme.colors.textSecondary }]}>
+          Customize appearance and manage your local LoopTidy data.
+        </Text>
 
-          <View style={styles.pillsRow}>
-            <AppearancePill
-              label="System"
-              selected={mode === 'system'}
-              onPress={() => void onSetMode('system')}
-            />
-            <AppearancePill
-              label="Light"
-              selected={mode === 'light'}
-              onPress={() => void onSetMode('light')}
-            />
-            <AppearancePill
-              label="Dark"
-              selected={mode === 'dark'}
-              onPress={() => void onSetMode('dark')}
-            />
-          </View>
-          <Text style={[styles.appearanceHint, { color: theme.colors.textMuted }]}>
-            Appearance: {appearanceLabel}
-          </Text>
+        <View style={styles.pillsRow}>
+          <AppearancePill
+            label="System"
+            selected={mode === 'system'}
+            onPress={() => void onSetMode('system')}
+          />
+          <AppearancePill
+            label="Light"
+            selected={mode === 'light'}
+            onPress={() => void onSetMode('light')}
+          />
+          <AppearancePill
+            label="Dark"
+            selected={mode === 'dark'}
+            onPress={() => void onSetMode('dark')}
+          />
         </View>
-      </Animated.View>
+      </View>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Your data</Text>
       <View style={[styles.accountCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
@@ -162,9 +134,9 @@ export default function SettingsScreen() {
       />
       <SettingsRow
         icon={settingsIcons.notifications}
-        title="Notifications"
-        subtitle="Reminders are set per loop in loop detail."
-        right={{ type: 'none' }}
+        title="Local reminders"
+        subtitle="Set on each loop in loop detail. No remote push."
+        right={{ type: 'value', value: 'Per loop' }}
       />
 
       <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Data</Text>
@@ -197,7 +169,7 @@ export default function SettingsScreen() {
         onPress={() => router.push('/marketing')}
       />
 
-      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Danger Zone</Text>
+      <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Danger zone</Text>
       <SettingsRow
         icon={settingsIcons.danger}
         title="Delete all local data"
@@ -240,10 +212,6 @@ const styles = StyleSheet.create({
   pillText: {
     ...typography.caption,
     fontWeight: '700',
-  },
-  appearanceHint: {
-    ...typography.caption,
-    marginTop: spacing.sm,
   },
   sectionTitle: {
     ...typography.label,

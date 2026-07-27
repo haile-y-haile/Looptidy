@@ -1,8 +1,7 @@
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as Clipboard from 'expo-clipboard';
 import { QuickCaptureSheet } from '../../components/QuickCaptureSheet';
-import { Animated as RNAnimated, Easing } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,8 +41,6 @@ export default function TodayScreen() {
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const [showWeeklyBanner, setShowWeeklyBanner] = useState(false);
 
-  const headerEnter = useRef(new RNAnimated.Value(0)).current;
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -56,7 +53,9 @@ export default function TodayScreen() {
         }
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const openLoops = loops.filter(isOpenLoop);
@@ -96,15 +95,6 @@ export default function TodayScreen() {
     }
   };
 
-  useEffect(() => {
-    RNAnimated.timing(headerEnter, {
-      toValue: 1,
-      duration: 520,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [headerEnter]);
-
   if (loading) {
     return (
       <ScreenCentered>
@@ -130,23 +120,16 @@ export default function TodayScreen() {
         />
       }
     >
-      <RNAnimated.View
-        style={{
-          opacity: headerEnter,
-          transform: [
-            { translateY: headerEnter.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) },
-          ],
-        }}
-      >
-        <View style={styles.header}>
+      <View style={styles.header}>
           <Text style={[styles.greeting, { color: theme.colors.text }]}>Today</Text>
           <View style={styles.metaLine}>
           <Text style={[styles.metaText, { color: theme.colors.textSecondary }]}>
-            {openLoops.length} need attention{dueCount > 0 ? ` · ${dueCount} due soon` : ''}{overdueCount > 0 ? ` · ${overdueCount} overdue` : ''}
+            {openLoops.length === 0
+              ? 'No open loops'
+              : `${openLoops.length} open${dueCount > 0 ? ` · ${dueCount} due soon` : ''}${overdueCount > 0 ? ` · ${overdueCount} overdue` : ''}`}
           </Text>
         </View>
       </View>
-      </RNAnimated.View>
 
       {showWeeklyBanner ? (
         <View style={[styles.banner, { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary }]}>

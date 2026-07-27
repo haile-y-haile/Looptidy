@@ -76,7 +76,7 @@ export default function TabsLayout() {
             title: 'Decisions',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
-              <TabBarIcon name="git-branch-outline" color={color} focused={focused} />
+              <TabBarIcon name="scale-outline" color={color} focused={focused} />
             ),
           }}
         />

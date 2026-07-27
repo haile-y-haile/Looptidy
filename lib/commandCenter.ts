@@ -26,12 +26,11 @@ export const COMMAND_CENTER_FILTERS: { key: CommandCenterFilter; label: string }
   { key: 'blocked', label: 'Blocked' },
   { key: 'decisions', label: 'Decisions' },
   { key: 'due', label: 'Due' },
-  { key: 'high_risk', label: 'High Risk' },
+  { key: 'high_risk', label: 'High risk' },
   { key: 'overdue', label: 'Overdue' },
-  { key: 'closed', label: 'Closed' },
+  { key: 'closed', label: 'Closed & archived' },
   { key: 'ownership_unclear', label: 'Owner unclear' },
   { key: 'escalated', label: 'Escalated' },
-  { key: 'decision_needed', label: 'Decision needed' },
   { key: 'scope_change', label: 'Scope change' },
   { key: 'feedback', label: 'Feedback' },
 ];
@@ -160,7 +159,7 @@ export function getCommandCenterEmptyState(
     },
     promised: {
       title: 'No open promises',
-      message: 'Commitments you have made will show here until you close them.',
+      message: 'Commitments you have made will show up here until they are done.',
     },
     blocked: {
       title: 'Nothing blocked',
@@ -183,8 +182,8 @@ export function getCommandCenterEmptyState(
       message: 'Overdue due dates and reminders will appear here.',
     },
     closed: {
-      title: 'No closed loops',
-      message: 'Loops you close are kept here for reference.',
+      title: 'No closed or archived loops',
+      message: 'Loops you close or archive will be listed here for reference.',
     },
     ownership_unclear: {
       title: 'Ownership is clear',
@@ -195,8 +194,8 @@ export function getCommandCenterEmptyState(
       message: 'Escalated accountability issues will show here.',
     },
     decision_needed: {
-      title: 'No decisions needed',
-      message: 'Open decision loops and pending decision records appear here.',
+      title: 'No decisions pending',
+      message: 'Unresolved decision loops will appear here.',
     },
     scope_change: {
       title: 'No scope changes',
@@ -204,13 +203,13 @@ export function getCommandCenterEmptyState(
     },
     feedback: {
       title: 'No feedback',
-      message: 'Captured feedback items will appear here when you filter or search.',
+      message: 'Captured feedback will appear here when you filter or search.',
     },
   };
   return (
     map[filter] ?? {
       title: 'No open loops',
-      message: 'Capture a new loop to start tracking follow-ups and commitments.',
+      message: 'Create a new loop to start tracking follow-ups and commitments.',
     }
   );
 }

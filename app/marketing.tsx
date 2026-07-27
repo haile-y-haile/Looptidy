@@ -1,11 +1,10 @@
-import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandLockup } from '../components/BrandLockup';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
-import { TAGLINE } from '../lib/fonts';
 import { CONTACT_EMAIL, links } from '../lib/links';
 import { radius, spacing, typography } from '../lib/theme';
 
@@ -52,8 +51,8 @@ export default function MarketingScreen() {
         <LinearGradient
           colors={
             theme.isDark
-              ? ['rgba(13,148,136,0.28)', 'rgba(99,102,241,0.1)', 'transparent']
-              : ['rgba(13,148,136,0.18)', 'rgba(99,102,241,0.06)', 'transparent']
+              ? ['rgba(13,148,136,0.28)', 'rgba(13,148,136,0.06)', 'transparent']
+              : ['rgba(13,148,136,0.18)', 'rgba(13,148,136,0.05)', 'transparent']
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -61,7 +60,7 @@ export default function MarketingScreen() {
         />
 
         <View style={[styles.hero, isWeb && styles.webHero]}>
-          <BrandLockup variant="splash" logoSize={112} />
+          <BrandLockup variant="full" logoSize={112} />
           <Text style={[styles.headline, { color: theme.colors.text }]}>
             Open loops,{'\n'}handled with care.
           </Text>
@@ -69,7 +68,6 @@ export default function MarketingScreen() {
             LoopTidy is a calm place for follow-ups, promises, and decisions — personal enough for
             life, structured enough for work.
           </Text>
-          <Text style={[styles.taglineAccent, { color: theme.colors.primary }]}>{TAGLINE}</Text>
 
           <View style={styles.ctaRow}>
             <PrimaryButton
@@ -84,35 +82,6 @@ export default function MarketingScreen() {
                 </Text>
               </Pressable>
             ) : null}
-          </View>
-
-          <View style={styles.linkRow}>
-            <Pressable onPress={() => openUrl(links.privacyPolicy)}>
-              <Text style={[styles.linkText, { color: theme.colors.primary }]}>Privacy Policy</Text>
-            </Pressable>
-            <Text style={[styles.linkDot, { color: theme.colors.textMuted }]}>·</Text>
-            <Pressable onPress={() => openUrl(links.supportEmail)}>
-              <Text style={[styles.linkText, { color: theme.colors.primary }]}>Support</Text>
-            </Pressable>
-            <Text style={[styles.linkDot, { color: theme.colors.textMuted }]}>·</Text>
-            <Pressable onPress={() => openUrl(links.githubRepo)}>
-              <Text style={[styles.linkText, { color: theme.colors.primary }]}>GitHub</Text>
-            </Pressable>
-          </View>
-
-          <View
-            style={[
-              styles.storeBadge,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-            ]}
-          >
-            <Image source={require('../assets/icon.png')} style={styles.storeIcon} />
-            <View style={styles.storeCopy}>
-              <Text style={[styles.storeTitle, { color: theme.colors.text }]}>LoopTidy for iOS</Text>
-              <Text style={[styles.storeSub, { color: theme.colors.textMuted }]}>
-                Local-first open-loop tracking. Your data stays on this device.
-              </Text>
-            </View>
           </View>
         </View>
 
@@ -145,6 +114,15 @@ export default function MarketingScreen() {
             Contact us at {CONTACT_EMAIL} for support or privacy questions.
           </Text>
           <PrimaryButton label="Email support" onPress={() => openUrl(links.supportEmail)} />
+          <View style={styles.linkRow}>
+            <Pressable onPress={() => openUrl(links.privacyPolicy)}>
+              <Text style={[styles.linkText, { color: theme.colors.primary }]}>Privacy Policy</Text>
+            </Pressable>
+            <Text style={[styles.linkDot, { color: theme.colors.textMuted }]}>·</Text>
+            <Pressable onPress={() => openUrl(links.githubRepo)}>
+              <Text style={[styles.linkText, { color: theme.colors.primary }]}>GitHub</Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
     </>
@@ -181,10 +159,6 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     maxWidth: 480,
   },
-  taglineAccent: {
-    ...typography.callout,
-    textAlign: 'center',
-  },
   ctaRow: {
     width: '100%',
     maxWidth: 360,
@@ -207,39 +181,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    maxWidth: 360,
+    marginTop: spacing.sm,
   },
   linkText: {
     ...typography.callout,
   },
   linkDot: {
     ...typography.caption,
-  },
-  storeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    width: '100%',
-    maxWidth: 360,
-    marginTop: spacing.md,
-  },
-  storeIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-  },
-  storeCopy: {
-    flex: 1,
-  },
-  storeTitle: {
-    ...typography.headline,
-  },
-  storeSub: {
-    ...typography.caption,
-    marginTop: 2,
   },
   sectionTitle: {
     ...typography.label,

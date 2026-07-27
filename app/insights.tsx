@@ -7,6 +7,7 @@ import { useLoops } from '../context/LoopContext';
 import { useScopeChanges } from '../context/ScopeContext';
 import { useTheme } from '../context/ThemeContext';
 import { GlassCard } from '../components/GlassCard';
+import { EmptyState } from '../components/EmptyState';
 import { ProgressBar } from '../components/ProgressBar';
 import { ScreenScroll } from '../components/ScreenScroll';
 import { StatCard } from '../components/StatCard';
@@ -172,7 +173,7 @@ export default function InsightsScreen() {
         <GlassCard style={styles.card} intensity={32}>
           <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Open loops by type</Text>
           {insights.byType.length === 0 ? (
-            <Text style={[styles.meta, { color: theme.colors.textMuted }]}>No open loops yet.</Text>
+            <EmptyState compact title="Nothing here" message="No open loops yet." />
           ) : (
             insights.byType.map((row) => (
               <ProgressBar

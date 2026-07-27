@@ -34,37 +34,37 @@ export interface GuidedReviewStep {
 export const REVIEW_SECTIONS: ReviewSection[] = [
   {
     key: 'overdue',
-    title: 'Overdue Loops',
+    title: 'Overdue loops',
     description: 'Past due — decide to nudge, snooze, or close.',
   },
   {
     key: 'waiting',
-    title: 'Waiting on Others',
+    title: 'Waiting on others',
     description: 'The ball is in someone else’s court.',
   },
   {
     key: 'promised',
-    title: 'Promised by Me',
+    title: 'Promised by me',
     description: 'Commitments you made that are still open.',
   },
   {
     key: 'blocked',
-    title: 'Blocked Items',
+    title: 'Blocked loops',
     description: 'Work that cannot move until something clears.',
   },
   {
     key: 'decisions',
-    title: 'Decisions Needed',
+    title: 'Decisions needed',
     description: 'Unresolved choices that need an outcome.',
   },
   {
     key: 'high_risk',
-    title: 'High Risk Loops',
+    title: 'High risk loops',
     description: 'Loops flagged high risk — worth extra attention.',
   },
   {
     key: 'closed_week',
-    title: 'Closed This Week',
+    title: 'Closed this week',
     description: 'Loops you closed in the last 7 days.',
   },
 ];

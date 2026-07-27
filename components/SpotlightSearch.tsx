@@ -57,7 +57,7 @@ export function SpotlightSearch({
             <TextInput
               ref={inputRef}
               style={[styles.input, { color: theme.colors.text }]}
-              placeholder="Spotlight search..."
+              placeholder="Search…"
               placeholderTextColor={theme.colors.textMuted}
               value={query}
               onChangeText={setQuery}

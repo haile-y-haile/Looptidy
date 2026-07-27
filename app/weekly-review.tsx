@@ -98,7 +98,7 @@ export default function WeeklyReviewScreen() {
         <BrandLockup variant="splash" logoSize={64} />
         <Text style={[styles.heroTitle, { color: theme.colors.text }]}>Weekly review</Text>
         <Text style={[styles.heroText, { color: theme.colors.textSecondary }]}>
-          A guided ritual to triage overdue items, nudge dependencies, and close what no longer
+          A guided ritual to triage overdue loops, nudge dependencies, and close what no longer
           matters — all on your device.
         </Text>
       </View>
@@ -167,7 +167,7 @@ export default function WeeklyReviewScreen() {
                     />
                   ))
                 ) : (
-                  <EmptyState compact title="Clear" message="Nothing in this bucket right now." />
+                  <EmptyState compact title="Nothing here" message="No loops in this group right now." />
                 )}
               </CollapsibleSection>
             );
