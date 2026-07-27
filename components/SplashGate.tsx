@@ -9,6 +9,7 @@ import { useFontsLoaded } from '../context/FontContext';
 import { getOnboardingComplete } from '../lib/preferences';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+SplashScreen.setOptions({ fade: false, duration: 0 });
 
 const FONT_LOAD_TIMEOUT_MS = 5000;
 
@@ -53,12 +54,19 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
 
   const appReady = dataReady && routeReady;
 
-  useEffect(() => {
-    if (!appReady || nativeHidden) return;
+  /** Hide the native Sample A splash as soon as BrandFlash paints (same art → seamless). */
+  const hideNativeSplash = useCallback(() => {
+    if (nativeHidden) return;
     SplashScreen.hideAsync()
       .then(() => setNativeHidden(true))
       .catch(() => setNativeHidden(true));
-  }, [appReady, nativeHidden]);
+  }, [nativeHidden]);
+
+  useEffect(() => {
+    if (nativeHidden) return;
+    const safety = setTimeout(hideNativeSplash, 1200);
+    return () => clearTimeout(safety);
+  }, [hideNativeSplash, nativeHidden]);
 
   const onBrandDone = useCallback(() => setBrandDone(true), []);
 
@@ -68,7 +76,9 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
       {dataReady ? children : null}
-      {showBrandFlash ? <BrandFlash ready={brandReady} onDone={onBrandDone} /> : null}
+      {showBrandFlash ? (
+        <BrandFlash ready={brandReady} onDone={onBrandDone} onReady={hideNativeSplash} />
+      ) : null}
     </View>
   );
 }
