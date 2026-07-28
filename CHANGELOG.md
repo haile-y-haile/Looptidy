@@ -2,7 +2,7 @@
 
 All notable changes to LoopTidy are documented in this file.
 
-## [1.0.0] — 2026-07 (Build 33)
+## [1.0.0-build.33] — 2026-07 (Build 33)
 
 Covers builds 27–33. Focused on launch reliability, data durability, and turning
 Settings from a near-empty screen into a real control panel.
@@ -75,4 +75,5 @@ App Store review candidate. Local-first open-loop tracker with SQLite storage an
 
 - Expo 54 · React Native · TypeScript · expo-sqlite · expo-notifications · EAS Build
 
+[1.0.0-build.33]: https://github.com/haile-y-haile/Looptidy/releases/tag/v1.0.0-build.33
 [1.0.0]: https://github.com/haile-y-haile/Looptidy/releases/tag/v1.0.0
