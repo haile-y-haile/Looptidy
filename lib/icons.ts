@@ -9,6 +9,17 @@ export const settingsIcons = {
   support: 'chatbubble-ellipses-outline',
   about: 'information-circle-outline',
   danger: 'warning-outline',
+  haptics: 'phone-portrait-outline',
+  motion: 'flash-outline',
+  capture: 'create-outline',
+  snooze: 'alarm-outline',
+  calendar: 'calendar-outline',
+  today: 'today-outline',
+  tour: 'map-outline',
+  rate: 'star-outline',
+  time: 'time-outline',
+  nudge: 'chatbubbles-outline',
+  stale: 'hourglass-outline',
 } as const satisfies Record<string, AppIconName>;
 
 export const attachmentIcons: Record<AttachmentType, AppIconName> = {

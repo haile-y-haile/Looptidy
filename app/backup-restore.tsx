@@ -29,6 +29,7 @@ import {
   getWeeklyReviews,
   replaceWeeklyReviews,
 } from '../lib/weeklyReviewStorage';
+import { setLastBackupAt } from '../lib/preferences';
 import { radius, spacing, typography } from '../lib/theme';
 
 async function shareText(filename: string, body: string, mimeType: string) {
@@ -71,6 +72,7 @@ export default function BackupRestoreScreen() {
         backupToJson(backup),
         'application/json'
       );
+      await setLastBackupAt(new Date().toISOString());
     });
 
   const exportOpenCsv = () =>

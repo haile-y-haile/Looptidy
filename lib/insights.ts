@@ -4,6 +4,7 @@ import { getDecisionsMadeThisWeek } from './pmSignals';
 import { flattenDecisions } from './decisions';
 import { getScopeChangeSummary } from './scopeGuard';
 import { getFeedbackSummary } from './feedback';
+import { getPreferenceCache, startOfWeekDate } from './preferences';
 import { isOpenLoop } from './utils';
 import { categoryLabels, loopTypeLabels } from './utils';
 
@@ -36,12 +37,7 @@ export interface LoopInsights {
 }
 
 function startOfWeek(d = new Date()): Date {
-  const copy = new Date(d);
-  const day = copy.getDay();
-  const diff = copy.getDate() - day + (day === 0 ? -6 : 1);
-  copy.setDate(diff);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
+  return startOfWeekDate(d);
 }
 
 function daysBetween(from: string, to = new Date()): number {
@@ -112,13 +108,17 @@ export function computeInsights(
     .sort((a, b) => b.count - a.count)
     .slice(0, 4);
 
+  const stale = getPreferenceCache().staleDays;
   const agingBuckets = [
-    { label: '0–7 days', count: open.filter((l) => daysBetween(l.createdAt) <= 7).length },
     {
-      label: '8–30 days',
+      label: `0–${stale} days`,
+      count: open.filter((l) => daysBetween(l.createdAt) <= stale).length,
+    },
+    {
+      label: `${stale + 1}–30 days`,
       count: open.filter((l) => {
         const d = daysBetween(l.createdAt);
-        return d > 7 && d <= 30;
+        return d > stale && d <= 30;
       }).length,
     },
     { label: '30+ days', count: open.filter((l) => daysBetween(l.createdAt) > 30).length },

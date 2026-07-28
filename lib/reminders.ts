@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import type { OpenLoop } from '../types';
+import { getPreferenceCache } from './preferences';
 import { isOpenLoop, isOverdue } from './utils';
 
 export const LOOP_CATEGORY = 'LOOP_REMINDER';
@@ -14,6 +15,16 @@ export const SNOOZE_PRESETS: { key: SnoozePreset; label: string }[] = [
   { key: 'tomorrow', label: 'Tomorrow' },
   { key: 'next_week', label: 'Next week' },
 ];
+
+export async function getReminderPermissionStatus(): Promise<
+  'granted' | 'denied' | 'undetermined'
+> {
+  if (Platform.OS === 'web') return 'denied';
+  const existing = await Notifications.getPermissionsAsync();
+  if (existing.status === 'granted') return 'granted';
+  if (existing.status === 'denied') return 'denied';
+  return 'undetermined';
+}
 
 /** Register handler and actionable categories — does NOT request permission. */
 export async function configureNotifications() {
@@ -93,24 +104,39 @@ export function isLoopOverdueForDisplay(loop: OpenLoop): boolean {
   return (loop.dueDate ? isOverdue(loop.dueDate) : false) || isReminderOverdue(loop);
 }
 
+function reminderHour(): number {
+  return getPreferenceCache().defaultReminderHour;
+}
+
 export function computeSnoozeUntil(preset: SnoozePreset, from = new Date()): string {
   const d = new Date(from);
+  const hour = reminderHour();
   switch (preset) {
     case 'later_today':
       d.setHours(d.getHours() + 4, 0, 0, 0);
       if (d.getTime() <= from.getTime()) {
         d.setDate(d.getDate() + 1);
-        d.setHours(9, 0, 0, 0);
+        d.setHours(hour, 0, 0, 0);
       }
       break;
     case 'tomorrow':
       d.setDate(d.getDate() + 1);
-      d.setHours(9, 0, 0, 0);
+      d.setHours(hour, 0, 0, 0);
       break;
     case 'next_week':
       d.setDate(d.getDate() + 7);
-      d.setHours(9, 0, 0, 0);
+      d.setHours(hour, 0, 0, 0);
       break;
+  }
+  return d.toISOString();
+}
+
+/** Build a reminder datetime for default hour when a simple date is chosen. */
+export function defaultReminderAt(from = new Date()): string {
+  const d = new Date(from);
+  d.setHours(reminderHour(), 0, 0, 0);
+  if (d.getTime() <= Date.now()) {
+    d.setDate(d.getDate() + 1);
   }
   return d.toISOString();
 }
@@ -170,10 +196,12 @@ export async function cancelLoopReminder(loop: OpenLoop): Promise<void> {
 export function formatReminderDisplay(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
+  const hour12 = getPreferenceCache().timeFormat !== '24h';
   return d.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    hour12,
   });
 }

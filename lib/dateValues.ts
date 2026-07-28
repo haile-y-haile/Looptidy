@@ -1,3 +1,5 @@
+import { getPreferenceCache } from './preferences';
+
 /** Parse stored date/time strings for pickers. */
 export function parseStoredDate(value: string | undefined): Date {
   if (value?.trim()) {
@@ -31,11 +33,13 @@ export function formatPickerLabel(value: string | undefined, mode: 'date' | 'dat
   if (mode === 'date') {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
+  const hour12 = getPreferenceCache().timeFormat !== '24h';
   return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    hour12,
   });
 }

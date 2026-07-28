@@ -27,6 +27,7 @@ import {
 import { requestReminderPermission, scheduleLoopReminder } from '../../../lib/reminders';
 import { radius, spacing, typography } from '../../../lib/theme';
 import { analyzeLoopText } from '../../../lib/heuristics';
+import { getPreferenceCache } from '../../../lib/preferences';
 import { generateId, loopTypeLabels, categoryLabels, getPriorityColor, getRiskColor, priorityLabels, riskLevelLabels } from '../../../lib/utils';
 import { cancelLoopReminder } from '../../../lib/reminders';
 
@@ -74,10 +75,16 @@ export default function NewLoopScreen() {
   );
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<LoopType>(initialTemplate?.type ?? 'follow_up');
-  const [priority, setPriority] = useState<Priority>(initialTemplate?.priority ?? 'medium');
+  const [type, setType] = useState<LoopType>(
+    initialTemplate?.type ?? getPreferenceCache().defaultLoopType
+  );
+  const [priority, setPriority] = useState<Priority>(
+    initialTemplate?.priority ?? getPreferenceCache().defaultPriority
+  );
   const [riskLevel, setRiskLevel] = useState<RiskLevel>(initialTemplate?.riskLevel ?? 'none');
-  const [category, setCategory] = useState<Category>(initialTemplate?.category ?? 'work');
+  const [category, setCategory] = useState<Category>(
+    initialTemplate?.category ?? getPreferenceCache().defaultCategory
+  );
   const [personName, setPersonName] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [reminderWhen, setReminderWhen] = useState('');

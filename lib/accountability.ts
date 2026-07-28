@@ -4,6 +4,7 @@ import type {
   OpenLoop,
   Person,
 } from '../types';
+import { getPreferenceCache } from './preferences';
 import { isOpenLoop } from './utils';
 
 export function getAccountabilityStatus(loop: OpenLoop): AccountabilityStatus {
@@ -17,8 +18,9 @@ export function getAccountabilityStatus(loop: OpenLoop): AccountabilityStatus {
   }
   if (loop.type === 'waiting_on_others' && loop.waitingOn) return 'waiting_on_owner';
   if (loop.lastFollowUpAt) {
-    const days = (Date.now() - new Date(loop.lastFollowUpAt).getTime()) / (86400000);
-    if (days > 7) return 'needs_follow_up';
+    const days = (Date.now() - new Date(loop.lastFollowUpAt).getTime()) / 86400000;
+    const threshold = getPreferenceCache().staleDays;
+    if (days > threshold) return 'needs_follow_up';
   }
   return 'clear';
 }

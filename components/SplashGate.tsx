@@ -6,7 +6,11 @@ import { BrandFlash } from './BrandFlash';
 import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { useFontsLoaded } from '../context/FontContext';
-import { getOnboardingComplete } from '../lib/preferences';
+import {
+  getOnboardingComplete,
+  getPreferenceCache,
+  hydratePreferenceCache,
+} from '../lib/preferences';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ fade: false, duration: 0 });
@@ -22,13 +26,28 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
   const [routeReady, setRouteReady] = useState(false);
   const [fontTimedOut, setFontTimedOut] = useState(false);
   const [brandDone, setBrandDone] = useState(false);
+  const [prefsReady, setPrefsReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void hydratePreferenceCache()
+      .then(() => {
+        if (!cancelled) setPrefsReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setPrefsReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setFontTimedOut(true), FONT_LOAD_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, []);
 
-  const dataReady = !loading && hydrationDone && (fontsLoaded || fontTimedOut);
+  const dataReady = prefsReady && !loading && hydrationDone && (fontsLoaded || fontTimedOut);
 
   /** Resolve first-launch route while the stack stays mounted under the brand flash. */
   useEffect(() => {
@@ -70,8 +89,15 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
 
   const onBrandDone = useCallback(() => setBrandDone(true), []);
 
-  const showBrandFlash = !brandDone;
+  const reduceMotion = prefsReady && getPreferenceCache().reduceMotion;
+  const showBrandFlash = !brandDone && !reduceMotion;
   const brandReady = appReady && nativeHidden;
+
+  useEffect(() => {
+    if (!reduceMotion || brandDone) return;
+    hideNativeSplash();
+    setBrandDone(true);
+  }, [reduceMotion, brandDone, hideNativeSplash]);
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>

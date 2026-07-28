@@ -1,4 +1,5 @@
 import type { OpenLoop, WeeklyReview } from '../types';
+import { startOfWeekDate } from './preferences';
 import { isOpenLoop, isOverdue } from './utils';
 import { generateId } from './utils';
 
@@ -79,12 +80,7 @@ export const GUIDED_REVIEW_STEPS: GuidedReviewStep[] = [
 ];
 
 function startOfWeek(d = new Date()): Date {
-  const copy = new Date(d);
-  const day = copy.getDay();
-  const diff = copy.getDate() - day + (day === 0 ? -6 : 1);
-  copy.setDate(diff);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
+  return startOfWeekDate(d);
 }
 
 function closedThisWeek(loops: OpenLoop[]): OpenLoop[] {

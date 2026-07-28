@@ -12,6 +12,7 @@ import { useLoops } from '../context/LoopContext';
 import { useTheme } from '../context/ThemeContext';
 import { hapticLight, hapticSuccess } from '../lib/haptics';
 import { buildLoopNudgeMessage } from '../lib/nudge';
+import { getPreferenceCache } from '../lib/preferences';
 import { radius, shadows, spacing, typography } from '../lib/theme';
 import {
   getAccountabilityStatus,
@@ -145,7 +146,7 @@ export const LoopCard = memo(function LoopCard({ loop, index = 0 }: LoopCardProp
   const handleSnooze = useCallback(() => {
     void hapticLight();
     void (async () => {
-      const until = computeSnoozeUntil('tomorrow');
+      const until = computeSnoozeUntil(getPreferenceCache().defaultSnooze);
       const merged = {
         ...loop,
         reminderEnabled: true,

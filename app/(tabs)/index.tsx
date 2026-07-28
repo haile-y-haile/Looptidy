@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, RefreshControl, Alert } from 'react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import * as Clipboard from 'expo-clipboard';
 import { QuickCaptureSheet } from '../../components/QuickCaptureSheet';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLoops } from '../../context/LoopContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -21,7 +21,11 @@ import { useFeedback } from '../../context/FeedbackContext';
 import { PMSignalsCard } from '../../components/PMSignalsCard';
 import { computePMSignals } from '../../lib/pmSignals';
 import { buildLoopNudgeMessage } from '../../lib/nudge';
-import { getWeeklyReviewBannerDismissed, setWeeklyReviewBannerDismissed } from '../../lib/preferences';
+import {
+  getPreferenceCache,
+  getWeeklyReviewBannerDismissed,
+  setWeeklyReviewBannerDismissed,
+} from '../../lib/preferences';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TodayScreen() {
@@ -40,23 +44,36 @@ export default function TodayScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const [showWeeklyBanner, setShowWeeklyBanner] = useState(false);
+  const [showPmSignals, setShowPmSignals] = useState(getPreferenceCache().showPmSignals);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const day = new Date().getDay();
-      // Show Friday (5), Saturday (6), Sunday (0)
-      if (day === 5 || day === 6 || day === 0) {
-        const dismissed = await getWeeklyReviewBannerDismissed();
-        if (!cancelled && !dismissed) {
-          setShowWeeklyBanner(true);
+  /** Re-read Settings toggles on focus so changes apply without remounting the tab. */
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const prefs = getPreferenceCache();
+      setShowPmSignals(prefs.showPmSignals);
+
+      void (async () => {
+        try {
+          if (!prefs.showWeeklyBanner) {
+            if (!cancelled) setShowWeeklyBanner(false);
+            return;
+          }
+          const day = new Date().getDay();
+          // Show Friday (5), Saturday (6), Sunday (0)
+          if (day !== 5 && day !== 6 && day !== 0) return;
+          const dismissed = await getWeeklyReviewBannerDismissed();
+          if (!cancelled) setShowWeeklyBanner(!dismissed);
+        } catch {
+          // Banner is optional — never block Today.
         }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [])
+  );
 
   const openLoops = loops.filter(isOpenLoop);
   
@@ -204,7 +221,7 @@ export default function TodayScreen() {
         )}
       </GlassCard>
 
-      <PMSignalsCard signals={pmSignals} />
+      {showPmSignals ? <PMSignalsCard signals={pmSignals} /> : null}
 
       <View style={styles.actions}>
         <Pressable
