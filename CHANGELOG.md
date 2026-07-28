@@ -2,6 +2,46 @@
 
 All notable changes to LoopTidy are documented in this file.
 
+## [1.0.0] — 2026-07 (Build 33)
+
+Covers builds 27–33. Focused on launch reliability, data durability, and turning
+Settings from a near-empty screen into a real control panel.
+
+### Added
+
+- **Settings control panel** — haptics, reduce motion, time format, week start,
+  stale threshold, nudge tone, default reminder time, default snooze, and
+  default loop type / priority / category for new captures
+- **Today toggles** — show or hide PM signals and the weekly-review prompt
+- **Notification permission row** — request in-app, or jump to iOS Settings once denied
+- **Replay onboarding** and **restore weekly banner** from Settings
+- **Backup status** — last full JSON backup shown in Settings
+- **Version row** — app version and build number from the Expo config
+- **Brand flash** — animated launch screen, skippable via reduce motion
+
+### Changed
+
+- **Splash** — single brand flash on launch; the second logo screen is gone
+- **Preferences** — hydrated once at launch and read from a cache, so settings
+  apply without a restart in most places
+- **Week boundaries** — the weekly review and PM signals honor the "week starts
+  on" preference instead of a rolling seven-day window
+- **People** — top bottleneck rows open the person detail screen
+
+### Fixed
+
+- **Blank screen on fresh install** — theme hydration, brand flash completion,
+  and a launch ceiling so the app always reaches a usable state
+- **Biometric lock** — the unlock prompt can no longer hang on a spinner
+- **Data durability** — corrupt rows are skipped instead of failing the whole
+  read, malformed loop fields are repaired on load, and a failed legacy
+  migration retries on the next launch instead of discarding data
+- **Silent save failures** — storage errors now surface on Today with a retry
+- **Dead ends** — "not found" screens, editing a deleted loop, and opening a
+  missing decision all offer a way back
+- **Weekly review banner** — no longer lingers past the weekend
+- **Settings copy** — each control now describes what it actually does
+
 ## [1.0.0] — 2026-06 (Build 26 — App Store candidate)
 
 App Store review candidate. Local-first open-loop tracker with SQLite storage and local reminders.

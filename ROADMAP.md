@@ -12,10 +12,14 @@ LoopTidy manages **open loops**: follow-ups, blockers, commitments, due dates, d
 - Local on-device reminders (not remote push)
 - Optional Face ID app lock
 - Dark mode · Insights · People · Weekly review · PM tools screens
+- Settings control panel — capture defaults, reminder and snooze defaults,
+  time format, week start, stale threshold, nudge tone, Today toggles
+- Animated brand launch screen
 - iOS build via EAS
 
 ## Next (post–App Store)
 
+- Reduce motion applied to in-app animations, not just the launch screen
 - Improved weekly review guided flow
 - Real account system and cloud sync
 - Shared loops and collaboration

@@ -11,7 +11,7 @@ LoopTidy is a local-first open-loop tracker for managing follow-ups, blockers, c
 | | |
 |---|---|
 | **App** | LoopTidy |
-| **Version** | 1.0.0 |
+| **Version** | 1.0.0 (build 33) |
 | **Platform** | iOS |
 | **Storage** | SQLite (loops) + on-device preferences |
 | **Repository** | https://github.com/haile-y-haile/Looptidy |
@@ -29,6 +29,8 @@ LoopTidy is a local-first open-loop tracker for managing follow-ups, blockers, c
 - **Command Center** — search, filters, sorting across loops and related data
 - **Local reminders** — on-device notifications (permission requested when you set a reminder)
 - **Backup & restore** — JSON/CSV export and import on this device
+- **Settings** — capture defaults, reminder and snooze defaults, time format,
+  week start, stale threshold, nudge tone, and Today toggles
 - **Dark mode** — system, light, or dark appearance
 - **Optional app lock** — Face ID / passcode (Settings)
 
