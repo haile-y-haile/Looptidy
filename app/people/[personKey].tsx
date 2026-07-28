@@ -35,6 +35,14 @@ export default function PersonDetailScreen() {
     return (
       <ScreenScroll>
         <EmptyState title="Person not found" message="They may not appear in any loops yet." />
+        <Pressable
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/people'))}
+          style={({ pressed }) => [styles.notFoundBtn, pressed && { opacity: 0.9 }]}
+        >
+          <Text style={[styles.notFoundBtnText, { color: theme.colors.primary }]}>
+            Back to People
+          </Text>
+        </Pressable>
       </ScreenScroll>
     );
   }
@@ -150,6 +158,15 @@ function PersonSection({
 }
 
 const styles = StyleSheet.create({
+  notFoundBtn: {
+    alignSelf: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  notFoundBtnText: {
+    ...typography.callout,
+    fontWeight: '700',
+  },
   role: {
     ...typography.callout,
     marginBottom: spacing.xs,

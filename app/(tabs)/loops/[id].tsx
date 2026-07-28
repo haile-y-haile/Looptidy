@@ -68,8 +68,11 @@ export default function LoopDetailScreen() {
           title="Loop not found"
           message="It may have been removed or the link is outdated."
         />
-        <Pressable onPress={() => router.back()} style={{ marginTop: spacing.lg }}>
-          <Text style={[styles.link, { color: theme.colors.primary }]}>Go back</Text>
+        <Pressable
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/loops'))}
+          style={{ marginTop: spacing.lg }}
+        >
+          <Text style={[styles.link, { color: theme.colors.primary }]}>Go to Loops</Text>
         </Pressable>
       </ScreenCentered>
     );
@@ -306,8 +309,9 @@ export default function LoopDetailScreen() {
                 </Text>
               </Pressable>
             ) : null}
-            <AccountabilityPanel loop={loop} />
-            <ReminderPanel loop={loop} />
+            {/* Key by loop id so panel form state never carries over between loops. */}
+            <AccountabilityPanel key={`accountability-${loop.id}`} loop={loop} />
+            <ReminderPanel key={`reminder-${loop.id}`} loop={loop} />
           </>
         ) : null}
 

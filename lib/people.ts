@@ -37,7 +37,7 @@ function mergePerson(existing: PersonSummary | undefined, person: Person): Perso
 
 function mentionInTimeline(loop: OpenLoop, name: string): boolean {
   const lower = name.toLowerCase();
-  return loop.timeline.some((e) =>
+  return (loop.timeline ?? []).some((e) =>
     `${e.title} ${e.description ?? ''}`.toLowerCase().includes(lower)
   );
 }

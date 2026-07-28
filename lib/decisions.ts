@@ -73,7 +73,7 @@ export type DecisionWithLoop = Decision & {
 
 export function flattenDecisions(loops: OpenLoop[]): DecisionWithLoop[] {
   return loops.flatMap((loop) =>
-    loop.decisions.map((d) => ({
+    (loop.decisions ?? []).map((d) => ({
       ...normalizeDecision(d, loop.id),
       loopTitle: loop.title,
       loopRisk: loop.riskLevel,

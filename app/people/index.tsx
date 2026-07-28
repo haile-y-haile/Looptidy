@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLoops } from '../../context/LoopContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -40,7 +40,11 @@ export default function PeopleIndexScreen() {
           <Text style={[styles.bottleneckTitle, { color: theme.colors.text }]}>Top Bottlenecks</Text>
           <View style={[styles.bottleneckBox, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
             {people.slice(0, 3).map((p, i) => (
-              <View key={p.key} style={styles.bottleneckRow}>
+              <Pressable
+                key={p.key}
+                onPress={() => router.push(`/people/${p.key}`)}
+                style={({ pressed }) => [styles.bottleneckRow, pressed && { opacity: 0.9 }]}
+              >
                 <View style={styles.bottleneckLeft}>
                   <Text style={[styles.bottleneckRank, { color: theme.colors.textMuted }]}>#{i + 1}</Text>
                   <Text style={[styles.bottleneckName, { color: theme.colors.text }]} numberOfLines={1}>{p.name}</Text>
@@ -51,7 +55,7 @@ export default function PeopleIndexScreen() {
                   </View>
                   <Text style={[styles.bottleneckScore, { color: theme.colors.textSecondary }]}>{p.totalOpen}</Text>
                 </View>
-              </View>
+              </Pressable>
             ))}
           </View>
         </View>

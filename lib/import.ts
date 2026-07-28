@@ -1,6 +1,6 @@
 import type { FeedbackItem, LoopTidyBackup, OpenLoop, ScopeChange, WeeklyReview } from '../types';
 import { BACKUP_FORMAT_VERSION } from '../types';
-import { normalizeDecision } from './decisions';
+import { normalizeLoop } from './storage';
 
 export type ImportValidationResult =
   | { ok: true; backup: LoopTidyBackup }
@@ -31,12 +31,25 @@ function isWeeklyReviewArray(value: unknown): value is WeeklyReview[] {
   );
 }
 
-function isScopeArray(value: unknown): value is ScopeChange[] {
-  return Array.isArray(value);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
-function isFeedbackArray(value: unknown): value is FeedbackItem[] {
-  return Array.isArray(value);
+/** Keep only well-formed rows; a malformed entry must not crash the app after restore. */
+function toScopeChanges(value: unknown): ScopeChange[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is ScopeChange => isRecord(item) && typeof item.id === 'string');
+}
+
+function toFeedbackItems(value: unknown): FeedbackItem[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is FeedbackItem => isRecord(item) && typeof item.id === 'string')
+    .map((item) => ({
+      ...item,
+      tags: Array.isArray(item.tags) ? item.tags : [],
+      linkedLoopIds: Array.isArray(item.linkedLoopIds) ? item.linkedLoopIds : [],
+    }));
 }
 
 export function validateBackupJson(raw: string): ImportValidationResult {
@@ -65,15 +78,15 @@ export function validateBackupJson(raw: string): ImportValidationResult {
   }
 
   const weeklyReviews = isWeeklyReviewArray(obj.weeklyReviews) ? obj.weeklyReviews : [];
-  const scopeChanges = isScopeArray(obj.scopeChanges) ? (obj.scopeChanges as ScopeChange[]) : [];
-  const feedbackItems = isFeedbackArray(obj.feedbackItems) ? (obj.feedbackItems as FeedbackItem[]) : [];
+  const scopeChanges = toScopeChanges(obj.scopeChanges);
+  const feedbackItems = toFeedbackItems(obj.feedbackItems);
 
-  const loops = obj.loops.map((loop) => ({
-    ...loop,
-    decisions: (loop.decisions ?? []).map((d) =>
-      normalizeDecision({ ...d, id: d.id }, loop.id)
-    ),
-  }));
+  let loops: OpenLoop[];
+  try {
+    loops = obj.loops.map(normalizeLoop);
+  } catch {
+    return { ok: false, error: 'Backup contains loop data LoopTidy could not read.' };
+  }
 
   return {
     ok: true,

@@ -31,11 +31,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const stored = await getAppearanceMode();
-      if (cancelled) return;
-      setModeState(stored);
-      setHydrationDone(true);
+    void (async () => {
+      try {
+        const stored = await getAppearanceMode();
+        if (!cancelled) setModeState(stored);
+      } catch {
+        // Fall back to system appearance — never block launch on a storage read.
+      } finally {
+        if (!cancelled) setHydrationDone(true);
+      }
     })();
     return () => {
       cancelled = true;

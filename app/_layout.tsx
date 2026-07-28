@@ -78,11 +78,17 @@ function BiometricGate({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Unlock LoopTidy',
-        fallbackLabel: 'Use Passcode',
-        cancelLabel: 'Cancel',
-      });
+      /** Never sit on the spinner forever if the prompt never resolves. */
+      const result = await Promise.race([
+        LocalAuthentication.authenticateAsync({
+          promptMessage: 'Unlock LoopTidy',
+          fallbackLabel: 'Use Passcode',
+          cancelLabel: 'Cancel',
+        }),
+        new Promise<{ success: false }>((resolve) =>
+          setTimeout(() => resolve({ success: false }), 60000)
+        ),
+      ]);
 
       setAuthState(result.success ? 'authenticated' : 'locked');
     } catch {

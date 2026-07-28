@@ -16,6 +16,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ fade: false, duration: 0 });
 
 const FONT_LOAD_TIMEOUT_MS = 5000;
+/** Absolute ceiling: mount the app even if a data gate never resolves. */
+const LAUNCH_TIMEOUT_MS = 8000;
 
 export function SplashGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -27,6 +29,7 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
   const [fontTimedOut, setFontTimedOut] = useState(false);
   const [brandDone, setBrandDone] = useState(false);
   const [prefsReady, setPrefsReady] = useState(false);
+  const [launchTimedOut, setLaunchTimedOut] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,7 +50,13 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const dataReady = prefsReady && !loading && hydrationDone && (fontsLoaded || fontTimedOut);
+  useEffect(() => {
+    const timer = setTimeout(() => setLaunchTimedOut(true), LAUNCH_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const gatesReady = prefsReady && !loading && hydrationDone && (fontsLoaded || fontTimedOut);
+  const dataReady = gatesReady || launchTimedOut;
 
   /** Resolve first-launch route while the stack stays mounted under the brand flash. */
   useEffect(() => {

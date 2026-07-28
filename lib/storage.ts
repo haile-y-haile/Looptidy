@@ -7,16 +7,27 @@ function cloneLoops(loops: OpenLoop[]): OpenLoop[] {
   return JSON.parse(JSON.stringify(loops)) as OpenLoop[];
 }
 
-function normalizeLoop(raw: OpenLoop): OpenLoop {
+/** Fill in every field the app assumes is present, so legacy or restored data cannot crash the UI. */
+export function normalizeLoop(raw: OpenLoop): OpenLoop {
   const legacyReminder = raw.reminder;
   const reminderAt =
     raw.reminderAt ??
     (legacyReminder && !legacyReminder.completed ? legacyReminder.date : undefined);
   const reminderEnabled =
     raw.reminderEnabled ?? Boolean(reminderAt && !legacyReminder?.completed);
+  const now = new Date().toISOString();
 
   return {
     ...raw,
+    title: raw.title ?? 'Untitled loop',
+    type: raw.type ?? 'follow_up',
+    status: raw.status ?? 'open',
+    priority: raw.priority ?? 'medium',
+    riskLevel: raw.riskLevel ?? 'none',
+    category: raw.category ?? 'other',
+    owner: raw.owner ?? { id: 'local', name: 'Me' },
+    createdAt: raw.createdAt ?? now,
+    updatedAt: raw.updatedAt ?? raw.createdAt ?? now,
     description: raw.description ?? '',
     attachments: Array.isArray(raw.attachments) ? raw.attachments : [],
     decisions: Array.isArray(raw.decisions)
@@ -54,7 +65,17 @@ export async function getLoops(): Promise<OpenLoop[]> {
   if (!rows || rows.length === 0) {
     return [];
   }
-  return rows.map((r) => JSON.parse(r.data) as OpenLoop).map(normalizeLoop);
+  /** Skip corrupt rows rather than failing the whole read. */
+  const loops: OpenLoop[] = [];
+  for (const row of rows) {
+    try {
+      const parsed = JSON.parse(row.data) as OpenLoop;
+      if (parsed?.id) loops.push(normalizeLoop(parsed));
+    } catch {
+      console.warn('Skipped unreadable loop row');
+    }
+  }
+  return loops;
 }
 
 export async function saveLoops(loops: OpenLoop[]): Promise<void> {

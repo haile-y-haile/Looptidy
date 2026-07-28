@@ -105,7 +105,14 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
       next = getNext(prev);
       return next;
     });
-    await saveLoops(next);
+    try {
+      await saveLoops(next);
+      setLoadError(null);
+    } catch (error) {
+      // Keep the optimistic UI but tell the user the write did not land.
+      console.error('Failed to save loops:', error);
+      setLoadError('Could not save your last change. Check storage and try again.');
+    }
   }, []);
 
   const refreshLoops = useCallback(async () => {

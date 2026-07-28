@@ -35,21 +35,28 @@ export function BrandFlash({ ready, onDone, onReady }: BrandFlashProps) {
   useEffect(() => {
     if (!ready || finished.current) return;
 
+    /** Always resolve, even if the animation is interrupted — never strand the overlay. */
+    const complete = () => {
+      if (finished.current) return;
+      finished.current = true;
+      onDone();
+    };
+
     const hold = setTimeout(() => {
       Animated.timing(opacity, {
         toValue: 0,
         duration: FADE_MS,
         easing: Easing.inOut(Easing.cubic),
         useNativeDriver: true,
-      }).start(({ finished: ok }) => {
-        if (ok && !finished.current) {
-          finished.current = true;
-          onDone();
-        }
-      });
+      }).start(complete);
     }, HOLD_MS);
 
-    return () => clearTimeout(hold);
+    const failsafe = setTimeout(complete, HOLD_MS + FADE_MS + 600);
+
+    return () => {
+      clearTimeout(hold);
+      clearTimeout(failsafe);
+    };
   }, [ready, opacity, onDone]);
 
   return (

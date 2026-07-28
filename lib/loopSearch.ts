@@ -12,13 +12,13 @@ const miniSearch = new MiniSearch({
 });
 
 function buildSearchDocument(loop: OpenLoop) {
-  const decisionText = loop.decisions
+  const decisionText = (loop.decisions ?? [])
     .map(
       (d) =>
         `${d.title} ${d.summary ?? ''} ${d.finalDecision ?? ''} ${d.rationale ?? ''} ${d.question ?? ''} ${d.outcome ?? ''}`
     )
     .join(' ');
-  const timelineText = loop.timeline
+  const timelineText = (loop.timeline ?? [])
     .map((e) => `${e.title} ${e.description ?? ''}`)
     .join(' ');
 

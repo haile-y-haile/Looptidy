@@ -28,7 +28,7 @@ export function getFeedbackSummary(items: FeedbackItem[]): FeedbackSummary {
     total: items.length,
     untriaged: getUntriagedFeedback(items).length,
     highUrgency: getHighUrgencyFeedback(items).length,
-    linkedLoops: items.filter((f) => f.linkedLoopIds.length > 0).length,
+    linkedLoops: items.filter((f) => (f.linkedLoopIds ?? []).length > 0).length,
     converted: items.filter(
       (f) => f.status === 'converted_to_loop' || f.status === 'converted_to_decision'
     ).length,
@@ -85,7 +85,7 @@ function buildFeedbackSearchHaystack(item: FeedbackItem): string {
     item.sourcePerson ?? '',
     item.category ?? '',
     item.theme ?? '',
-    item.tags.join(' '),
+    (item.tags ?? []).join(' '),
     item.suggestedAction ?? '',
   ]
     .join(' ')

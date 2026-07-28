@@ -61,7 +61,16 @@ export default function DecisionDetailScreen() {
   if (!loop) {
     return (
       <ScreenScroll>
-        <EmptyState title="Loop not found" message="Return to the decision center." />
+        <EmptyState
+          title="Loop not found"
+          message="This decision’s loop may have been deleted."
+        />
+        <PrimaryButton
+          label="Go to Decisions"
+          onPress={() =>
+            router.canGoBack() ? router.back() : router.replace('/decisions')
+          }
+        />
       </ScreenScroll>
     );
   }

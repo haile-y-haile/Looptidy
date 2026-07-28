@@ -9,8 +9,9 @@ let db: SQLite.SQLiteDatabase | null = null;
 
 export async function getDb() {
   if (db) return db;
-  db = await SQLite.openDatabaseAsync('looptidy.db');
-  await db.execAsync(`
+  /** Only cache the handle after the schema exists, so a failed init can retry. */
+  const opened = await SQLite.openDatabaseAsync('looptidy.db');
+  await opened.execAsync(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS documents (
       id TEXT PRIMARY KEY,
@@ -27,6 +28,7 @@ export async function getDb() {
       state TEXT NOT NULL
     );
   `);
+  db = opened;
   return db;
 }
 
@@ -45,23 +47,28 @@ export async function migrateFromAsyncStorageIfNeeded() {
   }
 
   const raw = await AsyncStorage.getItem(ASYNC_STORAGE_KEY);
-  if (raw) {
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        await database.withTransactionAsync(async () => {
-          for (const loop of parsed as OpenLoop[]) {
-            await database.runAsync(
-              `INSERT OR REPLACE INTO documents (id, type, data, updated_at) VALUES (?, ?, ?, ?)`,
-              [loop.id, 'loop', JSON.stringify(loop), Date.now()]
-            );
-          }
-        });
-      }
-    } catch (e) {
-      console.error('Migration failed', e);
-    }
+  if (!raw) {
+    await setAsyncStorageMigrated(true);
+    return;
   }
 
-  await setAsyncStorageMigrated(true);
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      await database.withTransactionAsync(async () => {
+        for (const loop of parsed as OpenLoop[]) {
+          if (!loop?.id) continue;
+          await database.runAsync(
+            `INSERT OR REPLACE INTO documents (id, type, data, updated_at) VALUES (?, ?, ?, ?)`,
+            [loop.id, 'loop', JSON.stringify(loop), Date.now()]
+          );
+        }
+      });
+    }
+    // Only retire the legacy source once the copy actually succeeded.
+    await setAsyncStorageMigrated(true);
+  } catch (e) {
+    // Leave the flag unset so the next launch can retry instead of losing loops.
+    console.error('Migration failed; will retry on next launch', e);
+  }
 }

@@ -22,8 +22,9 @@ export function formatStoredDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Store date+time values as ISO strings. */
+/** Store date+time values as ISO strings. Invalid dates would throw, so fall back to now. */
 export function formatStoredDateTime(date: Date): string {
+  if (Number.isNaN(date.getTime())) return new Date().toISOString();
   return date.toISOString();
 }
 

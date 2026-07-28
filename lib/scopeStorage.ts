@@ -8,7 +8,12 @@ export async function getScopeChanges(): Promise<ScopeChange[]> {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as ScopeChange[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    // Drop malformed entries so screens can rely on the shape.
+    return parsed.filter(
+      (item): item is ScopeChange =>
+        typeof item === 'object' && item !== null && typeof (item as ScopeChange).id === 'string'
+    );
   } catch {
     return [];
   }
