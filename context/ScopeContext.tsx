@@ -39,7 +39,11 @@ export function ScopeProvider({ children }: { children: React.ReactNode }) {
       next = getNext(prev);
       return next;
     });
-    await saveScopeChanges(next);
+    try {
+      await saveScopeChanges(next);
+    } catch (error) {
+      console.error('Failed to save scope changes:', error);
+    }
   }, []);
 
   const addScopeChange = useCallback(

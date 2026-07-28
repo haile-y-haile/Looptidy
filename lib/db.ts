@@ -6,6 +6,8 @@ import { getAsyncStorageMigrated, setAsyncStorageMigrated } from './preferences'
 const ASYNC_STORAGE_KEY = '@looptidy/loops';
 
 let db: SQLite.SQLiteDatabase | null = null;
+/** Retry a failed migration on the next launch, not on every read this session. */
+let migrationAttempted = false;
 
 export async function getDb() {
   if (db) return db;
@@ -33,9 +35,11 @@ export async function getDb() {
 }
 
 export async function migrateFromAsyncStorageIfNeeded() {
+  if (migrationAttempted) return;
   if (await getAsyncStorageMigrated()) {
     return;
   }
+  migrationAttempted = true;
 
   const database = await getDb();
   const existingCount = await database.getFirstAsync<{ count: number }>(
@@ -54,17 +58,21 @@ export async function migrateFromAsyncStorageIfNeeded() {
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      await database.withTransactionAsync(async () => {
-        for (const loop of parsed as OpenLoop[]) {
-          if (!loop?.id) continue;
-          await database.runAsync(
-            `INSERT OR REPLACE INTO documents (id, type, data, updated_at) VALUES (?, ?, ?, ?)`,
-            [loop.id, 'loop', JSON.stringify(loop), Date.now()]
-          );
-        }
-      });
+    if (!Array.isArray(parsed)) {
+      // Legacy loops were always stored as an array; anything else is unrecoverable.
+      console.warn('Legacy loop data is not an array; nothing to migrate');
+      await setAsyncStorageMigrated(true);
+      return;
     }
+    await database.withTransactionAsync(async () => {
+      for (const loop of parsed as OpenLoop[]) {
+        if (!loop?.id) continue;
+        await database.runAsync(
+          `INSERT OR REPLACE INTO documents (id, type, data, updated_at) VALUES (?, ?, ?, ?)`,
+          [loop.id, 'loop', JSON.stringify(loop), Date.now()]
+        );
+      }
+    });
     // Only retire the legacy source once the copy actually succeeded.
     await setAsyncStorageMigrated(true);
   } catch (e) {

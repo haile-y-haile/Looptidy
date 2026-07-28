@@ -84,11 +84,12 @@ function startOfWeek(d = new Date()): Date {
 }
 
 function closedThisWeek(loops: OpenLoop[]): OpenLoop[] {
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekStart = startOfWeek();
   return loops.filter((l) => {
     if (!l.closedAt) return false;
-    return new Date(l.closedAt) >= weekAgo;
+    const closed = new Date(l.closedAt);
+    if (Number.isNaN(closed.getTime())) return false;
+    return closed >= weekStart;
   });
 }
 

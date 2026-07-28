@@ -39,7 +39,11 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       next = getNext(prev);
       return next;
     });
-    await saveFeedbackItems(next);
+    try {
+      await saveFeedbackItems(next);
+    } catch (error) {
+      console.error('Failed to save feedback:', error);
+    }
   }, []);
 
   const addFeedback = useCallback(

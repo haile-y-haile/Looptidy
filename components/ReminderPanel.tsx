@@ -20,7 +20,6 @@ import {
   type SnoozePreset,
 } from '../lib/reminders';
 import { radius, spacing, typography } from '../lib/theme';
-import { formatDate } from '../lib/utils';
 
 export function ReminderPanel({ loop }: { loop: OpenLoop }) {
   const { theme } = useTheme();
@@ -146,7 +145,7 @@ export function ReminderPanel({ loop }: { loop: OpenLoop }) {
             {isReminderSnoozed(loop) ? 'Snoozed until' : 'Remind me'}
           </Text>
           <Text style={[styles.statusValue, { color: theme.colors.text }]}>
-            {formatDate(effective!)}
+            {formatReminderDisplay(effective!)}
           </Text>
           {loop.reminderLabel ? (
             <Text style={[styles.statusMeta, { color: theme.colors.textMuted }]}>

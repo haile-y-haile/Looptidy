@@ -159,8 +159,8 @@ export function weeklyReviewsToCsv(reviews: WeeklyReview[]): string {
     r.id,
     r.startedAt,
     r.completedAt ?? '',
-    String(r.reviewedLoopIds.length),
-    String(r.closedLoopIds.length),
+    String((r.reviewedLoopIds ?? []).length),
+    String((r.closedLoopIds ?? []).length),
     r.notes,
     r.createdAt,
   ]);

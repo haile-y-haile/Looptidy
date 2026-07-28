@@ -18,6 +18,7 @@ import {
   parseStoredDate,
 } from '../lib/dateValues';
 import { radius, spacing, typography } from '../lib/theme';
+import { getPreferenceCache } from '../lib/preferences';
 
 type DatePickerFieldProps = {
   value: string;
@@ -42,7 +43,8 @@ export function DatePickerField({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(() => parseStoredDate(value));
 
-  const label = useMemo(() => formatPickerLabel(value, mode), [mode, value]);
+  const timeFormat = getPreferenceCache().timeFormat;
+  const label = useMemo(() => formatPickerLabel(value, mode), [mode, value, timeFormat]);
 
   const openPicker = () => {
     setDraft(parseStoredDate(value));

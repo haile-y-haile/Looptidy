@@ -18,6 +18,8 @@ import { CaptureTemplatePicker } from '../../../components/CaptureTemplatePicker
 import { DatePickerField } from '../../../components/DatePickerField';
 import { ChipSelector } from '../../../components/ChipSelector';
 import { ScreenScroll } from '../../../components/ScreenScroll';
+import { EmptyState } from '../../../components/EmptyState';
+import { PrimaryButton } from '../../../components/PrimaryButton';
 import { hapticLight, hapticSuccess } from '../../../lib/haptics';
 import {
   getCaptureTemplate,
@@ -57,7 +59,7 @@ export default function NewLoopScreen() {
     category?: string;
     personName?: string;
   }>();
-  const { loops, addLoop, updateLoop } = useLoops();
+  const { loops, loading, addLoop, updateLoop } = useLoops();
 
   const editId = typeof params.id === 'string' ? params.id : undefined;
   const editingLoop = useMemo(
@@ -294,6 +296,19 @@ export default function NewLoopScreen() {
   const removeAttachment = (attachmentId: string) => {
     setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
   };
+
+  if (editId && !editingLoop && !loading) {
+    return (
+      <ScreenScroll contentContainerStyle={{ paddingTop: insets.top + spacing.xxl }}>
+        <Stack.Screen options={{ title: 'Edit Loop' }} />
+        <EmptyState title="Loop not found" message="This loop may have been deleted." />
+        <PrimaryButton
+          label="Go to Loops"
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/loops'))}
+        />
+      </ScreenScroll>
+    );
+  }
 
   const canSave = title.trim().length > 0 && !saving && (!editId || editingLoop);
   const canAddLink = linkUrl.trim().length > 0;

@@ -8,7 +8,18 @@ export async function getFeedbackItems(): Promise<FeedbackItem[]> {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as FeedbackItem[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    // Guarantee the array fields the rest of the app iterates over.
+    return parsed
+      .filter(
+        (item): item is FeedbackItem =>
+          typeof item === 'object' && item !== null && typeof item.id === 'string'
+      )
+      .map((item) => ({
+        ...item,
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        linkedLoopIds: Array.isArray(item.linkedLoopIds) ? item.linkedLoopIds : [],
+      }));
   } catch {
     return [];
   }

@@ -68,7 +68,7 @@ export function draftToDecision(
 
 export function decisionNeedsOwner(loops: OpenLoop[]): number {
   return loops.reduce((count, loop) => {
-    const open = loop.decisions.filter(
+    const open = (loop.decisions ?? []).filter(
       (d) =>
         (d.status === 'decision_needed' || d.status === 'options_reviewed') && !d.owner?.trim()
     );

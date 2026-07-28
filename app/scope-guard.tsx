@@ -123,12 +123,20 @@ export default function ScopeGuardScreen() {
               onReject={() => void updateScopeChange(item.id, { status: 'rejected' })}
               onResolve={() => void updateScopeChange(item.id, { status: 'resolved', resolvedAt: new Date().toISOString() })}
               onConvert={async () => {
-                const loop = await addLoop(convertScopeChangeToLoop(item));
-                await updateScopeChange(item.id, { status: 'converted_to_loop', loopId: loop.id });
+                try {
+                  const loop = await addLoop(convertScopeChangeToLoop(item));
+                  await updateScopeChange(item.id, { status: 'converted_to_loop', loopId: loop.id });
+                } catch {
+                  Alert.alert('Could not convert', 'Something went wrong. Please try again.');
+                }
               }}
               onCopy={async () => {
-                await Clipboard.setStringAsync(buildScopeSummaryText(item));
-                Alert.alert('Copied');
+                try {
+                  await Clipboard.setStringAsync(buildScopeSummaryText(item));
+                  Alert.alert('Copied');
+                } catch {
+                  Alert.alert('Could not copy', 'Please try again.');
+                }
               }}
             />
           ))

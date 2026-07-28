@@ -4,6 +4,7 @@ import { decisionNeedsOwner } from './decisionSpeed';
 import { getHighImpactScopeChanges, getOpenScopeChanges } from './scopeGuard';
 import { getUntriagedFeedback } from './feedback';
 import { flattenDecisions } from './decisions';
+import { startOfWeekDate } from './preferences';
 import { isOpenLoop } from './utils';
 
 export interface PMSignals {
@@ -33,9 +34,10 @@ export function computePMSignals(
 }
 
 export function getDecisionsMadeThisWeek(loops: OpenLoop[]): number {
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  return flattenDecisions(loops).filter(
-    (d) => d.decidedAt && new Date(d.decidedAt) >= weekAgo && d.status === 'decided'
-  ).length;
+  const weekStart = startOfWeekDate();
+  return flattenDecisions(loops).filter((d) => {
+    if (!d.decidedAt || d.status !== 'decided') return false;
+    const decided = new Date(d.decidedAt);
+    return !Number.isNaN(decided.getTime()) && decided >= weekStart;
+  }).length;
 }

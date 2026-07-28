@@ -72,7 +72,7 @@ export function buildPeopleSummaries(loops: OpenLoop[]): PersonSummary[] {
     if (loop.type === 'decision_needed') {
       touch(loop.waitingOn ?? loop.promisedTo, loop, 'decision');
     }
-    for (const d of loop.decisions) {
+    for (const d of loop.decisions ?? []) {
       if (d.owner) {
         touch({ id: `owner-${d.owner}`, name: d.owner }, loop, 'decision');
       }
@@ -103,7 +103,7 @@ export function getLoopsForPerson(loops: OpenLoop[], key: string): {
       (l) =>
         isOpenLoop(l) &&
         (l.type === 'decision_needed' ||
-          l.decisions.some((d) => d.owner && personKey(d.owner) === key))
+          (l.decisions ?? []).some((d) => d.owner && personKey(d.owner) === key))
     ),
     blocked: loops.filter(
       (l) => isOpenLoop(l) && (l.status === 'blocked' || l.type === 'blocked') && match(l.waitingOn)

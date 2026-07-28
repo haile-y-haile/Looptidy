@@ -32,7 +32,7 @@ export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { loops, loading, refreshLoops } = useLoops();
+  const { loops, loading, loadError, refreshLoops } = useLoops();
   const { scopeChanges } = useScopeChanges();
   const { feedbackItems } = useFeedback();
 
@@ -61,7 +61,10 @@ export default function TodayScreen() {
           }
           const day = new Date().getDay();
           // Show Friday (5), Saturday (6), Sunday (0)
-          if (day !== 5 && day !== 6 && day !== 0) return;
+          if (day !== 5 && day !== 6 && day !== 0) {
+            if (!cancelled) setShowWeeklyBanner(false);
+            return;
+          }
           const dismissed = await getWeeklyReviewBannerDismissed();
           if (!cancelled) setShowWeeklyBanner(!dismissed);
         } catch {
@@ -147,6 +150,32 @@ export default function TodayScreen() {
           </Text>
         </View>
       </View>
+
+      {loadError ? (
+        <View
+          style={[
+            styles.banner,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.danger },
+          ]}
+        >
+          <View style={styles.bannerTexts}>
+            <Text style={[styles.bannerTitle, { color: theme.colors.danger }]}>Storage problem</Text>
+            <Text style={[styles.bannerSub, { color: theme.colors.text }]}>{loadError}</Text>
+          </View>
+          <View style={styles.bannerActions}>
+            <Pressable
+              onPress={() => void onRefresh()}
+              style={({ pressed }) => [
+                styles.bannerBtn,
+                { backgroundColor: theme.colors.danger },
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.bannerBtnText}>Retry</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
 
       {showWeeklyBanner ? (
         <View style={[styles.banner, { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary }]}>
@@ -252,17 +281,17 @@ export default function TodayScreen() {
       </View>
 
       <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Up Next</Text>
-      <Animated.FlatList
-        data={upNext}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <LoopCard loop={item} index={index} />}
-        itemLayoutAnimation={LinearTransition.springify()}
-        scrollEnabled={false}
-        contentContainerStyle={styles.upNextList}
-        ListEmptyComponent={
+      <View style={styles.upNextList}>
+        {upNext.length === 0 ? (
           <EmptyState compact title="Nothing up next" message="You're in good shape." />
-        }
-      />
+        ) : (
+          upNext.map((item, index) => (
+            <Animated.View key={item.id} layout={LinearTransition.springify()}>
+              <LoopCard loop={item} index={index} />
+            </Animated.View>
+          ))
+        )}
+      </View>
 
       <View style={styles.linkRow}>
         <Pressable

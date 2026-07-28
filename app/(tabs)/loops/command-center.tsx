@@ -237,14 +237,18 @@ export default function CommandCenterScreen() {
         <>
           <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Scope changes</Text>
           {scopeResults.map((item) => (
-            <View key={item.id}>
+            <Pressable
+              key={item.id}
+              onPress={() => router.push('/scope-guard')}
+              style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
+            >
               <GlassCard style={styles.auxCard} intensity={24}>
                 <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
                 <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
                   {SCOPE_STATUS_LABELS[item.status]} · {item.impact} impact
                 </Text>
               </GlassCard>
-            </View>
+            </Pressable>
           ))}
           <Pressable
             onPress={() => router.push('/scope-guard')}
@@ -262,14 +266,18 @@ export default function CommandCenterScreen() {
         <>
           <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>Feedback</Text>
           {feedbackResults.map((item) => (
-            <View key={item.id}>
+            <Pressable
+              key={item.id}
+              onPress={() => router.push('/feedback')}
+              style={({ pressed }) => (pressed ? { opacity: 0.9 } : undefined)}
+            >
               <GlassCard style={styles.auxCard} intensity={24}>
                 <Text style={[styles.auxTitle, { color: theme.colors.text }]}>{item.title}</Text>
                 <Text style={[styles.auxMeta, { color: theme.colors.textMuted }]}>
                   {FEEDBACK_SOURCE_LABELS[item.source]} · {item.urgency} urgency
                 </Text>
               </GlassCard>
-            </View>
+            </Pressable>
           ))}
           <Pressable
             onPress={() => router.push('/feedback')}

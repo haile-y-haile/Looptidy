@@ -85,7 +85,7 @@ function buildFeedbackSearchHaystack(item: FeedbackItem): string {
     item.sourcePerson ?? '',
     item.category ?? '',
     item.theme ?? '',
-    (item.tags ?? []).join(' '),
+    (Array.isArray(item.tags) ? item.tags : []).join(' '),
     item.suggestedAction ?? '',
   ]
     .join(' ')

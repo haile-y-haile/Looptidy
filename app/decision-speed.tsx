@@ -96,6 +96,8 @@ export default function DecisionSpeedScreen() {
       Alert.alert('Decision saved', 'Recorded locally on this device.', [
         { text: 'Done', onPress: () => router.back() },
       ]);
+    } catch {
+      Alert.alert('Could not save', 'Something went wrong saving this decision. Try again.');
     } finally {
       setBusy(false);
     }

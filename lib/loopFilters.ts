@@ -52,7 +52,7 @@ export function getLoopsForCommandFilter(
         (l) =>
           isOpenLoop(l) &&
           (l.type === 'decision_needed' ||
-            l.decisions.some((d) => d.status === 'decision_needed'))
+            (l.decisions ?? []).some((d) => d.status === 'decision_needed'))
       );
     case 'due':
       return loops.filter(

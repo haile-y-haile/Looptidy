@@ -70,7 +70,12 @@ export default function WeeklyReviewScreen() {
       closedLoopIds: [...closedIds],
       notes: notes.trim(),
     });
-    await saveWeeklyReview(record);
+    try {
+      await saveWeeklyReview(record);
+    } catch {
+      Alert.alert('Could not save review', 'Something went wrong saving this review. Try again.');
+      return;
+    }
     void hapticSuccess();
     Alert.alert(
       'Weekly review complete',

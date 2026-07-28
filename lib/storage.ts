@@ -7,8 +7,16 @@ function cloneLoops(loops: OpenLoop[]): OpenLoop[] {
   return JSON.parse(JSON.stringify(loops)) as OpenLoop[];
 }
 
+function isRecord(value: unknown): boolean {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /** Fill in every field the app assumes is present, so legacy or restored data cannot crash the UI. */
-export function normalizeLoop(raw: OpenLoop): OpenLoop {
+export function normalizeLoop(input: OpenLoop): OpenLoop {
+  if (!isRecord(input)) {
+    throw new Error('Loop entry is not an object');
+  }
+  const raw = input;
   const legacyReminder = raw.reminder;
   const reminderAt =
     raw.reminderAt ??
@@ -29,11 +37,12 @@ export function normalizeLoop(raw: OpenLoop): OpenLoop {
     createdAt: raw.createdAt ?? now,
     updatedAt: raw.updatedAt ?? raw.createdAt ?? now,
     description: raw.description ?? '',
-    attachments: Array.isArray(raw.attachments) ? raw.attachments : [],
+    attachments: Array.isArray(raw.attachments) ? raw.attachments.filter(isRecord) : [],
+    // Drop malformed entries so one bad decision cannot discard the whole loop.
     decisions: Array.isArray(raw.decisions)
-      ? raw.decisions.map((d) => normalizeDecision({ ...d, id: d.id }, raw.id))
+      ? raw.decisions.filter(isRecord).map((d) => normalizeDecision({ ...d, id: d.id }, raw.id))
       : [],
-    timeline: Array.isArray(raw.timeline) ? raw.timeline : [],
+    timeline: Array.isArray(raw.timeline) ? raw.timeline.filter(isRecord) : [],
     reminderAt,
     reminderLabel: raw.reminderLabel,
     snoozedUntil: raw.snoozedUntil,

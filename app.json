@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hailehaile.looptidy",
-      "buildNumber": "32",
+      "buildNumber": "33",
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
           {

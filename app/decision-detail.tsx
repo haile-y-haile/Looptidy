@@ -37,7 +37,7 @@ export default function DecisionDetailScreen() {
   const loop = loopId ? loops.find((l) => l.id === loopId) : undefined;
   const existing = useMemo(() => {
     if (!loop || !decisionId) return undefined;
-    const raw = loop.decisions.find((d) => d.id === decisionId);
+    const raw = (loop.decisions ?? []).find((d) => d.id === decisionId);
     return raw ? normalizeDecision(raw, loop.id) : undefined;
   }, [loop, decisionId]);
 
@@ -58,12 +58,16 @@ export default function DecisionDetailScreen() {
   const [decisionDeadline, setDecisionDeadline] = useState(existing?.decisionDeadline ?? '');
   const [busy, setBusy] = useState(false);
 
-  if (!loop) {
+  if (!loop || (!isNew && !existing)) {
     return (
       <ScreenScroll>
         <EmptyState
-          title="Loop not found"
-          message="This decision’s loop may have been deleted."
+          title={loop ? 'Decision not found' : 'Loop not found'}
+          message={
+            loop
+              ? 'This decision may have been deleted.'
+              : 'This decision’s loop may have been deleted.'
+          }
         />
         <PrimaryButton
           label="Go to Decisions"
@@ -104,6 +108,8 @@ export default function DecisionDetailScreen() {
         await updateDecision(loop.id, decisionId, payload);
       }
       router.back();
+    } catch {
+      Alert.alert('Could not save', 'Something went wrong saving this decision. Try again.');
     } finally {
       setBusy(false);
     }

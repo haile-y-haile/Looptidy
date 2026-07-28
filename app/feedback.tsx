@@ -174,8 +174,18 @@ function Section({
           <View style={styles.actions}>
             {['To loop', 'To decision', 'Triage', 'Archive', 'Copy'].map((label, i) => {
               const handlers = [() => onConvertLoop(item), () => onConvertDecision(item), () => onTriage(item.id), () => onArchive(item.id), () => onCopy(item)];
+              const run = () => {
+                try {
+                  const result = handlers[i]() as unknown;
+                  if (result instanceof Promise) {
+                    result.catch(() => Alert.alert('Action failed', 'Please try again.'));
+                  }
+                } catch {
+                  Alert.alert('Action failed', 'Please try again.');
+                }
+              };
               return (
-                <Pressable key={label} onPress={handlers[i]} style={[styles.chip, { borderColor: theme.colors.border }]}>
+                <Pressable key={label} onPress={run} style={[styles.chip, { borderColor: theme.colors.border }]}>
                   <Text style={{ color: theme.colors.text, ...typography.caption }}>{label}</Text>
                 </Pressable>
               );

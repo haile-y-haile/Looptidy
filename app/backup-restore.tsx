@@ -153,13 +153,21 @@ export default function BackupRestoreScreen() {
             style: 'destructive',
             onPress: () => {
               void (async () => {
-                await replaceAllLoops(validation.backup.loops);
-                await replaceWeeklyReviews(validation.backup.weeklyReviews);
-                await replaceAllScopeChanges(validation.backup.scopeChanges ?? []);
-                await replaceAllFeedback(validation.backup.feedbackItems ?? []);
-                await refreshLoops();
-                void hapticSuccess();
-                Alert.alert('Restore complete', 'Your LoopTidy data was restored from backup.');
+                try {
+                  await replaceAllLoops(validation.backup.loops);
+                  await replaceWeeklyReviews(validation.backup.weeklyReviews);
+                  await replaceAllScopeChanges(validation.backup.scopeChanges ?? []);
+                  await replaceAllFeedback(validation.backup.feedbackItems ?? []);
+                  await refreshLoops();
+                  void hapticSuccess();
+                  Alert.alert('Restore complete', 'Your LoopTidy data was restored from backup.');
+                } catch {
+                  await refreshLoops();
+                  Alert.alert(
+                    'Restore failed',
+                    'Your data may be partly restored. Check your loops, then try the backup file again.'
+                  );
+                }
               })();
             },
           },

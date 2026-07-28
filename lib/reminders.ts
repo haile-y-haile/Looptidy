@@ -131,16 +131,6 @@ export function computeSnoozeUntil(preset: SnoozePreset, from = new Date()): str
   return d.toISOString();
 }
 
-/** Build a reminder datetime for default hour when a simple date is chosen. */
-export function defaultReminderAt(from = new Date()): string {
-  const d = new Date(from);
-  d.setHours(reminderHour(), 0, 0, 0);
-  if (d.getTime() <= Date.now()) {
-    d.setDate(d.getDate() + 1);
-  }
-  return d.toISOString();
-}
-
 export function defaultReminderLabel(loop: OpenLoop): string {
   return loop.reminderLabel?.trim() || `Follow up: ${loop.title}`;
 }

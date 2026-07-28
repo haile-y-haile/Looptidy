@@ -35,7 +35,9 @@ export function getDecisionsNeeded(loops: OpenLoop[]): OpenLoop[] {
     (l) =>
       isOpenLoop(l) &&
       (l.type === 'decision_needed' ||
-        l.decisions.some((d) => d.status === 'decision_needed' || d.status === 'options_reviewed'))
+        (l.decisions ?? []).some(
+          (d) => d.status === 'decision_needed' || d.status === 'options_reviewed'
+        ))
   );
 }
 

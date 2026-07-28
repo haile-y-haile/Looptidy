@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import type { Decision, LoopStatus, LoopType, OpenLoop, TimelineEvent } from '../types';
 import { normalizeDecision } from '../lib/decisions';
-import { clearAllLoops, getLoops, saveLoops } from '../lib/storage';
+import { clearAllLoops, getLoops, normalizeLoop, saveLoops } from '../lib/storage';
 import { generateId } from '../lib/utils';
 import { cancelLoopReminder, scheduleLoopReminder } from '../lib/reminders';
 
@@ -354,10 +354,7 @@ export function LoopProvider({ children }: { children: React.ReactNode }) {
   );
 
   const replaceAllLoops = useCallback(async (nextLoops: OpenLoop[]) => {
-    const normalized = nextLoops.map((l) => ({
-      ...l,
-      decisions: l.decisions.map((d) => normalizeDecision({ ...d, id: d.id }, l.id)),
-    }));
+    const normalized = nextLoops.map(normalizeLoop);
     await saveLoops(normalized);
     setLoops(normalized);
     setLoadError(null);

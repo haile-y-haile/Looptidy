@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, Linking, Alert, Platform } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenScroll } from '../../components/ScreenScroll';
 import { SettingsRow } from '../../components/SettingsRow';
@@ -132,26 +132,29 @@ export default function SettingsScreen() {
     setModeLocal(theme.mode);
   }, [theme.mode]);
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const [enabled, status] = await Promise.all([
-          getBiometricLockEnabled().catch(() => false),
-          getReminderPermissionStatus().catch(() => 'undetermined' as const),
-          refreshPrefs(),
-        ]);
-        if (cancelled) return;
-        setBiometricLock(enabled);
-        setNotifStatus(status);
-      } catch {
-        // Settings must always render, even if a read fails.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshPrefs]);
+  /** Re-read on focus so a new backup or a permission change in iOS Settings shows up here. */
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void (async () => {
+        try {
+          const [enabled, status] = await Promise.all([
+            getBiometricLockEnabled().catch(() => false),
+            getReminderPermissionStatus().catch(() => 'undetermined' as const),
+            refreshPrefs(),
+          ]);
+          if (cancelled) return;
+          setBiometricLock(enabled);
+          setNotifStatus(status);
+        } catch {
+          // Settings must always render, even if a read fails.
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [refreshPrefs])
+  );
 
   const onSetMode = async (next: typeof theme.mode) => {
     setModeLocal(next);
@@ -235,7 +238,7 @@ export default function SettingsScreen() {
       <SettingsRow
         icon={settingsIcons.time}
         title="Default reminder time"
-        subtitle="Used for snooze and date-only reminders"
+        subtitle="Used when you snooze a loop"
         onPress={() => {
           const next = cycleNext(REMINDER_HOURS, prefs.defaultReminderHour);
           setPrefs((p) => ({ ...p, defaultReminderHour: next }));
@@ -278,7 +281,7 @@ export default function SettingsScreen() {
       <SettingsRow
         icon={settingsIcons.motion}
         title="Reduce motion"
-        subtitle="Skip BrandFlash and shorten motion"
+        subtitle="Skip the animated launch screen"
         right={{
           type: 'switch',
           value: prefs.reduceMotion,
@@ -313,7 +316,7 @@ export default function SettingsScreen() {
       <SettingsRow
         icon={settingsIcons.stale}
         title="Stale after"
-        subtitle="Follow-up needed when no check-in"
+        subtitle="Flag loops with no follow-up for this long"
         onPress={() => {
           const next = cycleNext(STALE_OPTIONS, prefs.staleDays);
           setPrefs((p) => ({ ...p, staleDays: next }));
@@ -417,8 +420,14 @@ export default function SettingsScreen() {
             {
               text: 'Replay',
               onPress: () => {
-                void resetOnboarding();
-                Alert.alert('Ready', 'Close and reopen the app to see onboarding.');
+                void (async () => {
+                  try {
+                    await resetOnboarding();
+                    Alert.alert('Ready', 'Close and reopen the app to see onboarding.');
+                  } catch {
+                    Alert.alert('Could not reset', 'Please try again.');
+                  }
+                })();
               },
             },
           ]);
@@ -430,8 +439,12 @@ export default function SettingsScreen() {
         subtitle="Show this week’s review prompt again"
         onPress={() => {
           void (async () => {
-            await clearWeeklyReviewBannerDismissed();
-            Alert.alert('Restored', 'The weekly review banner can show again this weekend.');
+            try {
+              await clearWeeklyReviewBannerDismissed();
+              Alert.alert('Restored', 'The weekly review banner can show again this weekend.');
+            } catch {
+              Alert.alert('Could not restore', 'Please try again.');
+            }
           })();
         }}
       />
